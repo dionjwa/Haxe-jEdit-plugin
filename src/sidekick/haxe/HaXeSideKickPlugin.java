@@ -179,4 +179,7 @@ public class HaXeSideKickPlugin extends EditPlugin
     public static void registerServices ()
     {}
 
+    protected static String[] OUTPUT_FILE_PREFIXES = { "-js", "-swf", "-neko", "-xml" };
+    protected static String[] OUTPUT_FOLDER_PREFIXES = { "-as3 ", "-php", "-cpp" };
+
 }
