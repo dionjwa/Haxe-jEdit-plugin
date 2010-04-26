@@ -1,0 +1,9 @@
+.DS_Store
+.settings
+bin
+build
+lib/jedit
+lib/miglayout2
+lib/guava-r03/javadoc
+*.svn
+.svn/

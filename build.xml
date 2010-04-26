@@ -1,0 +1,75 @@
+<project name="HaXeSideKick" default="build" basedir=".">
+
+
+	<property name="build.support" value="lib/jeditBuildSupport" />
+	<property file="${build.support}/build.properties" />
+        <import file="${build.support}/plugin-build.xml" />
+	
+	
+	<!--<property file="../build.properties" />-->
+	<property file="build.properties" />
+
+	<property name="javadoc.packagenames"	value="sidekick.haxe.*" />
+	<property name="plugin.dependencies" 	value="SideKick,ErrorList,Console" />
+	<property name="version" value="0.6" />
+
+	<property name="lib.home"	value="lib" />
+	
+	
+	<path id="project.class.path">
+		<pathelement location="${jedit.install.dir}/jedit.jar" />
+		<fileset dir="${jedit.user.home}/jars" includes="*.jar"/>
+		<fileset dir="${lib.home}" includes="**/*.jar"/>
+	</path>
+	
+	    <!-- This selector defines other files that should be packaged
+         in the plugin's jar file; by default it contains actions.xml,
+         dockables.xml, services.xml, any files ending in ".props",
+         "LICENSE" and "README". The context is "${basedir}". Override
+         it if your plugin needs special treatment for these files. -->
+    <selector id="extraFiles">
+        <and>
+            <or>
+                <filename name="**/actions.xml" />
+                <filename name="**/browser.actions.xml" />
+                <filename name="**/dockables.xml" />
+                <filename name="**/services.xml" />
+                <filename name="**/haxe.xml" />
+                <filename name="**/*.props" />
+                <filename name="**/LICENSE" />
+                <filename name="**/README" />
+            </or>
+        </and>
+    </selector>
+    
+    
+    <property name="dist.target"    value="build" />
+
+
+	<import file="${build.support}/plugin-build.xml" />
+
+	
+	
+
+    <selector id="packageFiles">
+      <or>
+		<filename name="docs/*.html"/>
+		<filename name="icons/*.png"/>
+	  </or>
+	</selector>
+	
+    <target name="build.prepare"
+          depends="compile"
+          description="Builds the plugin JAR file">
+	  <mkdir dir="${build.classes}" />
+    </target>
+    
+<!--    <target name="build.post">
+    <copy todir="${jedit.user.home}/console/commando">
+    	    <fileset dir=".">
+    	      <include name="haxe.xml"/>
+    	    </fileset>
+    	  </copy>
+    </target>-->
+
+</project>

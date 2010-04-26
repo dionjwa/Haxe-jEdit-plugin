@@ -1,0 +1,95 @@
+<?xml version="1.0" ?>
+<!DOCTYPE COMMANDO SYSTEM "commando.dtd">
+<!-- This was based around Ant (jakarta.apache.org) version 1.6
+     Support for changing dirs into project root directory before
+     executing command. 
+-->
+<COMMANDO>
+	<UI>
+    		<ENTRY LABEL="Targets  build" VARNAME="targets" />
+
+        <CHOICE LABEL="Build in" VARNAME="makeIn" DEFAULT="projectroot">
+            <OPTION LABEL="Project Root" VALUE="projectroot" />
+            <OPTION LABEL="Source Dir" VALUE="sourcedir" />
+            <OPTION LABEL="Custom Location" VALUE="customloc" />
+        </CHOICE>
+
+        <DIR_ENTRY LABEL="Source Dir" 
+         VARNAME = "sourcedir"
+         EVAL = 'new File(buffer.getPath()).getParent()' />    
+
+        <DIR_ENTRY LABEL="Project Root" 
+         VARNAME = "projectroot"
+         EVAL = 'getProjectRoot(view, buffer)' />
+         <DIR_ENTRY LABEL="Custom Location" 
+         VARNAME = "customlocation" />         
+         
+         
+        <FILE_ENTRY LABEL="Build file"
+            VARNAME="buildfile"
+			EVAL='buffer.getName().equals("build.hxml") ? buffer.getPath() : "build.hxml"' />
+            
+		<ENTRY LABEL="HaXe command" VARNAME="command" DEFAULT="haxe" />
+
+		<CHOICE LABEL="Output type" VARNAME="output" DEFAULT="normal">
+			<OPTION LABEL="Quiet" VALUE="quiet" />
+			<OPTION LABEL="Normal" VALUE="normal" />
+			<OPTION LABEL="Verbose" VALUE="verbose" />
+			<OPTION LABEL="Extra verbose" VALUE="debug" />
+		</CHOICE>
+
+		<TOGGLE LABEL="Don't print adornments" VARNAME="emacs" />
+
+		<ENTRY LABEL="Extra parameters" VARNAME="extra" />
+	</UI>
+
+	<COMMANDS>
+		<COMMAND CONFIRM="FALSE" SHELL="System">
+        if (makeIn.equals("projectroot")) {
+            location = projectroot;
+        }
+        else if (makeIn.equals("customloc")) {
+            location = customlocation;
+        }
+        else location=sourcedir;
+		return "cd " + location;
+		</COMMAND>
+		<COMMAND CONFIRM="FALSE" SHELL="System">
+            buf = new StringBuffer();
+<!--            buf.append("cd " + location + " &amp;&amp; "); -->
+            
+            buf.append(command);
+			if(!buildfile.equals(""))
+			{
+				<!--buf.append(" -f \""); -->
+				buf.append(' ');
+				buf.append(buildfile);
+				<!--buf.append('"');-->
+			}
+
+			if(!targets.equals(""))
+			{
+				buf.append(' ');
+				buf.append(targets);
+			}
+
+			if(!output.equals("normal"))
+			{
+				buf.append(" -");
+				buf.append(output);
+			}
+
+			if(emacs)
+				buf.append(" -emacs");
+
+			if(!extra.equals(""))
+			{
+				buf.append(' ');
+				buf.append(extra);
+			}
+
+			return buf.toString();
+		</COMMAND>
+	</COMMANDS>
+</COMMANDO>
+

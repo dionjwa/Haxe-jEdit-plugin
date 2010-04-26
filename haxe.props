@@ -1,0 +1,100 @@
+# :tabSize=4:indentSize=4:noTabs=false:folding=explicit:collapseFolds=1:
+#
+# HaXeSideKick.props - Properties file for the HaXeSideKick plugin
+#
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; either version 2
+# of the License, or any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+
+
+# general plugin properites
+plugin.sidekick.haxe.HaXeSideKickPlugin.activate=startup
+plugin.sidekick.haxe.HaXeSideKickPlugin.name=HaXeSideKick
+plugin.sidekick.haxe.HaXeSideKickPlugin.author=Dion Amago
+plugin.sidekick.haxe.HaXeSideKickPlugin.version=0.1
+plugin.sidekick.haxe.HaXeSideKickPlugin.docs=docs/index.html
+plugin.sidekick.haxe.HaXeSideKickPlugin.description=HaXe parser and code-completion plugin for use with the SideKick plugin.
+
+
+# dependencies
+plugin.sidekick.haxe.HaXeSideKickPlugin.depend.0=jdk 1.5
+plugin.sidekick.haxe.HaXeSideKickPlugin.depend.1=jedit 04.03.08.00
+plugin.sidekick.haxe.HaXeSideKickPlugin.depend.2=plugin errorlist.ErrorListPlugin 1.3.1
+plugin.sidekick.haxe.HaXeSideKickPlugin.depend.3=plugin sidekick.SideKickPlugin 0.7.2
+plugin.sidekick.haxe.HaXeSideKickPlugin.depend.4=plugin ctags.sidekick.Plugin 1.2
+plugin.sidekick.haxe.HaXeSideKickPlugin.depend.5=plugin console.ConsolePlugin 4.4.1
+
+
+# Plugins menu
+plugin.antfarm.AntFarmPlugin.menu=antfarm \
+            prompt-for-ant-build-file \
+            run-current-target \
+            run-last-build
+plugin.antfarm.AntFarmPlugin.menu.label=Ant Farm
+antfarm.label=Ant Farm
+prompt-for-ant-build-file.label=Load Ant Build Script
+run-current-target.label=Run Current Target
+run-last-build.label=Run Last Build
+
+# application menu items
+plugin.sidekick.haxe.HaXeSideKickPlugin.menu.label=HaXe
+plugin.sidekick.haxe.HaXeSideKickPlugin.menu=haxe-build-project \
+             haxe-launch-project
+haxe-build-project.label=Build current project
+haxe-launch-project.label=Run current project
+  
+# menu
+# plugin.sidekick.haxe.HaXeSideKickPlugin.menu=sidekick-tree 
+
+
+# registration with SideKick as a mode parser
+sidekick.parser.haxe.label=haxe
+mode.haxe.sidekick.parser=haxe
+
+
+# icon names (in the /icons/ subdir)
+# sidekick.parser.haxe.package-icon=haxepackage.gif
+# sidekick.parser.haxe.use-icon=haxeuse.gif
+# sidekick.parser.haxe.sub-icon=haxesub.gif
+# sidekick.parser.haxe.package_invalid-icon=haxepackage_invalid.gif
+# sidekick.parser.haxe.use-invalid-icon=haxeuse_invalid.gif
+# sidekick.parser.haxe.sub-invalid-icon=haxesub_invalid.gif
+# sidekick.parser.haxe.comment-icon=haxe_comment.gif
+
+
+# Option panel 
+# plugin.sidekick.haxe.HaXeSideKickPlugin.option-pane=haxe-sidekick-options
+# options.haxe-sidekick-options.label=HaXeSideKick
+# options.haxe-sidekick-options.code=new sidekick.haxe.HaXeSideKickOptionPane();
+
+# options.haxe-sidekick.guess_method_args_label=Guess method arguments from buffer variables
+# options.haxe-sidekick.guess_method_args=true
+# options.haxe-sidekick.search_path_label=Enter paths (separated by either semi-colons ';' or new lines) to folders containing either haxe source files or html docs.  The html docs for the base classes can be found at http://livedocs.adobe.com/flash/9.0/ActionScriptLangRefV3.zip
+# options.haxe-sidekick.search_path=/export/flex_sdk_3.0/ActionScriptLangRefV3
+
+
+#Misc
+plugin.sidekick.haxe.HaXeSideKickPlugin.usePluginHome=false
+plugin.sidekick.haxe.HaXeSideKickPlugin.buildOnSave=true
+plugin.sidekick.haxe.HaXeSideKickPlugin.launchCommand=/usr/bin/open deploy/out.swf
+
+#Integration with other plugins
+mode.haxe.commando.compile=haxe
+commando.haxe.command=haxe
+commando.haxe.buildfile=build.hxml
+mode.haxe.sidekick.parser=haxe
+
+
+
+
+

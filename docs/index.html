@@ -1,0 +1,63 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/transitional.dtd"> 
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+<title>ActionscriptSideKick Plugin</title>
+
+<meta name="author" content="Dion Whitehead"></meta>
+<meta name="date" content="28.11.2004, 19:28 h"></meta>
+<meta HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso-8859-1"></meta>
+
+</head>
+
+<body>
+
+<div class="main">
+<h2>ActionscriptSideKick plugin</h2>
+<p>
+(c) 2008 by Dion Whitehead
+</p>
+
+<p>Provides a SideKick structure tree for Actionscript scripts. I wrote it because I wanted to learn writing jEdit plugins and because the "ActionscriptBrowse" plugin by Will Simpson didn't fully satisfy my needs.
+ActionscriptSideKick installs itself for the "actionscript" mode and will display all package names of the current script/module in a tree. The implicit package name "main" will appear on top.
+</p>
+
+<p> Like all "SideKick" plugins, ActionscriptSideKick has no dockable
+view. Instead, it shares its view with other SideKick plugins through
+the SideKick Structure Browser. To use SideKick, dock the Structure
+Browser on the left or the right. </p>
+<pre>
+Global Options -&gt; Docking -&gt; Structure Browser
+</pre>
+
+
+<p>
+In each package branch a <i>use</i> branch is added which lists all
+used/required modules. Below it follows an alphabetized list of all
+subroutines.  Fully qualified subroutines
+(e. g. sub <i>Example::Routine</i>) are listed under their
+corresponding package entries Variables are currently not supported.
+</p>
+
+<p>
+The plugin parses the Actionscript source using regular expressions. An
+excentric programming style will probably confuse it.
+</p>
+
+<p>
+Two options can be set in the Plugin's menu:<br/>
+<b>Unload sidekick structure browser</b>: Actionscriptsidekick enhances the
+sidekick structure browser with a Popup menu and marker display. This
+option replaces the original Sidekick structure browser and takes over
+all its functionality.<br/>
+
+<b>Show Markers</b>: Set it if you want markers to be shown in the
+Structure Tree (by underlining the relative entry that contains the
+marker).
+</p>
+
+</div>
+
+</body>
+</html>

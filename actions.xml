@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+<!DOCTYPE ACTIONS SYSTEM "actions.dtd">
+<ACTIONS>
+        <ACTION NAME="haxe-build-project">
+                <CODE>
+                        sidekick.haxe.HaXeSideKickPlugin.buildProject();
+                </CODE>
+        </ACTION>
+        <ACTION NAME="haxe-launch-project">
+                <CODE>
+                        sidekick.haxe.HaXeSideKickPlugin.launchProject();
+		</CODE>
+        </ACTION>
+</ACTIONS>
