@@ -1,10 +1,13 @@
 package sidekick.haxe;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
+
+import org.gjt.sp.util.Log;
 
 /**
  * Make a system call through a system shell in a platform-independent manner in Java. <br />
@@ -26,19 +29,20 @@ public final class JavaSystemCaller
      * @throws IllegalArgumentException if one parameters is null or empty.
      * 'args' can be empty (default 'ls' performed then)
      */
-    public static void main(final String[] args)
+    public static String systemCall(String command, String workingDirectory, String[] someParameters)
     {
-        String anOutput = "";
-        if(args.length == 0)
-        {
-            anOutput = Exec.execute("/usr/bin/haxe build.hxml --display src/Morphogen.hx@290");
+        try {
+            return Exec.execute(command, workingDirectory, someParameters);
+        } catch (Exception e) {
+            Log.log(Log.ERROR, "JavaSystemCaller", e.getMessage());
+            return null;
         }
-        else
-        {
-            String[] someParameters = null;
-            anOutput = Exec.execute(args[0],someParameters);
-        }
-        System.out.println("Final output: " + anOutput);
+    }
+
+    public static String systemCall(String command, String workingDirectory)
+    {
+        String[] parameters = null;
+        return Exec.execute(command, workingDirectory, parameters);
     }
     /**
      * Asynchronously read the output of a given input stream. <br />
@@ -105,7 +109,7 @@ public final class JavaSystemCaller
          * @param someParameters parameters of the command (must not be null or empty)
          * @return final output (stdout only)
          */
-        public static String execute(final String aCommand, final String... someParameters)
+        public static String execute(final String aCommand, String workingDirectory, final String... someParameters)
         {
             String output = "";
             try
@@ -117,7 +121,7 @@ public final class JavaSystemCaller
                 final Runtime rt = Runtime.getRuntime();
                 System.out.println("Executing " + aShell.getShellCommand() + " " + aCommandLine);
 
-                final Process proc = rt.exec(aShell.getShellCommand() + " " + aCommandLine);
+                final Process proc = rt.exec(aShell.getShellCommand() + " " + aCommandLine, null, new File(workingDirectory));
                 // any error message?
                 final StreamGobbler errorGobbler = new
                     StreamGobbler(proc.getErrorStream(), "ERROR");

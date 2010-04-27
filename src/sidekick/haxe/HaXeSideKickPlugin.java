@@ -5,6 +5,7 @@ import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.util.Arrays;
 
+import org.gjt.sp.jedit.EditPane;
 import org.gjt.sp.jedit.EditPlugin;
 import org.gjt.sp.jedit.View;
 import org.gjt.sp.jedit.jEdit;
@@ -16,6 +17,7 @@ import projectviewer.vpt.VPTProject;
 import console.Console;
 import console.ConsolePlugin;
 import console.Output;
+import console.Shell;
 import console.SystemShell;
 import errorlist.ErrorList;
 import errorlist.ErrorSource;
@@ -37,6 +39,12 @@ public class HaXeSideKickPlugin extends EditPlugin
     {
 // ErrorSource.unregisterErrorSource(_errorSource);
     }
+
+//    public void handleMessage (EBMessage message)
+//    {
+//        // TODO Auto-generated method stub
+//
+//    }
 
     private void copyBundledProperties ()
     {
@@ -92,14 +100,9 @@ public class HaXeSideKickPlugin extends EditPlugin
         DockableWindowManager wm = jEdit.getActiveView().getDockableWindowManager();
         Console console = (Console)wm.getDockable("console");
         console.setShell(shell);
-        while (!shell.waitFor(console)) {
-            Log.log(Log.NOTICE, NAME, "waiting for console");
-            try {
-                Thread.sleep(300);
-            } catch (InterruptedException ie) {
-                Log.log(Log.ERROR, NAME, ie.getMessage());
-            }
-        }
+
+        waitOnShell(console, shell);
+
         if (!isErrors()) {
             String launchCommand = jEdit.getProperty("plugin.sidekick.haxe.HaXeSideKickPlugin.launchCommand");
 
@@ -110,6 +113,18 @@ public class HaXeSideKickPlugin extends EditPlugin
             shell.execute(console, launchCommand, output);
         } else {
             Log.log(Log.ERROR, NAME, "Cannot launch project due to errors");
+        }
+    }
+
+    protected static void waitOnShell (Console console, Shell shell)
+    {
+        while (!shell.waitFor(console)) {
+            Log.log(Log.NOTICE, NAME, "waiting for console");
+            try {
+                Thread.sleep(100);
+            } catch (InterruptedException ie) {
+                Log.log(Log.ERROR, NAME, ie.getMessage());
+            }
         }
     }
 
@@ -129,17 +144,16 @@ public class HaXeSideKickPlugin extends EditPlugin
 
     public static String getProjectRoot ()
     {
+        if (jEdit.getPlugin("projectviewer.ProjectPlugin", false) == null) {
+            Log.log(Log.ERROR, NAME, "projectviewer.ProjectPlugin not available");
+            return null;
+        }
         VPTProject prj = ProjectViewer.getActiveProject(jEdit.getActiveView());
         return prj.getRootPath();
     }
 
     public static void buildProject ()
     {
-        if (jEdit.getPlugin("projectviewer.ProjectPlugin", false) == null) {
-            Log.log(Log.ERROR, NAME, "projectviewer.ProjectPlugin not available");
-            return;
-        }
-
         String projectRootPath = getProjectRoot();
         Log.log(Log.DEBUG, NAME, "projectRootPath=" + projectRootPath);
 
@@ -160,10 +174,56 @@ public class HaXeSideKickPlugin extends EditPlugin
         console.setShell(shell);
         Output output = console.getOutput();
         // Switch to the project root directory
-        shell.execute(console, projectRootPath, output);
+        shell.execute(console, projectRootPath, NullConsoleOutput.NULL);
         shell.execute(console, "haxe " + hxmlFile.getName(), output);
         ((ErrorList)wm.getDockableWindow("error-list")).nextError();
         view.getTextArea().requestFocus();
+    }
+
+    public static String getCodeCompletionXML (EditPane editPane, int caret)
+    {
+        Log.log(Log.NOTICE, NAME, "getCodeCompletionXML, caret=" + caret);
+        String projectRootPath = getProjectRoot();
+        Log.log(Log.DEBUG, NAME, "projectRootPath=" + projectRootPath);
+
+        File hxmlFile = getBuildFile();
+
+        Log.log(Log.DEBUG, NAME, "hxmlFileName=" + hxmlFile);
+
+        if (hxmlFile == null) {
+            Log.log(Log.ERROR, NAME, "buildProject, but no *.hxml at the project root.");
+            return null;
+        }
+
+        String command = "haxe " + hxmlFile.getName() + " --display src/Morphogen.hx@" + caret;
+        Log.log(Log.NOTICE, NAME, "call=" + command);
+//        String output = JavaSystemCaller.systemCall(call, getProjectRoot());
+//        Log.log(Log.NOTICE, NAME, "output=" + output);
+
+        View view = jEdit.getActiveView();
+        DockableWindowManager wm = view.getDockableWindowManager();
+        Console console = (Console)wm.getDockable("console");
+        SystemShell shell = ConsolePlugin.getSystemShell();
+        ConsoleStringOutput output = new ConsoleStringOutput();
+//        console.run(shell, output, command);
+        shell.execute(console, projectRootPath, NullConsoleOutput.NULL);
+        shell.execute(console, command, output);
+
+        waitOnShell(console, shell);
+
+        Log.log(Log.NOTICE, NAME, "output=" + output.getStringOutput());
+        return output.getStringOutput();
+
+//        boolean isConsoleShowing = wm.isDockableWindowVisible("console");
+//        wm.addDockableWindow("console");
+//        console.setShell(shell);
+//        // Switch to the project root directory
+//        shell.execute(console, projectRootPath, output);
+//        shell.execute(console, "haxe " + hxmlFile.getName(), output);
+//        if (!isConsoleShowing) {
+//            wm.hideDockableWindow("console");
+//        }
+
     }
 
     protected static boolean isErrors ()
@@ -178,8 +238,4 @@ public class HaXeSideKickPlugin extends EditPlugin
 
     public static void registerServices ()
     {}
-
-    protected static String[] OUTPUT_FILE_PREFIXES = { "-js", "-swf", "-neko", "-xml" };
-    protected static String[] OUTPUT_FOLDER_PREFIXES = { "-as3 ", "-php", "-cpp" };
-
 }
