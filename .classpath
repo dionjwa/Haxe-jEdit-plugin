@@ -2,7 +2,6 @@
 <classpath>
 	<classpathentry kind="src" path="src"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
-	<classpathentry kind="lib" path="lib/guava-r03/guava-r03.jar" sourcepath="lib/guava-r03/guava-src-r03.zip"/>
 	<classpathentry kind="lib" path="lib/jedit/dist/jedit.jar" sourcepath="lib/jedit"/>
 	<classpathentry kind="lib" path="/Users/dion/Documents/storage/settings/jedit/jars/SideKick.jar" sourcepath="/Users/dion/Documents/storage/settings/jedit/jars/SideKick"/>
 	<classpathentry kind="lib" path="/Users/dion/Documents/storage/settings/jedit/jars/CtagsSideKick.jar" sourcepath="/Users/dion/Documents/storage/settings/jedit/jars/CtagsSideKick"/>
@@ -14,7 +13,7 @@
 	<classpathentry kind="lib" path="/Users/dion/Documents/storage/settings/jedit/jars/AntFarm.jar" sourcepath="/Users/dion/Documents/storage/settings/jedit/jars/AntFarm"/>
 	<classpathentry kind="lib" path="/Users/dion/Documents/storage/settings/jedit/jars/Beauty.jar" sourcepath="/Users/dion/Documents/storage/settings/jedit/jars/Beauty/src"/>
 	<classpathentry kind="lib" path="/Users/dion/Documents/storage/settings/jedit/jars/JavaSideKick.jar" sourcepath="/Users/dion/Documents/storage/settings/jedit/jars/JavaSideKick"/>
-	<classpathentry kind="lib" path="/export/ooo-libs/samskivert/dist/samskivert.jar" sourcepath="/export/ooo-libs/samskivert/src/java"/>
 	<classpathentry kind="lib" path="/export/samsara/dist/samsara-shared.jar" sourcepath="/export/samsara/src/java"/>
+	<classpathentry kind="lib" path="lib/guava-r03.jar" sourcepath="lib/guava-src-r03.zip"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

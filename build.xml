@@ -16,6 +16,13 @@
 	<property name="lib.home"	value="lib" />
 	
 	
+	<condition property="can.reload.plugins">
+        <and>
+            <available classname="org.gjt.sp.jedit.jEdit"/>
+            <available classname="ReloadPluginTask"/>
+        </and>
+    </condition>
+	
 	<path id="project.class.path">
 		<pathelement location="${jedit.install.dir}/jedit.jar" />
 		<fileset dir="${jedit.user.home}/jars" includes="*.jar"/>
@@ -62,6 +69,13 @@
           depends="compile"
           description="Builds the plugin JAR file">
 	  <mkdir dir="${build.classes}" />
+    </target>
+    
+    
+        <target name="reload" if="can.reload.plugins">
+        <echo>Reloading ${install.dir}/${ant.project.name}.jar</echo>
+        <taskdef name="reloadPlugin" classname="ReloadPluginTask"/>
+        <reloadPlugin jarfile="${install.dir}/${plugin.sidekick.haxe.HaXeSideKickPlugin.name}.jar"/>
     </target>
     
 <!--    <target name="build.post">

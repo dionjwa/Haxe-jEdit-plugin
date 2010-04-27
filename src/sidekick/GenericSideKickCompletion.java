@@ -1,4 +1,4 @@
-package sidekick.haxe;
+package sidekick;
 
 import java.util.Collections;
 import java.util.LinkedList;
@@ -12,15 +12,8 @@ import org.gjt.sp.jedit.View;
 import org.gjt.sp.jedit.buffer.JEditBuffer;
 import org.gjt.sp.jedit.textarea.Selection;
 
-import sidekick.CodeCellRenderer;
-import sidekick.CodeCompletion;
-import sidekick.CodeCompletionMethod;
-import sidekick.CodeCompletionVariable;
-import sidekick.SideKickCompletion;
-
-public class HaXeCompletion extends SideKickCompletion
+public class GenericSideKickCompletion extends SideKickCompletion
 {
-
     private List<CodeCompletion> _codeCompletions;
 
     /**
@@ -29,15 +22,15 @@ public class HaXeCompletion extends SideKickCompletion
     private List<CodeCompletion> _codeCompletionsAfterTyping;
     private Map<String, CodeCompletionVariable> _localvars;
 
-    public HaXeCompletion(View view, String text, Map<String, CodeCompletionVariable> localvars, List<? extends CodeCompletion>... variables)
+    public GenericSideKickCompletion(View view, String text, List<CodeCompletion> codeCompletions, Map<String, CodeCompletionVariable> localVariables)
     {
         super(view, text);
-        _localvars = localvars;
-        _codeCompletions = new LinkedList<CodeCompletion>();
-        for (List< ? extends CodeCompletion> list : variables)
-        {
-            _codeCompletions.addAll(list);
-        }
+        _localvars = localVariables;
+        _codeCompletions = codeCompletions;//new LinkedList<CodeCompletion>();
+//        for (List< ? extends CodeCompletion> list : codeCompletions)
+//        {
+//            _codeCompletions.addAll(list);
+//        }
         Collections.sort(_codeCompletions);
         _codeCompletionsAfterTyping = new LinkedList<CodeCompletion>();
         for (CodeCompletion cc : _codeCompletions)
@@ -228,6 +221,4 @@ public class HaXeCompletion extends SideKickCompletion
     {
         return true;
     }
-
-
 }

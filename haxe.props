@@ -25,7 +25,6 @@ plugin.sidekick.haxe.HaXeSideKickPlugin.version=0.1
 plugin.sidekick.haxe.HaXeSideKickPlugin.docs=docs/index.html
 plugin.sidekick.haxe.HaXeSideKickPlugin.description=HaXe parser and code-completion plugin for use with the SideKick plugin.
 
-
 # dependencies
 plugin.sidekick.haxe.HaXeSideKickPlugin.depend.0=jdk 1.5
 plugin.sidekick.haxe.HaXeSideKickPlugin.depend.1=jedit 04.03.08.00
@@ -33,7 +32,10 @@ plugin.sidekick.haxe.HaXeSideKickPlugin.depend.2=plugin errorlist.ErrorListPlugi
 plugin.sidekick.haxe.HaXeSideKickPlugin.depend.3=plugin sidekick.SideKickPlugin 0.7.2
 plugin.sidekick.haxe.HaXeSideKickPlugin.depend.4=plugin ctags.sidekick.Plugin 1.2
 plugin.sidekick.haxe.HaXeSideKickPlugin.depend.5=plugin console.ConsolePlugin 4.4.1
+plugin.sidekick.haxe.HaXeSideKickPlugin.depend.6=plugin projectviewer.ProjectPlugin 3.0.0
 
+# external dependencies
+#plugin.sidekick.haxe.HaXeSideKickPlugin.jars=guava-r03.jar
 
 # Plugins menu
 plugin.antfarm.AntFarmPlugin.menu=antfarm \

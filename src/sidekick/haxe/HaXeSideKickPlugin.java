@@ -14,9 +14,9 @@ import org.gjt.sp.util.Log;
 
 import projectviewer.ProjectViewer;
 import projectviewer.vpt.VPTProject;
+import sidekick.haxe.JavaSystemCaller.StreamGobbler;
 import console.Console;
 import console.ConsolePlugin;
-import console.Output;
 import console.Shell;
 import console.SystemShell;
 import errorlist.ErrorList;
@@ -106,11 +106,11 @@ public class HaXeSideKickPlugin extends EditPlugin
         if (!isErrors()) {
             String launchCommand = jEdit.getProperty("plugin.sidekick.haxe.HaXeSideKickPlugin.launchCommand");
 
-            Output output = console.getOutput();
+//            Output output = console.getOutput();
             // Switch to the project root directory
-            shell.execute(console, getProjectRoot(), output);
+            shell.execute(console, getProjectRoot(), NullConsoleOutput.NULL);
             Log.log(Log.NOTICE, NAME, "launch command=" + launchCommand);
-            shell.execute(console, launchCommand, output);
+            shell.execute(console, launchCommand, NullConsoleOutput.NULL);
         } else {
             Log.log(Log.ERROR, NAME, "Cannot launch project due to errors");
         }
@@ -172,16 +172,60 @@ public class HaXeSideKickPlugin extends EditPlugin
         wm.addDockableWindow("console");
         Console console = (Console)wm.getDockable("console");
         console.setShell(shell);
-        Output output = console.getOutput();
+//        Output output = console.getOutput();
         // Switch to the project root directory
-        shell.execute(console, projectRootPath, NullConsoleOutput.NULL);
-        shell.execute(console, "haxe " + hxmlFile.getName(), output);
+        shell.execute(console, null, NullConsoleOutput.NULL, NullConsoleOutput.NULL, projectRootPath);
+        shell.execute(console, null, NullConsoleOutput.NULL, NullConsoleOutput.NULL, "haxe " + hxmlFile.getName());
+
+//        shell.execute(console, projectRootPath, NullConsoleOutput.NULL);
+//        shell.execute(console, "haxe " + hxmlFile.getName(), NullConsoleOutput.NULL);
         ((ErrorList)wm.getDockableWindow("error-list")).nextError();
         view.getTextArea().requestFocus();
     }
 
+
+    public static String executeShellCommand(final String command, String workingDirectory)
+    {
+        String output = "";
+        try
+        {
+            final Runtime rt = Runtime.getRuntime();
+
+            final Process proc = rt.exec(command, null, new File(workingDirectory));
+            // any error message?
+            final StreamGobbler errorGobbler = new
+                StreamGobbler(proc.getErrorStream(), "ERROR");
+
+            // any output?
+            final StreamGobbler outputGobbler = new
+                StreamGobbler(proc.getInputStream(), "OUTPUT");
+
+            // kick them off
+            errorGobbler.start();
+            outputGobbler.start();
+
+            // any error???
+            final int exitVal = proc.waitFor();
+            System.out.println("ExitValue: " + exitVal);
+
+            output = errorGobbler.getOutput();
+
+        } catch (final Throwable t)
+        {
+            t.printStackTrace();
+        }
+        return output;
+    }
+
     public static String getCodeCompletionXML (EditPane editPane, int caret)
     {
+        boolean autoReload = editPane.getBuffer().getAutoReload();
+        boolean autoReloadDialog = editPane.getBuffer().getAutoReloadDialog();
+        editPane.getBuffer().setAutoReload(false);
+        editPane.getBuffer().setAutoReloadDialog(false);
+        editPane.getBuffer().save(editPane.getView(), null);
+
+
         Log.log(Log.NOTICE, NAME, "getCodeCompletionXML, caret=" + caret);
         String projectRootPath = getProjectRoot();
         Log.log(Log.DEBUG, NAME, "projectRootPath=" + projectRootPath);
@@ -196,33 +240,44 @@ public class HaXeSideKickPlugin extends EditPlugin
         }
 
         String command = "haxe " + hxmlFile.getName() + " --display src/Morphogen.hx@" + caret;
-        Log.log(Log.NOTICE, NAME, "call=" + command);
-//        String output = JavaSystemCaller.systemCall(call, getProjectRoot());
-//        Log.log(Log.NOTICE, NAME, "output=" + output);
 
-        View view = jEdit.getActiveView();
-        DockableWindowManager wm = view.getDockableWindowManager();
-        Console console = (Console)wm.getDockable("console");
-        SystemShell shell = ConsolePlugin.getSystemShell();
-        ConsoleStringOutput output = new ConsoleStringOutput();
-//        console.run(shell, output, command);
-        shell.execute(console, projectRootPath, NullConsoleOutput.NULL);
-        shell.execute(console, command, output);
+        String output = HaXeSideKickPlugin.executeShellCommand(command, projectRootPath);
+        Log.log(Log.NOTICE, "getCodeCompletionXML", "output=" + output);
 
-        waitOnShell(console, shell);
+        editPane.getBuffer().setAutoReload(autoReload);
+        editPane.getBuffer().setAutoReloadDialog(autoReloadDialog);
+        return output;
 
-        Log.log(Log.NOTICE, NAME, "output=" + output.getStringOutput());
-        return output.getStringOutput();
-
-//        boolean isConsoleShowing = wm.isDockableWindowVisible("console");
-//        wm.addDockableWindow("console");
-//        console.setShell(shell);
-//        // Switch to the project root directory
-//        shell.execute(console, projectRootPath, output);
-//        shell.execute(console, "haxe " + hxmlFile.getName(), output);
-//        if (!isConsoleShowing) {
-//            wm.hideDockableWindow("console");
-//        }
+//
+//        Log.log(Log.NOTICE, NAME, "call=" + command);
+////        String output = JavaSystemCaller.systemCall(call, getProjectRoot());
+////        Log.log(Log.NOTICE, NAME, "output=" + output);
+//
+//        View view = jEdit.getActiveView();
+//        DockableWindowManager wm = view.getDockableWindowManager();
+//        Console console = (Console)wm.getDockable("console");
+//        SystemShell shell = ConsolePlugin.getSystemShell();
+//        ConsoleStringOutput output = new ConsoleStringOutput();
+////        console.run(shell, output, command);
+//        shell.execute(console, null, NullConsoleOutput.NULL, NullConsoleOutput.NULL, projectRootPath);
+////        shell.execute(console, projectRootPath, NullConsoleOutput.NULL);
+////        shell.execute(console, command, output);
+//        shell.execute(console, null, output, NullConsoleOutput.NULL, command);
+//
+//        waitOnShell(console, shell);
+//
+//        Log.log(Log.NOTICE, NAME, "output=" + output.getStringOutput());
+//        return output.getStringOutput();
+//
+////        boolean isConsoleShowing = wm.isDockableWindowVisible("console");
+////        wm.addDockableWindow("console");
+////        console.setShell(shell);
+////        // Switch to the project root directory
+////        shell.execute(console, projectRootPath, output);
+////        shell.execute(console, "haxe " + hxmlFile.getName(), output);
+////        if (!isConsoleShowing) {
+////            wm.hideDockableWindow("console");
+////        }
 
     }
 
