@@ -37,23 +37,14 @@ plugin.sidekick.haxe.HaXeSideKickPlugin.depend.6=plugin projectviewer.ProjectPlu
 # external dependencies
 #plugin.sidekick.haxe.HaXeSideKickPlugin.jars=guava-r03.jar
 
-# Plugins menu
-plugin.antfarm.AntFarmPlugin.menu=antfarm \
-            prompt-for-ant-build-file \
-            run-current-target \
-            run-last-build
-plugin.antfarm.AntFarmPlugin.menu.label=Ant Farm
-antfarm.label=Ant Farm
-prompt-for-ant-build-file.label=Load Ant Build Script
-run-current-target.label=Run Current Target
-run-last-build.label=Run Last Build
-
-# application menu items
+# Plugins menu items
 plugin.sidekick.haxe.HaXeSideKickPlugin.menu.label=HaXe
 plugin.sidekick.haxe.HaXeSideKickPlugin.menu=haxe-build-project \
-             haxe-launch-project
+             haxe-launch-project \
+             haxe-sidekick-complete
 haxe-build-project.label=Build current project
 haxe-launch-project.label=Run current project
+haxe-sidekick-complete=HaXe Code Complete
   
 # menu
 # plugin.sidekick.haxe.HaXeSideKickPlugin.menu=sidekick-tree 

@@ -1,15 +1,8 @@
 package sidekick.haxe;
 
-import javax.swing.JPanel;
-
 import org.gjt.sp.jedit.Buffer;
-import org.gjt.sp.jedit.EBComponent;
-import org.gjt.sp.jedit.EBMessage;
-import org.gjt.sp.jedit.EditBus;
 import org.gjt.sp.jedit.EditPane;
 import org.gjt.sp.jedit.View;
-import org.gjt.sp.jedit.jEdit;
-import org.gjt.sp.jedit.msg.BufferUpdate;
 import org.gjt.sp.util.Log;
 
 import sidekick.CodeCompletion;
@@ -20,33 +13,18 @@ import sidekick.SideKickParsedData;
 import sidekick.SideKickParser;
 import ctags.sidekick.Parser;
 import errorlist.DefaultErrorSource;
+import errorlist.ErrorSource;
 
 import javax.xml.parsers.*;
 import org.xml.sax.InputSource;
 import org.w3c.dom.*;
-
-import projectviewer.ProjectViewer;
-import projectviewer.vpt.VPTProject;
 
 import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 
 public class HaXeParser extends SideKickParser
-    implements EBComponent
 {
-
-    public void handleMessage (EBMessage message)
-    {
-        if (message instanceof BufferUpdate && ((BufferUpdate) message).getWhat() == BufferUpdate.SAVED) {
-            Buffer buffer = ((BufferUpdate) message).getBuffer();
-            VPTProject prj = ProjectViewer.getActiveProject(jEdit.getActiveView());
-            if (prj.isInProject(buffer.getPath())) {
-                HaXeSideKickPlugin.buildProject();
-            }
-        }
-    }
-
     public HaXeParser ()
     {
         super("haxe");
@@ -61,13 +39,13 @@ public class HaXeParser extends SideKickParser
     @Override
     public void activate (View view)
     {
-        EditBus.addToBus(this);
+        ErrorSource.registerErrorSource(HaXeSideKickPlugin._errorSource);
     }
 
     @Override
     public void deactivate (View view)
     {
-        EditBus.removeFromBus(this);
+        ErrorSource.unregisterErrorSource(HaXeSideKickPlugin._errorSource);
     }
 
     /**
@@ -76,7 +54,6 @@ public class HaXeParser extends SideKickParser
     public SideKickParsedData parse (Buffer buffer, DefaultErrorSource errorSource)
     {
         Log.log(Log.DEBUG, this, "parse request");
-        HaXeSideKickPlugin.buildProject();
         _ctagsParsed = _ctagsParser.parse(buffer, errorSource);
         return _ctagsParsed;
     }
@@ -85,15 +62,18 @@ public class HaXeParser extends SideKickParser
     public boolean canHandleBackspace ()
     {
         // TODO recall the compiler
-        return false;
+        return true;
     }
 
     @Override
     public SideKickCompletion complete (EditPane editPane, int caret)
     {
-        String completionXMLString = HaXeSideKickPlugin.getCodeCompletionXML(editPane, caret);
+        List<String> output = HaXeSideKickPlugin.getHaxeBuildOutput(editPane, caret, true);
+        String completionXMLString = output.get(1).trim();//HaXeSideKickPlugin.getCodeCompletionXML(editPane, caret);
 
-        if (completionXMLString == null || completionXMLString.trim().equals("")) {
+
+        if (completionXMLString == null || completionXMLString.equals("") ||
+                !completionXMLString.startsWith("<")) {
             return null;
         }
 
@@ -147,14 +127,6 @@ public class HaXeParser extends SideKickParser
         return "?";
     }
 
-// @Override
-// public SideKickCompletionPopup getCompletionPopup (View view, int caretPosition,
-// SideKickCompletion complete, boolean active)
-// {
-// // TODO Auto-generated method stub
-// return super.getCompletionPopup(view, caretPosition, complete, active);
-// }
-
     @Override
     public String getInstantCompletionTriggers ()
     {
@@ -162,16 +134,8 @@ public class HaXeParser extends SideKickParser
     }
 
     @Override
-    public JPanel getPanel ()
-    {
-        // TODO Auto-generated method stub
-        return super.getPanel();
-    }
-
-    @Override
     public boolean supportsCompletion ()
     {
         return true;
     }
-
 }

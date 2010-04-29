@@ -1,7 +1,7 @@
 <project name="HaXeSideKick" default="build" basedir=".">
 
 
-	<property name="build.support" value="lib/jeditBuildSupport" />
+	<property name="build.support" value="../build-support" />
 	<property file="${build.support}/build.properties" />
         <import file="${build.support}/plugin-build.xml" />
 	
@@ -42,6 +42,7 @@
                 <filename name="**/dockables.xml" />
                 <filename name="**/services.xml" />
                 <filename name="**/haxe.xml" />
+                <filename name="**/mode.xml" />
                 <filename name="**/*.props" />
                 <filename name="**/LICENSE" />
                 <filename name="**/README" />

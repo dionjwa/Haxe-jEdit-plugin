@@ -1,15 +1,21 @@
 package sidekick.haxe;
 
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.io.InputStream;
+import java.io.Writer;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 import org.gjt.sp.jedit.EditPane;
 import org.gjt.sp.jedit.EditPlugin;
-import org.gjt.sp.jedit.View;
 import org.gjt.sp.jedit.jEdit;
-import org.gjt.sp.jedit.gui.DockableWindowManager;
 import org.gjt.sp.util.Log;
 
 import projectviewer.ProjectViewer;
@@ -18,43 +24,22 @@ import sidekick.haxe.JavaSystemCaller.StreamGobbler;
 import console.Console;
 import console.ConsolePlugin;
 import console.Shell;
-import console.SystemShell;
-import errorlist.ErrorList;
 import errorlist.ErrorSource;
+import errorlist.DefaultErrorSource.DefaultError;
 
 public class HaXeSideKickPlugin extends EditPlugin
 {
+    static HaXeErrorSource _errorSource = new HaXeErrorSource();
     public final static String NAME = "sidekick.haxe";
     public final static String OPTION_PREFIX = "options.sidekick.haxe.";
+
     public final static String PROPERTY_PREFIX = "plugin.sidekick.haxe.";
 
-    public void start ()
+    public static void buildProject ()
     {
-        copyBundledProperties();
-// loadProperties();
-        registerServices();
-    }
-
-    public void stop ()
-    {
-// ErrorSource.unregisterErrorSource(_errorSource);
-    }
-
-//    public void handleMessage (EBMessage message)
-//    {
-//        // TODO Auto-generated method stub
-//
-//    }
-
-    private void copyBundledProperties ()
-    {
-        // Copy the haxe commando
-        String commandoResource = "commando.xml";
-        File outfile = new File(ConsolePlugin.getUserCommandDirectory(), "haxe.xml");
-        Log.log(Log.WARNING, this, "outfile=" + outfile.toString());
-
-        if (!outfile.exists()) {
-            copyToFile(getClass().getClassLoader().getResourceAsStream(commandoResource), outfile);
+        List<String> output = getHaxeBuildOutput(null, 0, false);
+        if (output != null && output.size() > 0) {
+            handleBuildErrors(output.get(1), _errorSource, getProjectRoot());
         }
     }
 
@@ -88,32 +73,182 @@ public class HaXeSideKickPlugin extends EditPlugin
         }
     }
 
+    public static List<String> executeShellCommand (final String command, String workingDirectory)
+    {
+        String output = "";
+        String errors = "";
+
+        try {
+            final Runtime rt = Runtime.getRuntime();
+
+            final Process proc = rt.exec(command, null, new File(workingDirectory));
+            // any error message?
+            final StreamGobbler errorGobbler = new StreamGobbler(proc.getErrorStream(), "ERROR");
+
+            // any output?
+            final StreamGobbler outputGobbler = new StreamGobbler(proc.getInputStream(), "OUTPUT");
+
+            // kick them off
+            errorGobbler.start();
+            outputGobbler.start();
+
+            // any error???
+            final int exitVal = proc.waitFor();
+            System.out.println("ExitValue: " + exitVal);
+
+            output = outputGobbler.getOutput();
+            errors = errorGobbler.getOutput();
+
+        } catch (final Throwable t) {
+            t.printStackTrace();
+        }
+
+        List<String> out = new ArrayList<String>(2);
+        out.add(output);
+        out.add(errors);
+        return out;
+    }
+
+    // Get the first *.hxml file we find
+    public static File getBuildFile ()
+    {
+        String projectRootPath = getProjectRoot();
+        if (projectRootPath == null) {
+            return null;
+        }
+        // Get the first *.hxml file we find
+        for (String filename : new File(projectRootPath).list()) {
+            if (filename.endsWith(".hxml")) {
+                return new File(projectRootPath, filename);
+            }
+        }
+
+        return null;
+    }
+
+    public static List<String> getHaxeBuildOutput (EditPane editPane, int caret,
+        boolean getCodeCompletion)
+    {
+        if (!isProjectSelected()) {
+            Log.log(Log.WARNING, NAME, "buildProject but projectRootPath is null");
+            return null;
+        }
+
+        if (editPane != null) {
+            editPane.getBuffer().save(editPane.getView(), null, false, true);
+        }
+
+        Log.log(Log.NOTICE, NAME, "getCodeCompletionXML, caret=" + caret);
+        String projectRootPath = getProjectRoot();
+
+        Log.log(Log.DEBUG, NAME, "projectRootPath=" + projectRootPath);
+
+        File hxmlFile = getBuildFile();
+
+        Log.log(Log.DEBUG, NAME, "hxmlFileName=" + hxmlFile);
+
+        if (hxmlFile == null) {
+            Log.log(Log.ERROR, NAME, "buildProject, but no *.hxml at the project root.");
+            return null;
+        }
+
+        String command = "haxe " + hxmlFile.getName();
+        if (getCodeCompletion) {
+            command += " --display src/Morphogen.hx@" + caret;
+        }
+
+        List<String> out = HaXeSideKickPlugin.executeShellCommand(command, projectRootPath);
+        String output = out.get(0);
+        String errorOutput = out.get(1);
+        Log.log(Log.NOTICE, "getHaxeBuildOutput", "output=" + output + ", errors=" + errorOutput);
+        return out;
+    }
+
+    public static String getProjectRoot ()
+    {
+        if (!isProjectSelected()) {
+            return null;
+        }
+        VPTProject prj = ProjectViewer.getActiveProject(jEdit.getActiveView());
+        return prj == null ? null : prj.getRootPath();
+    }
+
+    public static void handleBuildErrors (String errorOutput, HaXeErrorSource errorSource,
+        String projectRootPath)
+    {
+        Log.log(Log.NOTICE, "handleBuildErrors", "errorOutput=" + errorOutput);
+
+        if (errorSource != null) {
+            errorSource.clear();
+
+            String[] errorLines = errorOutput.split("\\n");
+            for (String errorLine : errorLines) {
+                if (errorLine.matches("((?:\\w:)?[^:]+?):(\\d+):\\s*(.+)")) {
+                    trace("Error line match=" + errorLine);
+                    String[] tokens = errorLine.split(":");
+                    String fileName = projectRootPath + File.separatorChar + tokens[0];
+                    trace("fileName=" + fileName);
+                    int line = Integer.parseInt(tokens[1]) - 1;
+                    String comment = tokens[3];
+                    DefaultError error = new DefaultError(errorSource, ErrorSource.ERROR,
+                        fileName, line, 0, 0, comment);
+                    errorSource.addError(error);
+                }
+            }
+        }
+    }
+
+    protected static boolean isErrors ()
+    {
+        for (ErrorSource src : ErrorSource.getErrorSources()) {
+            if (src instanceof errorlist.DefaultErrorSource && src.getErrorCount() > 0) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public static boolean isProjectSelected ()
+    {
+        if (jEdit.getPlugin("projectviewer.ProjectPlugin", false) == null) {
+            Log.log(Log.ERROR, NAME, "projectviewer.ProjectPlugin not available");
+            return false;
+        }
+        return ProjectViewer.getActiveProject(jEdit.getActiveView()) != null;
+    }
+
     public static void launchProject ()
     {
-        Log.log(Log.NOTICE, NAME, "launchProject");
-        Log.log(Log.NOTICE, NAME, "building");
-        buildProject();
-        Log.log(Log.NOTICE, NAME, "finish building");
-        Log.log(Log.NOTICE, NAME, "isErrors()=" + isErrors());
-        SystemShell shell = ConsolePlugin.getSystemShell();
+// Log.log(Log.NOTICE, NAME, "launchProject");
+// Log.log(Log.NOTICE, NAME, "building");
+// buildProject();
+// Log.log(Log.NOTICE, NAME, "finish building");
+// Log.log(Log.NOTICE, NAME, "isErrors()=" + isErrors());
+// SystemShell shell = ConsolePlugin.getSystemShell();
+//
+// DockableWindowManager wm = jEdit.getActiveView().getDockableWindowManager();
+// Console console = (Console)wm.getDockable("console");
+// console.setShell(shell);
+//
+// waitOnShell(console, shell);
+//
+// if (!isErrors()) {
+// String launchCommand =
+    // jEdit.getProperty("plugin.sidekick.haxe.HaXeSideKickPlugin.launchCommand");
+//
+// // Output output = console.getOutput();
+// // Switch to the project root directory
+// shell.execute(console, getProjectRoot(), NullConsoleOutput.NULL);
+// Log.log(Log.NOTICE, NAME, "launch command=" + launchCommand);
+// shell.execute(console, launchCommand, NullConsoleOutput.NULL);
+// } else {
+// Log.log(Log.ERROR, NAME, "Cannot launch project due to errors");
+// }
+    }
 
-        DockableWindowManager wm = jEdit.getActiveView().getDockableWindowManager();
-        Console console = (Console)wm.getDockable("console");
-        console.setShell(shell);
-
-        waitOnShell(console, shell);
-
-        if (!isErrors()) {
-            String launchCommand = jEdit.getProperty("plugin.sidekick.haxe.HaXeSideKickPlugin.launchCommand");
-
-//            Output output = console.getOutput();
-            // Switch to the project root directory
-            shell.execute(console, getProjectRoot(), NullConsoleOutput.NULL);
-            Log.log(Log.NOTICE, NAME, "launch command=" + launchCommand);
-            shell.execute(console, launchCommand, NullConsoleOutput.NULL);
-        } else {
-            Log.log(Log.ERROR, NAME, "Cannot launch project due to errors");
-        }
+    public static void trace (String line)
+    {
+        Log.log(Log.DEBUG, NAME, line);
     }
 
     protected static void waitOnShell (Console console, Shell shell)
@@ -128,169 +263,88 @@ public class HaXeSideKickPlugin extends EditPlugin
         }
     }
 
-    // Get the first *.hxml file we find
-    public static File getBuildFile ()
+    private void copyBundledProperties ()
     {
-        String projectRootPath = getProjectRoot();
-        // Get the first *.hxml file we find
-        for (String filename : new File(projectRootPath).list()) {
-            if (filename.endsWith(".hxml")) {
-                return new File(projectRootPath, filename);
+        // Copy the haxe commando if it doesn't exist
+        String commandoResource = "commando.xml";
+        File outfile = new File(ConsolePlugin.getUserCommandDirectory(), "haxe.xml");
+        if (!outfile.exists()) {
+            copyToFile(getClass().getClassLoader().getResourceAsStream(commandoResource), outfile);
+        }
+
+        // If there's no haxe mode, add the mode from the jar and edit the mode catalog
+        File haxeModeApp = new File(jEdit.getJEditHome() + File.separatorChar + "modes"
+            + File.separatorChar + "haxe.xml");
+        File haxeModeSettings = new File(jEdit.getSettingsDirectory() + File.separatorChar
+            + "modes" + File.separatorChar + "haxe.xml");
+        Log.log(Log.NOTICE, this, "haxeModeApp=" + haxeModeApp.exists());
+        if (!haxeModeApp.exists()) {// No system haxe mode
+            Log.log(Log.NOTICE, this, "haxeModeSettings=" + haxeModeSettings.exists());
+            if (!haxeModeSettings.exists()) {
+
+                new File(jEdit.getSettingsDirectory() + File.separatorChar + "modes").mkdirs();
+                // No local haxe mode, so copy the "mode.xml" from the jar to "modes/haxe.xml"
+                String modeResource = "mode.xml";
+                Log.log(Log.NOTICE, this, "Copying mode.xml to modes/haxe.xml");
+                copyToFile(getClass().getClassLoader().getResourceAsStream(modeResource),
+                    haxeModeSettings);
+
+                File catalogFile = new File(jEdit.getSettingsDirectory() + File.separatorChar
+                    + "modes" + File.separatorChar + "catalog");
+                StringBuffer contents = new StringBuffer();
+                if (!catalogFile.exists()) {
+                    // Write a catalog with just the haxe mode entry.
+                    contents.append("<?xml version=\"1.0\"?>\n<!DOCTYPE MODES SYSTEM \"catalog.dtd\">\n<MODES>\n<MODE NAME=\"haxe\" FILE=\"haxe.xml\" FILE_NAME_GLOB=\"*.hx\" />\n</MODES>");
+                } else {
+
+                    // Now we have to edit the catalog
+                    // On the line before the closing tag, insert the haxe entry
+                    try {
+                        BufferedReader input = new BufferedReader(new FileReader(catalogFile));
+                        try {
+                            String line = null; // not declared within while loop
+                            while ((line = input.readLine()) != null) {
+                                if (line.indexOf("</MODES>") > -1) {
+                                    contents.append("<MODE NAME=\"haxe\" FILE=\"haxe.xml\" FILE_NAME_GLOB=\"*.hx\" />\n");
+                                }
+                                contents.append(line + "\n");
+                            }
+                        } finally {
+                            input.close();
+                        }
+                    } catch (IOException ex) {
+                        ex.printStackTrace();
+                    }
+                }
+                // Now write the file
+
+                Log.log(Log.ERROR, this, "TO write:" + contents.toString());
+                try {
+                    Writer output = new BufferedWriter(new FileWriter(catalogFile));
+                    try {
+                        output.write(contents.toString());
+                    } finally {
+                        output.close();
+                    }
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                try {
+                    Thread.sleep(100L);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                jEdit.reloadModes();
             }
         }
-
-        return null;
     }
 
-    public static String getProjectRoot ()
+    public void start ()
     {
-        if (jEdit.getPlugin("projectviewer.ProjectPlugin", false) == null) {
-            Log.log(Log.ERROR, NAME, "projectviewer.ProjectPlugin not available");
-            return null;
-        }
-        VPTProject prj = ProjectViewer.getActiveProject(jEdit.getActiveView());
-        return prj.getRootPath();
+        copyBundledProperties();
     }
 
-    public static void buildProject ()
-    {
-        String projectRootPath = getProjectRoot();
-        Log.log(Log.DEBUG, NAME, "projectRootPath=" + projectRootPath);
-
-        File hxmlFile = getBuildFile();
-
-        Log.log(Log.DEBUG, NAME, "hxmlFileName=" + hxmlFile);
-
-        if (hxmlFile == null) {
-            Log.log(Log.ERROR, NAME, "buildProject, but no *.hxml at the project root.");
-            return;
-        }
-
-        View view = jEdit.getActiveView();
-        DockableWindowManager wm = view.getDockableWindowManager();
-        SystemShell shell = ConsolePlugin.getSystemShell();
-        wm.addDockableWindow("console");
-        Console console = (Console)wm.getDockable("console");
-        console.setShell(shell);
-//        Output output = console.getOutput();
-        // Switch to the project root directory
-        shell.execute(console, null, NullConsoleOutput.NULL, NullConsoleOutput.NULL, projectRootPath);
-        shell.execute(console, null, NullConsoleOutput.NULL, NullConsoleOutput.NULL, "haxe " + hxmlFile.getName());
-
-//        shell.execute(console, projectRootPath, NullConsoleOutput.NULL);
-//        shell.execute(console, "haxe " + hxmlFile.getName(), NullConsoleOutput.NULL);
-        ((ErrorList)wm.getDockableWindow("error-list")).nextError();
-        view.getTextArea().requestFocus();
-    }
-
-
-    public static String executeShellCommand(final String command, String workingDirectory)
-    {
-        String output = "";
-        try
-        {
-            final Runtime rt = Runtime.getRuntime();
-
-            final Process proc = rt.exec(command, null, new File(workingDirectory));
-            // any error message?
-            final StreamGobbler errorGobbler = new
-                StreamGobbler(proc.getErrorStream(), "ERROR");
-
-            // any output?
-            final StreamGobbler outputGobbler = new
-                StreamGobbler(proc.getInputStream(), "OUTPUT");
-
-            // kick them off
-            errorGobbler.start();
-            outputGobbler.start();
-
-            // any error???
-            final int exitVal = proc.waitFor();
-            System.out.println("ExitValue: " + exitVal);
-
-            output = errorGobbler.getOutput();
-
-        } catch (final Throwable t)
-        {
-            t.printStackTrace();
-        }
-        return output;
-    }
-
-    public static String getCodeCompletionXML (EditPane editPane, int caret)
-    {
-        boolean autoReload = editPane.getBuffer().getAutoReload();
-        boolean autoReloadDialog = editPane.getBuffer().getAutoReloadDialog();
-        editPane.getBuffer().setAutoReload(false);
-        editPane.getBuffer().setAutoReloadDialog(false);
-        editPane.getBuffer().save(editPane.getView(), null);
-
-
-        Log.log(Log.NOTICE, NAME, "getCodeCompletionXML, caret=" + caret);
-        String projectRootPath = getProjectRoot();
-        Log.log(Log.DEBUG, NAME, "projectRootPath=" + projectRootPath);
-
-        File hxmlFile = getBuildFile();
-
-        Log.log(Log.DEBUG, NAME, "hxmlFileName=" + hxmlFile);
-
-        if (hxmlFile == null) {
-            Log.log(Log.ERROR, NAME, "buildProject, but no *.hxml at the project root.");
-            return null;
-        }
-
-        String command = "haxe " + hxmlFile.getName() + " --display src/Morphogen.hx@" + caret;
-
-        String output = HaXeSideKickPlugin.executeShellCommand(command, projectRootPath);
-        Log.log(Log.NOTICE, "getCodeCompletionXML", "output=" + output);
-
-        editPane.getBuffer().setAutoReload(autoReload);
-        editPane.getBuffer().setAutoReloadDialog(autoReloadDialog);
-        return output;
-
-//
-//        Log.log(Log.NOTICE, NAME, "call=" + command);
-////        String output = JavaSystemCaller.systemCall(call, getProjectRoot());
-////        Log.log(Log.NOTICE, NAME, "output=" + output);
-//
-//        View view = jEdit.getActiveView();
-//        DockableWindowManager wm = view.getDockableWindowManager();
-//        Console console = (Console)wm.getDockable("console");
-//        SystemShell shell = ConsolePlugin.getSystemShell();
-//        ConsoleStringOutput output = new ConsoleStringOutput();
-////        console.run(shell, output, command);
-//        shell.execute(console, null, NullConsoleOutput.NULL, NullConsoleOutput.NULL, projectRootPath);
-////        shell.execute(console, projectRootPath, NullConsoleOutput.NULL);
-////        shell.execute(console, command, output);
-//        shell.execute(console, null, output, NullConsoleOutput.NULL, command);
-//
-//        waitOnShell(console, shell);
-//
-//        Log.log(Log.NOTICE, NAME, "output=" + output.getStringOutput());
-//        return output.getStringOutput();
-//
-////        boolean isConsoleShowing = wm.isDockableWindowVisible("console");
-////        wm.addDockableWindow("console");
-////        console.setShell(shell);
-////        // Switch to the project root directory
-////        shell.execute(console, projectRootPath, output);
-////        shell.execute(console, "haxe " + hxmlFile.getName(), output);
-////        if (!isConsoleShowing) {
-////            wm.hideDockableWindow("console");
-////        }
-
-    }
-
-    protected static boolean isErrors ()
-    {
-        for (ErrorSource src : ErrorSource.getErrorSources()) {
-            if (src instanceof errorlist.DefaultErrorSource && src.getErrorCount() > 0) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    public static void registerServices ()
+    public void stop ()
     {}
+
 }
