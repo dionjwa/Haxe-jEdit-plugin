@@ -2,7 +2,6 @@
 
 
 	<property name="build.support" value="../build-support" />
-	<property file="${build.support}/build.properties" />
         <import file="${build.support}/plugin-build.xml" />
 	
 	
