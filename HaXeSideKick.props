@@ -38,10 +38,11 @@ plugin.sidekick.haxe.HaXeSideKickPlugin.depend.5=plugin projectviewer.ProjectPlu
 plugin.sidekick.haxe.HaXeSideKickPlugin.menu.label=HaXe
 plugin.sidekick.haxe.HaXeSideKickPlugin.menu=haxe-build-project \
              haxe-launch-project \
-             haxe-sidekick-complete
+             
+#haxe-sidekick-complete
 haxe-build-project.label=Build current project
 haxe-launch-project.label=Run current project
-haxe-sidekick-complete=Code Complete
+# haxe-sidekick-complete=Code Complete
   
 # menu
 #plugin.sidekick.haxe.HaXeSideKickPlugin.menu=sidekick-tree 
