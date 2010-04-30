@@ -4,12 +4,15 @@ import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.swing.JPanel;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 
 import org.gjt.sp.jedit.Buffer;
+import org.gjt.sp.jedit.EBMessage;
 import org.gjt.sp.jedit.EditPane;
 import org.gjt.sp.jedit.View;
+import org.gjt.sp.jedit.msg.BufferUpdate;
 import org.gjt.sp.util.Log;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -29,6 +32,14 @@ import errorlist.ErrorSource;
 
 public class HaXeParser extends SideKickParser
 {
+    public void handleMessage (EBMessage message)
+    {
+        if (message instanceof BufferUpdate && ((BufferUpdate)message).getWhat() == BufferUpdate.SAVED) {
+            HaXeSideKickPlugin.trace("Building due to save.");
+            HaXeSideKickPlugin.buildProject(((BufferUpdate)message).getView().getEditPane());
+        }
+    }
+
     public HaXeParser ()
     {
         super("haxe");
@@ -118,6 +129,12 @@ public class HaXeParser extends SideKickParser
     public void deactivate (View view)
     {
         ErrorSource.unregisterErrorSource(HaXeSideKickPlugin._errorSource);
+    }
+
+    @Override
+    public JPanel getPanel()
+    {
+        return _ctagsParser.getPanel();
     }
 
     @Override

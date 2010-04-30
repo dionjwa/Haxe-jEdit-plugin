@@ -1,4 +1,4 @@
-<project name="HaXeSideKick" default="build" basedir=".">
+<project name="HaXePlugin" default="build" basedir=".">
 
 
 	<property name="build.support" value="../build-support" />

@@ -37,15 +37,21 @@ public class HaXeSideKickPlugin extends EditPlugin
 
     public static boolean buildProject ()
     {
-        if (getProjectRoot() == null || getBuildFile(getProjectRoot()) == null) {
+        return buildProject(null);
+    }
+
+    public static boolean buildProject (EditPane editpane)
+    {
+        String projectRoot = getProjectRoot(editpane);
+        if (projectRoot == null || getBuildFile(projectRoot) == null) {
             String msg = "No project opened with *.hxml at the project root.";
             Log.log(Log.ERROR, NAME, msg);
             jEdit.getFirstView().getStatus().setMessage(msg);
             return false;
         }
-        List<String> output = getHaxeBuildOutput(null, 0, false);
+        List<String> output = getHaxeBuildOutput(editpane, 0, false);
         if (output != null && output.size() > 0) {
-            handleBuildErrors(output.get(1), _errorSource, getProjectRoot());
+            handleBuildErrors(output.get(1), _errorSource, projectRoot);
         }
         return true;
     }
