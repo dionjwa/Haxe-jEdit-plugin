@@ -157,7 +157,7 @@ public class HaXeSideKickPlugin extends EditPlugin
             return null;
         }
 
-        String command = "haxe " + hxmlFile.getName();
+        String command = jEdit.getProperty("options.haxe.compilerLocation") + " " + hxmlFile.getName();
         if (getCodeCompletion) {
             String path = editPane.getBuffer().getPath();
             path = path.substring(projectRootPath.length());
@@ -174,7 +174,8 @@ public class HaXeSideKickPlugin extends EditPlugin
         List<String> out = HaXeSideKickPlugin.executeShellCommand(command, projectRootPath);
         String output = out.get(0);
         String errorOutput = out.get(1);
-        Log.log(Log.NOTICE, "getHaxeBuildOutput", "output=" + output + ", errors=" + errorOutput);
+        Log.log(Log.MESSAGE, "command=" + command + "\ngetHaxeBuildOutput", "output=" + output +
+            ", errors=" + errorOutput);
         return out;
     }
 
@@ -251,7 +252,7 @@ public class HaXeSideKickPlugin extends EditPlugin
         }
 
         if (buildProject() && !isErrors()) {
-            String launchCommand = jEdit.getProperty("plugin.sidekick.haxe.HaXeSideKickPlugin.launchCommand");
+            String launchCommand = jEdit.getProperty("options.haxe.launchCommand");
 
             // Output output = console.getOutput();
             // Switch to the project root directory
