@@ -1,6 +1,5 @@
 package sidekick.haxe;
 
-import javax.swing.JCheckBox;
 import javax.swing.JTextField;
 
 import org.gjt.sp.jedit.AbstractOptionPane;
@@ -8,7 +7,7 @@ import org.gjt.sp.jedit.jEdit;
 
 public class HaXeOptionPane extends AbstractOptionPane
 {
-    private JCheckBox buildOnSave;
+//    private JCheckBox buildOnSave;
     private JTextField compilerLocation;
     private JTextField launchCommand;
 
@@ -19,9 +18,9 @@ public class HaXeOptionPane extends AbstractOptionPane
 
     public void _init ()
     {
-        buildOnSave = new JCheckBox(jEdit.getProperty("options.haxe.buildOnSave.label"),
-            jEdit.getBooleanProperty("options.haxe.buildOnSave", true));
-        addComponent(buildOnSave);
+//        buildOnSave = new JCheckBox(jEdit.getProperty("options.haxe.buildOnSave.label"),
+//            jEdit.getBooleanProperty("options.haxe.buildOnSave", true));
+//        addComponent(buildOnSave);
 
         compilerLocation = new JTextField(jEdit.getProperty("options.haxe.compilerLocation"));
         addComponent(jEdit.getProperty("options.haxe.compilerLocation.label"), compilerLocation);
@@ -39,7 +38,7 @@ public class HaXeOptionPane extends AbstractOptionPane
     {
         jEdit.setProperty("options.haxe.compilerLocation", compilerLocation.getText());
         jEdit.setProperty("options.haxe.launchCommand", launchCommand.getText());
-        jEdit.setBooleanProperty("options.haxe.buildOnSave", buildOnSave.isSelected());
+//        jEdit.setBooleanProperty("options.haxe.buildOnSave", buildOnSave.isSelected());
     }
 
 }

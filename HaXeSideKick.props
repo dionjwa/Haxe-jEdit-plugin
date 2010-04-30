@@ -66,8 +66,8 @@ options.haxe.launchCommand=/usr/bin/open deploy/out.swf
 options.haxe.launchCommand.label=Launch output command
 options.haxe.compilerLocation=/usr/bin/haxe
 options.haxe.compilerLocation.label=Haxe compiler location
-options.haxe.buildOnSave=true
-options.haxe.buildOnSave.label=Build on file save
+# options.haxe.buildOnSave=true
+# options.haxe.buildOnSave.label=Build on file save
 
 #Apparently I should set this to true, even though I don't write any data there
 plugin.sidekick.haxe.HaXeSideKickPlugin.usePluginHome=true
