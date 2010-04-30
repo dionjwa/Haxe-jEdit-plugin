@@ -33,8 +33,6 @@ plugin.sidekick.haxe.HaXeSideKickPlugin.depend.3=plugin sidekick.SideKickPlugin 
 plugin.sidekick.haxe.HaXeSideKickPlugin.depend.4=plugin ctags.sidekick.Plugin 1.2
 plugin.sidekick.haxe.HaXeSideKickPlugin.depend.5=plugin projectviewer.ProjectPlugin 3.0.0
 
-# external dependencies
-#plugin.sidekick.haxe.HaXeSideKickPlugin.jars=guava-r03.jar
 
 # Plugins menu items
 plugin.sidekick.haxe.HaXeSideKickPlugin.menu.label=HaXe
@@ -48,7 +46,6 @@ haxe-sidekick-complete=Code Complete
 # menu
 #plugin.sidekick.haxe.HaXeSideKickPlugin.menu=sidekick-tree 
 
-
 # registration with SideKick as a mode parser
 sidekick.parser.haxe.label=haxe
 mode.haxe.sidekick.parser=haxe
@@ -59,52 +56,15 @@ mode.haxe.sidekick.parser=haxe
 #commando.haxe.buildfile=build.hxml
 
 # Option panel
-
-
 plugin.sidekick.haxe.HaXeSideKickPlugin.option-pane=haxe
 options.haxe.label=HaXe
 options.haxe.code=new sidekick.haxe.HaXeOptionPane();
 
-options.actionscript-sidekick.guess_method_args_label=Guess method arguments from buffer variables
-options.actionscript-sidekick.guess_method_args=true
-options.actionscript-sidekick.search_path_label=Enter paths (separated by either semi-colons ';' or new lines) to folders containing either actionscript source files or html docs.  The html docs for the base classes can be found at http://livedocs.adobe.com/flash/9.0/ActionScriptLangRefV3.zip
-options.actionscript-sidekick.search_path=/export/flex_sdk_3.0/ActionScriptLangRefV3
-
-
-#-----------------------
-# option pane settings
-#-----------------------
-plugin.sidekick.haxe.HaXeSideKickPlugin.option-pane=haxe
-options.haxe.label=HaXe
-options.haxe.code=new sidekick.haxe.HaXeOptionPane();
-
-# Option Pane labels
-#options.haxe-sidekick-options.label=HaXe SideKick
-options.haxe.launchCommand.label=Launch output command
-options.haxe.compilerLocation.label=Haxe compiler location
-# options.code2html.show-gutter=Show gutter
-# options.code2html.wrap=Wrap at column (0 for no wrapping):
-
-# Option Pane values
-# OS and output specific launch command.  It's to complicated to try to parse this for each OS and Haxe output type.
+# Option Pane values and labels
 options.haxe.launchCommand=/usr/bin/open deploy/out.swf
+options.haxe.launchCommand.label=Launch output command
 options.haxe.compilerLocation=/usr/bin/haxe
-# code2html.use-css=true
-# code2html.show-gutter=true
-# code2html.wrap=0
-
-
-# plugin.sidekick.haxe.HaXeSideKickPlugin.option-pane=haxe-sidekick-options
-# options.haxe-sidekick-options.label=HaXe SideKick
-# options.haxe-sidekick-options.code=new sidekick.haxe.HaXeOptionPane();
-
-# options.haxe-sidekick.guess_method_args_label=Guess method arguments from buffer variables
-# options.haxe-sidekick.guess_method_args=true
-# options.haxe-sidekick.search_path_label=Enter paths (separated by either semi-colons ';' or new lines) to folders containing either haxe source files or html docs.  The html docs for the base classes can be found at http://livedocs.adobe.com/flash/9.0/ActionScriptLangRefV3.zip
-# options.haxe-sidekick.search_path=/export/flex_sdk_3.0/ActionScriptLangRefV3
-
-
-#
+options.haxe.compilerLocation.label=Haxe compiler location
 
 #Apparently I should set this to true, even though I don't write any data there
 plugin.sidekick.haxe.HaXeSideKickPlugin.usePluginHome=true
