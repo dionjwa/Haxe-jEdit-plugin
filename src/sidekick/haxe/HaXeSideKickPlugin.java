@@ -38,7 +38,9 @@ public class HaXeSideKickPlugin extends EditPlugin
     public static boolean buildProject ()
     {
         if (getProjectRoot() == null || getBuildFile(getProjectRoot()) == null) {
-            Log.log(Log.ERROR, NAME, "No project opened with *.hxml at the project root.");
+            String msg = "No project opened with *.hxml at the project root.";
+            Log.log(Log.ERROR, NAME, msg);
+            jEdit.getFirstView().getStatus().setMessage(msg);
             return false;
         }
         List<String> output = getHaxeBuildOutput(null, 0, false);
@@ -261,7 +263,9 @@ public class HaXeSideKickPlugin extends EditPlugin
 //            Log.log(Log.NOTICE, NAME, "launch command=" + launchCommand);
 //            shell.execute(console, launchCommand, NullConsoleOutput.NULL);
         } else {
-            Log.log(Log.MESSAGE, NAME, "Cannot launch project due to errors or failed build");
+            String msg = "Cannot launch project due to errors or failed build";
+            Log.log(Log.MESSAGE, NAME, msg);
+            jEdit.getFirstView().getStatus().setMessage(msg);
         }
     }
 
