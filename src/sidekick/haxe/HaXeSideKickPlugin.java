@@ -18,6 +18,7 @@ import org.gjt.sp.jedit.EditPlugin;
 import org.gjt.sp.jedit.jEdit;
 import org.gjt.sp.util.Log;
 
+import projectviewer.ProjectManager;
 import projectviewer.ProjectViewer;
 import projectviewer.vpt.VPTProject;
 import sidekick.haxe.JavaSystemCaller.StreamGobbler;
@@ -32,15 +33,19 @@ public class HaXeSideKickPlugin extends EditPlugin
     static HaXeErrorSource _errorSource = new HaXeErrorSource();
     public final static String NAME = "sidekick.haxe";
     public final static String OPTION_PREFIX = "options.sidekick.haxe.";
-
     public final static String PROPERTY_PREFIX = "plugin.sidekick.haxe.";
 
-    public static void buildProject ()
+    public static boolean buildProject ()
     {
+        if (getProjectRoot() == null || getBuildFile(getProjectRoot()) == null) {
+            Log.log(Log.ERROR, NAME, "No project opened with *.hxml at the project root.");
+            return false;
+        }
         List<String> output = getHaxeBuildOutput(null, 0, false);
         if (output != null && output.size() > 0) {
             handleBuildErrors(output.get(1), _errorSource, getProjectRoot());
         }
+        return true;
     }
 
     /**
@@ -110,40 +115,40 @@ public class HaXeSideKickPlugin extends EditPlugin
     }
 
     // Get the first *.hxml file we find
-    public static File getBuildFile ()
+    public static File getBuildFile (String projectRootPath)
     {
-        String projectRootPath = getProjectRoot();
-        if (projectRootPath == null) {
-            return null;
-        }
         // Get the first *.hxml file we find
         for (String filename : new File(projectRootPath).list()) {
             if (filename.endsWith(".hxml")) {
                 return new File(projectRootPath, filename);
             }
         }
-
         return null;
     }
 
     public static List<String> getHaxeBuildOutput (EditPane editPane, int caret,
         boolean getCodeCompletion)
     {
-        if (!isProjectSelected()) {
-            Log.log(Log.WARNING, NAME, "buildProject but projectRootPath is null");
+        if (!isProjectSelected() && editPane == null) {
+            Log.log(Log.WARNING, NAME, "buildProject but projectRootPath is null && editPane == null");
             return null;
         }
 
-        if (editPane != null) {
-            editPane.getBuffer().save(editPane.getView(), null, false, true);
+        if (getCodeCompletion && editPane == null) {
+            Log.log(Log.ERROR, NAME, "getHaxeBuildOutput, getCodeCompletion=" + getCodeCompletion + ", editPane == null");
+            return null;
         }
 
-        Log.log(Log.NOTICE, NAME, "getCodeCompletionXML, caret=" + caret);
-        String projectRootPath = getProjectRoot();
+        Log.log(Log.NOTICE, NAME, "getHaxeBuildOutput, caret=" + caret);
+        String projectRootPath = getProjectRoot(editPane);
 
         Log.log(Log.DEBUG, NAME, "projectRootPath=" + projectRootPath);
 
-        File hxmlFile = getBuildFile();
+        if (projectRootPath == null) {
+            Log.log(Log.ERROR, NAME, "getProjectRoot(editPane) returns null");
+            return null;
+        }
+        File hxmlFile = getBuildFile(projectRootPath);
 
         Log.log(Log.DEBUG, NAME, "hxmlFileName=" + hxmlFile);
 
@@ -154,9 +159,18 @@ public class HaXeSideKickPlugin extends EditPlugin
 
         String command = "haxe " + hxmlFile.getName();
         if (getCodeCompletion) {
-            command += " --display src/Morphogen.hx@" + caret;
+            String path = editPane.getBuffer().getPath();
+            path = path.substring(projectRootPath.length());
+            if (path.startsWith(File.separator)) {
+                path = path.substring(1);
+            }
+            command += " --display " + path + "@" + caret;
+            Log.log(Log.NOTICE, NAME, "command=" + command);
         }
 
+        if (editPane != null) {
+            editPane.getBuffer().save(editPane.getView(), null, false, true);
+        }
         List<String> out = HaXeSideKickPlugin.executeShellCommand(command, projectRootPath);
         String output = out.get(0);
         String errorOutput = out.get(1);
@@ -173,21 +187,32 @@ public class HaXeSideKickPlugin extends EditPlugin
         return prj == null ? null : prj.getRootPath();
     }
 
+    public static String getProjectRoot (EditPane editPane)
+    {
+        if (editPane == null) {
+            return getProjectRoot();
+        }
+        ProjectManager pm = ProjectManager.getInstance();
+        String path = editPane.getBuffer().getPath();
+        for (VPTProject prj : pm.getProjects()) {
+            if (prj.isInProject(path)) {
+                return prj.getRootPath();
+            }
+        }
+        return null;
+    }
+
     public static void handleBuildErrors (String errorOutput, HaXeErrorSource errorSource,
         String projectRootPath)
     {
-        Log.log(Log.NOTICE, "handleBuildErrors", "errorOutput=" + errorOutput);
-
         if (errorSource != null) {
             errorSource.clear();
 
             String[] errorLines = errorOutput.split("\\n");
             for (String errorLine : errorLines) {
                 if (errorLine.matches("((?:\\w:)?[^:]+?):(\\d+):\\s*(.+)")) {
-                    trace("Error line match=" + errorLine);
                     String[] tokens = errorLine.split(":");
                     String fileName = projectRootPath + File.separatorChar + tokens[0];
-                    trace("fileName=" + fileName);
                     int line = Integer.parseInt(tokens[1]) - 1;
                     String comment = tokens[3];
                     DefaultError error = new DefaultError(errorSource, ErrorSource.ERROR,
@@ -219,36 +244,33 @@ public class HaXeSideKickPlugin extends EditPlugin
 
     public static void launchProject ()
     {
-// Log.log(Log.NOTICE, NAME, "launchProject");
-// Log.log(Log.NOTICE, NAME, "building");
-// buildProject();
-// Log.log(Log.NOTICE, NAME, "finish building");
-// Log.log(Log.NOTICE, NAME, "isErrors()=" + isErrors());
-// SystemShell shell = ConsolePlugin.getSystemShell();
-//
-// DockableWindowManager wm = jEdit.getActiveView().getDockableWindowManager();
-// Console console = (Console)wm.getDockable("console");
-// console.setShell(shell);
-//
-// waitOnShell(console, shell);
-//
-// if (!isErrors()) {
-// String launchCommand =
-    // jEdit.getProperty("plugin.sidekick.haxe.HaXeSideKickPlugin.launchCommand");
-//
-// // Output output = console.getOutput();
-// // Switch to the project root directory
-// shell.execute(console, getProjectRoot(), NullConsoleOutput.NULL);
-// Log.log(Log.NOTICE, NAME, "launch command=" + launchCommand);
-// shell.execute(console, launchCommand, NullConsoleOutput.NULL);
-// } else {
-// Log.log(Log.ERROR, NAME, "Cannot launch project due to errors");
-// }
+        String projectRoot = getProjectRoot();
+        if (projectRoot == null) {
+            Log.log(Log.ERROR, NAME, "No project project root.");
+            return;
+        }
+
+        if (buildProject() && !isErrors()) {
+            String launchCommand = jEdit.getProperty("plugin.sidekick.haxe.HaXeSideKickPlugin.launchCommand");
+
+            // Output output = console.getOutput();
+            // Switch to the project root directory
+            executeShellCommand(launchCommand, projectRoot);
+//            shell.execute(console, getProjectRoot(), NullConsoleOutput.NULL);
+//            Log.log(Log.NOTICE, NAME, "launch command=" + launchCommand);
+//            shell.execute(console, launchCommand, NullConsoleOutput.NULL);
+        } else {
+            Log.log(Log.MESSAGE, NAME, "Cannot launch project due to errors or failed build");
+        }
     }
 
-    public static void trace (String line)
+    public static void trace (Object... arguments)
     {
-        Log.log(Log.DEBUG, NAME, line);
+        StringBuffer sb = new StringBuffer();
+        for (Object s : arguments) {
+            sb.append(s.toString() + " ");
+        }
+        Log.log(Log.NOTICE, "HaXe", sb.toString());
     }
 
     protected static void waitOnShell (Console console, Shell shell)

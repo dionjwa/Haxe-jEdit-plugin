@@ -109,7 +109,7 @@ public class GenericSideKickCompletion extends SideKickCompletion
         String selected = cc.getStringForInsertion();
 
         int caret = textArea.getCaretPosition();
-        int lineNumber = textArea.getCaretLine();
+//        int lineNumber = textArea.getCaretLine();
         if(text.length() > 0 && !text.endsWith("."))
         {
             Selection toReplace = new Selection.Range(caret-text.length(), caret);

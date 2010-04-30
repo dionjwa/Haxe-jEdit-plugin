@@ -10,10 +10,5 @@
                 <CODE>
                         sidekick.haxe.HaXeSideKickPlugin.launchProject();
 		</CODE>
-        </ACTION>
-        	<ACTION NAME="haxe-sidekick-complete">
-		<CODE>
-			sidekick.SideKickActions.complete(view,sidekick.SideKickActions.COMPLETE_COMMAND);
-		</CODE>
 	</ACTION>
 </ACTIONS>

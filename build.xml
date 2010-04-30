@@ -44,6 +44,7 @@
                 <filename name="**/haxe.xml" />
                 <filename name="**/mode.xml" />
                 <filename name="**/*.props" />
+                <filename name="**/*.properties" />
                 <filename name="**/LICENSE" />
                 <filename name="**/README" />
             </or>

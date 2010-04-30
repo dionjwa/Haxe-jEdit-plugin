@@ -50,7 +50,7 @@ public class CodeCompletionVariable implements CodeCompletion
 		if(type == CodeCompletionType.CLASS)
 			return name;
 		else
-			return name + " - " + className;
+			return name + " : " + className;
 	}
 
 	public String getStringForInsertion()
