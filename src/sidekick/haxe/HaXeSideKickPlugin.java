@@ -105,6 +105,13 @@ public class HaXeSideKickPlugin extends EditPlugin
             errorGobbler.start();
             outputGobbler.start();
 
+            try {
+                Thread.sleep(100);
+            } catch (Exception e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
+
             // any error???
             final int exitVal = proc.waitFor();
             System.out.println("ExitValue: " + exitVal);

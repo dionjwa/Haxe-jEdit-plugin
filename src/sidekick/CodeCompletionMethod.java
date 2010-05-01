@@ -15,17 +15,18 @@ public class CodeCompletionMethod extends CodeCompletionVariable
 	@Override
 	public String toString()
 	{
-		StringBuilder s = new StringBuilder(name + "(");
-		for (int i = 0; i < arguments.size(); i++)
-		{
-			if(i>0)
-				s.append(", ");
-			s.append(arguments.get(i));
-			if(argumentTypes.get(i).length() > 0)
-				s.append(":"+argumentTypes.get(i));
-		}
-		s.append("): " + returnType);
-		return s.toString();
+	    return getCodeCompletionString();
+//		StringBuilder s = new StringBuilder(name + "(");
+//		for (int i = 0; i < arguments.size(); i++)
+//		{
+//			if(i>0)
+//				s.append(", ");
+//			s.append(arguments.get(i));
+//			if(argumentTypes.get(i).length() > 0)
+//				s.append(":"+argumentTypes.get(i));
+//		}
+//		s.append("): " + returnType);
+//		return s.toString();
 	}
 	public List<String> arguments;
 	public List<String> argumentTypes;
@@ -50,8 +51,9 @@ public class CodeCompletionMethod extends CodeCompletionVariable
 		for (int i = 0; i < arguments.size(); i++)
 		{
 			s.append((i==0?"":",") +arguments.get(i));
-			if(argumentTypes.get(i).length() > 0)
+			if(i < argumentTypes.size() && argumentTypes.get(i).length() > 0) {
 				s.append(":"+argumentTypes.get(i));
+			}
 		}
 		s.append("): " + returnType);
 		return s.toString();

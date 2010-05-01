@@ -88,7 +88,9 @@ public class HaXeParser extends SideKickParser
                 if (element.getNodeName().equals("i")) {
                     // Insertion
                     String codeName = element.getAttribute("n");
+                    HaXeSideKickPlugin.trace(codeName);
                     String argString = ((Element)element.getElementsByTagName("t").item(0)).getTextContent();
+                    HaXeSideKickPlugin.trace(codeName + "=" + argString);
                     String[] methodTokens = argString.split("->");
                     String returns = methodTokens[methodTokens.length - 1];
                     if (methodTokens.length == 1) {
@@ -107,7 +109,12 @@ public class HaXeParser extends SideKickParser
                             for (int jj = 0; jj < methodTokens.length - 1; ++jj) {
                                 String[] argTokens = methodTokens[jj].split(":");
                                 args.add(argTokens[0]);
-                                argsTypes.add(argTokens[1]);
+                                if (argTokens.length > 1) {
+                                    argsTypes.add(argTokens[1]);
+                                }
+//                                else {
+//                                    argsTypes.add(argTokens[1]);
+//                                }
                             }
                             cc.arguments = args;
                             cc.argumentTypes = argsTypes;
