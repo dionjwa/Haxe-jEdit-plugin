@@ -1,14 +1,8 @@
 package sidekick.haxe;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileOutputStream;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
 import java.io.InputStream;
-import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -23,7 +17,6 @@ import projectviewer.ProjectViewer;
 import projectviewer.vpt.VPTProject;
 import sidekick.haxe.JavaSystemCaller.StreamGobbler;
 import console.Console;
-import console.ConsolePlugin;
 import console.Shell;
 import errorlist.ErrorSource;
 import errorlist.DefaultErrorSource.DefaultError;
@@ -268,13 +261,7 @@ public class HaXeSideKickPlugin extends EditPlugin
 
         if (buildProject() && !isErrors()) {
             String launchCommand = jEdit.getProperty("options.haxe.launchCommand");
-
-            // Output output = console.getOutput();
-            // Switch to the project root directory
             executeShellCommand(launchCommand, projectRoot);
-//            shell.execute(console, getProjectRoot(), NullConsoleOutput.NULL);
-//            Log.log(Log.NOTICE, NAME, "launch command=" + launchCommand);
-//            shell.execute(console, launchCommand, NullConsoleOutput.NULL);
         } else {
             String msg = "Cannot launch project due to errors or failed build";
             Log.log(Log.MESSAGE, NAME, msg);
@@ -303,85 +290,8 @@ public class HaXeSideKickPlugin extends EditPlugin
         }
     }
 
-    private void copyBundledProperties ()
-    {
-        // Copy the haxe commando if it doesn't exist
-        String commandoResource = "commando.xml";
-        File outfile = new File(ConsolePlugin.getUserCommandDirectory(), "haxe.xml");
-        if (!outfile.exists()) {
-            copyToFile(getClass().getClassLoader().getResourceAsStream(commandoResource), outfile);
-        }
-
-        // If there's no haxe mode, add the mode from the jar and edit the mode catalog
-        File haxeModeApp = new File(jEdit.getJEditHome() + File.separatorChar + "modes"
-            + File.separatorChar + "haxe.xml");
-        File haxeModeSettings = new File(jEdit.getSettingsDirectory() + File.separatorChar
-            + "modes" + File.separatorChar + "haxe.xml");
-        Log.log(Log.NOTICE, this, "haxeModeApp=" + haxeModeApp.exists());
-        if (!haxeModeApp.exists()) {// No system haxe mode
-            Log.log(Log.NOTICE, this, "haxeModeSettings=" + haxeModeSettings.exists());
-            if (!haxeModeSettings.exists()) {
-
-                new File(jEdit.getSettingsDirectory() + File.separatorChar + "modes").mkdirs();
-                // No local haxe mode, so copy the "mode.xml" from the jar to "modes/haxe.xml"
-                String modeResource = "mode.xml";
-                Log.log(Log.NOTICE, this, "Copying mode.xml to modes/haxe.xml");
-                copyToFile(getClass().getClassLoader().getResourceAsStream(modeResource),
-                    haxeModeSettings);
-
-                File catalogFile = new File(jEdit.getSettingsDirectory() + File.separatorChar
-                    + "modes" + File.separatorChar + "catalog");
-                StringBuffer contents = new StringBuffer();
-                if (!catalogFile.exists()) {
-                    // Write a catalog with just the haxe mode entry.
-                    contents.append("<?xml version=\"1.0\"?>\n<!DOCTYPE MODES SYSTEM \"catalog.dtd\">\n<MODES>\n<MODE NAME=\"haxe\" FILE=\"haxe.xml\" FILE_NAME_GLOB=\"*.hx\" />\n</MODES>");
-                } else {
-
-                    // Now we have to edit the catalog
-                    // On the line before the closing tag, insert the haxe entry
-                    try {
-                        BufferedReader input = new BufferedReader(new FileReader(catalogFile));
-                        try {
-                            String line = null; // not declared within while loop
-                            while ((line = input.readLine()) != null) {
-                                if (line.indexOf("</MODES>") > -1) {
-                                    contents.append("<MODE NAME=\"haxe\" FILE=\"haxe.xml\" FILE_NAME_GLOB=\"*.hx\" />\n");
-                                }
-                                contents.append(line + "\n");
-                            }
-                        } finally {
-                            input.close();
-                        }
-                    } catch (IOException ex) {
-                        ex.printStackTrace();
-                    }
-                }
-                // Now write the file
-
-                Log.log(Log.ERROR, this, "TO write:" + contents.toString());
-                try {
-                    Writer output = new BufferedWriter(new FileWriter(catalogFile));
-                    try {
-                        output.write(contents.toString());
-                    } finally {
-                        output.close();
-                    }
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-                try {
-                    Thread.sleep(100L);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-                jEdit.reloadModes();
-            }
-        }
-    }
-
     public void start ()
     {
-        copyBundledProperties();
     }
 
     public void stop ()
