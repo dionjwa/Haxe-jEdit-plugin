@@ -29,12 +29,12 @@
 --langdef=haxe<br/>
 --langmap=haxe:.hx<br/><br/>
 
---regex-haxe=/^[ \t]*[import ]+[ \t]+([A-Za-z0-9_.]+)[ \t]*/\1 /F,import, imports/<br/>
---regex-haxe=/^[ \t]*[(enum) ( \t)]+ [ \t]+([A-Za-z0-9_.]+)[ \t]*\(/\1 /e,enum, enumerators/<br/>
---regex-haxe=/^[ \t]*[(typedef) ( \t)]+ [ \t]+([A-Za-z0-9_]+)[ \t]*\(/\1 /t,typedef, typedefs/<br/>
---regex-haXe=/^[ \t]*(private|public|static|inline) *[ \t]+var[ \t]+([A-Za-z0-9_]+)[ \t]*/\2 : \1/v,variable, variables/<br/>
---regex-haXe=/^[ \t]*(private|public|static|override) *[ \t]*function[ \t]+([A-Za-z0-9_]+)[ \t]*\(+([A-Za-z0-9_]+)*\)*/\1 \2 (\3)/f,function, functions/<br/>
---regex-haXe=/^[ \t]*[(class|interface) ( \t)]+([A-Za-z0-9_]+)+([ \t]?)(extends|implements)[ \t]+([A-Za-z0-9_]+)+[ \t]*/\1 \2 /c,class, classes/<br/>
+--regex-haxe=/^[ \t]*import[ \t]+([A-Za-z0-9_.]+)[ \t]*; /\1 /F,import, imports/<br>
+--regex-haxe=/^[ \t]*enum[ \t]+([A-Za-z0-9_]+).* /\1 /e,enum, enumerators/<br>
+--regex-haxe=/^[ \t]*typedef[ \t]+([A-Za-z0-9_]+)[ \t]+.* /\1 /t,typedef, typedefs/<br> 
+--regex-haxe=/^[ \t]*((private|public|static|inline)[ \t])*[ \t]+var[ \t]+([A-Za-z0-9_]+)[ \t]*(: *([A-Za-z0-9_]+))? *(=|;)/\3 : \5/v,variable, variables/<br> 
+--regex-haxe=/^[ \t]*((private|public|static|override) *)*[ \t]*function[ \t]+(([A-Za-z0-9_]+)[ \t]*\(+([A-Za-z0-9_:<> ]*)*\).*)/\3/f,function, functions/<br> 
+--regex-haxe=/^[ \t]*[(class|interface) ( \t)]+([A-Za-z0-9_]+)+([ \t]?)(extends|implements)[ \t]+([A-Za-z0-9_]+)+[ \t]*/\1 \2 /c,class, classes/<br>
 </p>
 
 
