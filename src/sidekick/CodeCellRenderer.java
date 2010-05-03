@@ -15,7 +15,7 @@ import javax.swing.ListCellRenderer;
 public class CodeCellRenderer implements ListCellRenderer
 {
 	private static Icon greenCircleIcon = new CircleIcon(new Color(20,202,59));
-	private static Icon yellowDiamondIcon = new DiamondIcon2(new Color(235, 225, 48));
+	private static Icon magentaDiamondIcon = new DiamondIcon2(new Color(126, 20, 20));
 	private static Icon greyCircleIcon = new CircleIcon(Color.gray);
 	private Icon classImageIcon;
 
@@ -54,7 +54,7 @@ public class CodeCellRenderer implements ListCellRenderer
 
 				case FIELD:
 				{
-					renderer.setIcon(yellowDiamondIcon);
+					renderer.setIcon(magentaDiamondIcon);
 					renderer.setText(cc.getCodeCompletionString());
 					break;
 				}
