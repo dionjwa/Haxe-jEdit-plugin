@@ -2,6 +2,11 @@
 
 
 	<property name="build.support" value="../build-support" />
+	
+	<property name="jedit.plugins.dir" value="${install.dir}" />
+	
+   <property name="docs-proc.target" value="none" />
+	
         <import file="${build.support}/plugin-build.xml" />
 	
 	
@@ -13,7 +18,7 @@
 	<property name="version" value="0.6" />
 
 	<property name="lib.home"	value="lib" />
-	
+
 	
 	<condition property="can.reload.plugins">
         <and>
@@ -24,7 +29,13 @@
 	
 	<path id="project.class.path">
 		<pathelement location="${jedit.install.dir}/jedit.jar" />
-		<fileset dir="${jedit.user.home}/jars" includes="*.jar"/>
+		<pathelement location="${jedit.plugins.dir}/CommonControls.jar" />
+		<pathelement location="${jedit.plugins.dir}/Console.jar" />
+		<pathelement location="${jedit.plugins.dir}/CtagsSideKick.jar" />
+		<pathelement location="${jedit.plugins.dir}/ErrorList.jar" />
+		<pathelement location="${jedit.plugins.dir}/ProjectViewer.jar" />
+		<pathelement location="${jedit.plugins.dir}/SideKick.jar" />
+		<pathelement location="${jedit.plugins.dir}/kappalayout.jar" />
 		<fileset dir="${lib.home}" includes="**/*.jar"/>
 	</path>
 	
