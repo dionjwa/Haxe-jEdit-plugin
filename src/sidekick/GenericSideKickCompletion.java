@@ -3,8 +3,6 @@ package sidekick;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
-
 import javax.swing.ListCellRenderer;
 
 import org.gjt.sp.jedit.EditPane;
@@ -20,12 +18,12 @@ public class GenericSideKickCompletion extends SideKickCompletion
      * Typing can shorten the list of completions.
      */
     private List<CodeCompletion> _codeCompletionsAfterTyping;
-    private Map<String, CodeCompletionVariable> _localvars;
+//    private Map<String, CodeCompletionVariable> _localvars;
 
-    public GenericSideKickCompletion(View view, String text, List<CodeCompletion> codeCompletions, Map<String, CodeCompletionVariable> localVariables)
+    public GenericSideKickCompletion(View view, String text, List<CodeCompletion> codeCompletions)//, Map<String, CodeCompletionVariable> localVariables)
     {
         super(view, text);
-        _localvars = localVariables;
+//        _localvars = localVariables;
         _codeCompletions = codeCompletions;//new LinkedList<CodeCompletion>();
 //        for (List< ? extends CodeCompletion> list : codeCompletions)
 //        {
@@ -37,6 +35,12 @@ public class GenericSideKickCompletion extends SideKickCompletion
         {
             _codeCompletionsAfterTyping.add(cc);
         }
+    }
+
+    public void addCompletion (CodeCompletion c)
+    {
+        _codeCompletions.add(c);
+        _codeCompletionsAfterTyping.add(c);
     }
 
     @Override

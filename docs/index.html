@@ -16,40 +16,38 @@
 <div class="main">
 <h2>HaXe plugin</h2>
 <p>
-(c) 2010 by Dion Amago
+(c) 2010 by Dion Amago<br/>
+Haxe editing mode: Kostas Michalopoulos
 </p>
 
-<p>Provides a SideKick structure tree and code completion for HaXe scripts. Also provides utility functions for building and launching e.g. swfs.  The <a href="http://haxe.org/com/ide/jedit">HaXe mode</a> is automatically copied into the mode folder in your jEdit settings and the catalog.xml file is edited.</p>
+<p>Provides code completion and (optionally) a code browser for the <a href="http://haxe.org/">HaXe</a> language. Also provides utility functions for building and launching e.g. swfs.  
 
-<p>Additional installation steps:</p>
-<p>Ctags parsing: ctags support for HaXe is pretty weak.  Append this to your .ctags file (or create it if it doesn't exist (~/.ctags on linux and mac).</p>
-<p>Credit to <a href="http://haxegui.blogspot.com/2009/08/jedit-and-haxe.html">Gershon</a></p>.
+<p>If you have Haxe installed, code completion should work out of the box.
+
+The <a href="http://haxe.org/com/ide/jedit">HaXe mode</a> is automatically copied into the mode folder in your jEdit settings and the catalog.xml file is edited.</p>
+
+<p>Additional (optional) installation steps:</p>
+<p>The Haxe plugin can use the CtagsSideKick plugin to parse and display HaXe code in navigable browser.  Ctags doesn't support HaXe out of the box.  Append this to your ~/.ctags file (or create it if it doesn't exist:</p>
+
 
 <p>
 --langdef=haxe<br/>
---langmap=haxe:.hx<br/><br/>
-
---regex-haxe=/^[ \t]*import[ \t]+([A-Za-z0-9_.]+)[ \t]*; /\1 /F,import, imports/<br>
---regex-haxe=/^[ \t]*enum[ \t]+([A-Za-z0-9_]+).* /\1 /e,enum, enumerators/<br>
---regex-haxe=/^[ \t]*typedef[ \t]+([A-Za-z0-9_]+)[ \t]+.* /\1 /t,typedef, typedefs/<br> 
---regex-haxe=/^[ \t]*((private|public|static|inline)[ \t])*[ \t]+var[ \t]+([A-Za-z0-9_]+)[ \t]*(: *([A-Za-z0-9_]+))? *(=|;)/\3 : \5/v,variable, variables/<br> 
---regex-haxe=/^[ \t]*((private|public|static|override) *)*[ \t]*function[ \t]+(([A-Za-z0-9_]+)[ \t]*\(+([A-Za-z0-9_:<> ]*)*\).*)/\3/f,function, functions/<br> 
---regex-haxe=/^[ \t]*[(class|interface) ( \t)]+([A-Za-z0-9_]+)+([ \t]?)(extends|implements)[ \t]+([A-Za-z0-9_]+)+[ \t]*/\1 \2 /c,class, classes/<br>
+--langmap=haxe:.hx<br/>
+--regex-haxe=/^[ \t]*import[ \t]+([A-Za-z0-9_.]+)[ \t]*; /\1 /F,import, imports/<br/>
+--regex-haxe=/^[ \t]*enum[ \t]+([A-Za-z0-9_]+).* /\1 /e,enum, enumerators/<br/>
+--regex-haxe=/^[ \t]*typedef[ \t]+([A-Za-z0-9_]+)[ \t]+.* /\1 /t,typedef, typedefs/ <br/>
+--regex-haxe=/^[ \t]*((private|public|static|inline)[ \t])*[ \t]+var[ \t]+([A-Za-z0-9_]+)[ \t]*(: *([A-Za-z0-9_]+))? *(=|;)/\3 : \5/v,variable, variables/<br/> 
+--regex-haxe=/^[ \t]*((private|public|static|override) *)*[ \t]*function[ \t]+(([A-Za-z0-9_]+)[ \t]*\(+([A-Za-z0-9_:<> ]*)*\).*)/\3/f,function, functions/ <br/>
+--regex-haxe=/^[ \t]*(class|interface)[ \t]+([A-Za-z0-9_]+)[ \t]*($|((extends|implements)?[ \t]+([A-Za-z0-9_]+))?.*)/\2 \5 \6 /c,class, classes/<br/>
 </p>
 
+<p>Credit to <a href="http://haxegui.blogspot.com/2009/08/jedit-and-haxe.html">Gershon</a></p>.
 
-<p>The HaXe compiler needs to be specified in the plugin options.  The default points to the mac haxe binary.  The HaXe compiler provides the <a href="http://ncannasse.fr/blog/haxe_completion">code completion functionality</a>.</p>
-<p></p>
 
 <p> Like all "SideKick" plugins, this has no dockable
 view. Instead, it shares its view with other SideKick plugins through
 the SideKick Structure Browser. To use SideKick, dock the Structure
 Browser on the left or the right. </p>
-<pre>
-Global Options -&gt; Docking -&gt; Structure Browser
-</pre>
-
-
 
 </div>
 

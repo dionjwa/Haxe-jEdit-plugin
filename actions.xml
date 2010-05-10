@@ -3,14 +3,17 @@
 <ACTIONS>
         <ACTION NAME="haxe-build-project">
                 <CODE>
-                        buffer.save(view, null);
                         sidekick.haxe.HaXeSideKickPlugin.buildProject();
                 </CODE>
         </ACTION>
         <ACTION NAME="haxe-launch-project">
                 <CODE>
-                        buffer.save(view, null);
                         sidekick.haxe.HaXeSideKickPlugin.launchProject();
+		</CODE>
+	</ACTION>
+	<ACTION NAME="haxe-code-completion">
+                <CODE>
+                        sidekick.haxe.HaXeSideKickPlugin.haxeCodeComplete(view);
 		</CODE>
 	</ACTION>
 </ACTIONS>

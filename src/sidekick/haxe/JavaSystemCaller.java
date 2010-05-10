@@ -1,13 +1,14 @@
 package sidekick.haxe;
 
+import org.gjt.sp.util.Log;
+
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.util.ArrayList;
+import java.io.IOException;
 
-import org.gjt.sp.util.Log;
+import java.util.ArrayList;
 
 /**
  * Make a system call through a system shell in a platform-independent manner in Java. <br />
@@ -29,7 +30,7 @@ public final class JavaSystemCaller
      * @throws IllegalArgumentException if one parameters is null or empty.
      * 'args' can be empty (default 'ls' performed then)
      */
-    public static String systemCall(String command, String workingDirectory, String[] someParameters)
+    public static SystemProcessOutput systemCall(String command, String workingDirectory, String[] someParameters)
     {
         try {
             return Exec.execute(command, workingDirectory, someParameters);
@@ -39,7 +40,7 @@ public final class JavaSystemCaller
         }
     }
 
-    public static String systemCall(String command, String workingDirectory)
+    public static SystemProcessOutput systemCall(String command, String workingDirectory)
     {
         String[] parameters = null;
         return Exec.execute(command, workingDirectory, parameters);
@@ -76,7 +77,6 @@ public final class JavaSystemCaller
                 String line=null;
                 while ( (line = br.readLine()) != null)
                 {
-                    System.out.println(this.type + ">" + line);
                     this.output.append(line+System.getProperty("line.separator"));
                 }
             } catch (final IOException ioe)
@@ -109,9 +109,9 @@ public final class JavaSystemCaller
          * @param someParameters parameters of the command (must not be null or empty)
          * @return final output (stdout only)
          */
-        public static String execute(final String aCommand, String workingDirectory, final String... someParameters)
+        public static SystemProcessOutput execute(final String aCommand, String workingDirectory, final String... someParameters)
         {
-            String output = "";
+            SystemProcessOutput output = new SystemProcessOutput();
             try
             {
                 ExecEnvironmentFactory anExecEnvFactory = getExecEnvironmentFactory(aCommand, someParameters);
@@ -119,9 +119,15 @@ public final class JavaSystemCaller
                 final String aCommandLine = anExecEnvFactory.createCommandLine();
 
                 final Runtime rt = Runtime.getRuntime();
-                System.out.println("Executing " + aShell.getShellCommand() + " " + aCommandLine);
+                final String processCommand = aShell.getShellCommand() + " " + aCommandLine;
+//                System.out.println("Executing: " + processCommand);
+//                Log.log(Log.NOTICE, "JavaSystemCaller", "Executing " + processCommand + " in " +workingDirectory);
 
-                final Process proc = rt.exec(aShell.getShellCommand() + " " + aCommandLine, null, new File(workingDirectory));
+                File workingDir = new File(workingDirectory);
+                if (!workingDir.exists()) {
+                	    Log.log(Log.ERROR, "JavaSystemCaller", "workingDir=" + workingDir + " doesn't exist");
+                }
+                final Process proc = rt.exec(processCommand, null, workingDir);
                 // any error message?
                 final StreamGobbler errorGobbler = new
                     StreamGobbler(proc.getErrorStream(), "ERROR");
@@ -131,14 +137,14 @@ public final class JavaSystemCaller
                     StreamGobbler(proc.getInputStream(), "OUTPUT");
 
                 // kick them off
-                errorGobbler.start();
                 outputGobbler.start();
+                errorGobbler.start();
 
                 // any error???
                 final int exitVal = proc.waitFor();
-                System.out.println("ExitValue: " + exitVal);
 
-                output = outputGobbler.getOutput();
+                output.output = outputGobbler.getOutput();
+                output.errors = errorGobbler.getOutput();
 
             } catch (final Throwable t)
             {
@@ -186,10 +192,12 @@ public final class JavaSystemCaller
         {
             if(aCommand == null || aCommand.length() == 0) { throw new IllegalArgumentException("Command must not be empty"); }
             this.command = aCommand;
-            for (int i = 0; i < someParameters.length; i++) {
-                final String aParameter = someParameters[i];
-                if(aParameter == null || aParameter.length() == 0) { throw new IllegalArgumentException("Parameter n¡ '"+i+"' must not be empty"); }
-                this.parameters.add(aParameter);
+            if (someParameters != null) {
+                for (int i = 0; i < someParameters.length; i++) {
+                    final String aParameter = someParameters[i];
+                    if(aParameter == null || aParameter.length() == 0) { throw new IllegalArgumentException("Parameter nï¿½ '"+i+"' must not be empty"); }
+                    this.parameters.add(aParameter);
+                }
             }
         }
         /**
@@ -338,4 +346,5 @@ public final class JavaSystemCaller
 //            return "/bin/sh -c";
         }
     }
+
 }

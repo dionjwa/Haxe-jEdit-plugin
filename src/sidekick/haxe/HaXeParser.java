@@ -1,135 +1,87 @@
 package sidekick.haxe;
 
-import java.io.StringReader;
-import java.util.ArrayList;
-import java.util.List;
-
+import java.util.Arrays;
 import javax.swing.JPanel;
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
 
 import org.gjt.sp.jedit.Buffer;
-import org.gjt.sp.jedit.EBMessage;
 import org.gjt.sp.jedit.EditPane;
+import org.gjt.sp.jedit.ServiceManager;
 import org.gjt.sp.jedit.View;
-import org.gjt.sp.jedit.msg.BufferUpdate;
+import org.gjt.sp.jedit.jEdit;
 import org.gjt.sp.util.Log;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.NodeList;
-import org.xml.sax.InputSource;
 
-import sidekick.CodeCompletion;
-import sidekick.CodeCompletionField;
-import sidekick.CodeCompletionMethod;
 import sidekick.GenericSideKickCompletion;
 import sidekick.SideKickCompletion;
 import sidekick.SideKickParsedData;
 import sidekick.SideKickParser;
-import ctags.sidekick.Parser;
 import errorlist.DefaultErrorSource;
 import errorlist.ErrorSource;
 
 public class HaXeParser extends SideKickParser
 {
-    public void handleMessage (EBMessage message)
-    {
-        if (message instanceof BufferUpdate && ((BufferUpdate)message).getWhat() == BufferUpdate.SAVED) {
-            HaXeSideKickPlugin.trace("Building due to save.");
-            HaXeSideKickPlugin.buildProject(((BufferUpdate)message).getView().getEditPane());
-        }
-    }
-
     public HaXeParser ()
     {
         super("haxe");
-        _ctagsParser = new Parser("haxe");
     }
 
     @Override
     public void activate (View view)
     {
+        if (_ctagsParser == null && jEdit.getPlugin("ctags.sidekick.Plugin") != null) {
+            _ctagsParser = ServiceManager.getService(SideKickParser.class, "ctags");
+        }
         ErrorSource.registerErrorSource(HaXeSideKickPlugin._errorSource);
     }
 
     @Override
     public boolean canHandleBackspace ()
     {
-        // TODO recall the compiler
         return false;
     }
 
     @Override
     public SideKickCompletion complete (EditPane editPane, int caret)
     {
-        List<String> output = HaXeSideKickPlugin.getHaxeBuildOutput(editPane, caret, true);
-        String completionXMLString = output.get(1).trim();
+        //If the caret is at a ".", use the Haxe compiler to provide completion hints
+        if (editPane.getBuffer().getText(caret - 1, 1).equals(".")) {
+            GenericSideKickCompletion completion = HaXeSideKickPlugin.getSideKickCompletion(editPane, caret);
+            return completion;
+        } else if (_ctagsParser != null) {
+            trace("complete, _ctagsParser=" + _ctagsParser);
+            String[] keywords = editPane.getBuffer().getKeywordMapAtOffset(caret).getKeywords();
+            System.out.println("keywords=" + Arrays.toString(keywords));
+//            if (keywords.length > 0) {
+//                String word = getWordAtCaret( editPane, caret );
+//                if (word != null && word.length() > 0) {
+//                    List possibles = new ArrayList();
+//                    for (int i = 0; i < keywords.length; i++) {
+//                        String kw = keywords[i];
+//                        if (kw.startsWith(word) && !kw.equals(word)) {
+//                            possibles.add(keywords[i]);
+//                        }
+//                    }
+//                    Collections.sort(possibles);
+//                    return new ConcreteSideKickCompletion(editPane.getView(), word, possibles);
+//                }
+//            }
+            SideKickCompletion ctagsCompletion = _ctagsParser.complete(editPane, caret);
+//            for (int ii = 0; ii < ctagsCompletion.size(); ++ii) {
+//                CodeCompletionVariable ccvar = new CodeCompletionVariable();
+//                ccvar.name = ctagsCompletion.get(ii).toString();
+//            }
 
-        if (completionXMLString == null || completionXMLString.equals("")
-            || !completionXMLString.startsWith("<")) {
-            return null;
+
+//            if (ctagsCompletion.size())
+//            EditAction action = jEdit.getAction("ctags-interface-complete-from-db");
+//            action.invoke(editPane.getView());
+            return ctagsCompletion;
         }
+        return null;
+    }
 
-        List<CodeCompletion> codeCompletions = new ArrayList<CodeCompletion>();
-
-        try {
-            // Example see http://www.rgagnon.com/javadetails/java-0573.html
-            DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
-            DocumentBuilder db = dbf.newDocumentBuilder();
-            InputSource is = new InputSource();
-            is.setCharacterStream(new StringReader(completionXMLString));
-
-            Document doc = db.parse(is);
-            NodeList insertions = doc.getElementsByTagName("i");
-
-            // iterate the insertions
-            for (int i = 0; i < insertions.getLength(); i++) {
-                Element element = (Element)insertions.item(i);
-                if (element.getNodeName().equals("i")) {
-                    // Insertion
-                    String codeName = element.getAttribute("n");
-                    HaXeSideKickPlugin.trace(codeName);
-                    String argString = ((Element)element.getElementsByTagName("t").item(0)).getTextContent();
-                    HaXeSideKickPlugin.trace(codeName + "=" + argString);
-                    String[] methodTokens = argString.split("->");
-                    String returns = methodTokens[methodTokens.length - 1];
-                    if (methodTokens.length == 1) {
-                        CodeCompletionField cc = new CodeCompletionField();
-                        cc.name = codeName;
-                        cc.setClassName(returns);
-                        codeCompletions.add(cc);
-                    } else {
-                        CodeCompletionMethod cc = new CodeCompletionMethod();
-                        cc.name = codeName;
-                        cc.returnType = returns;
-                        if (methodTokens.length > 1 && !methodTokens[0].trim().equals("Void")) {
-                            List<String> args = new ArrayList<String>(methodTokens.length - 1);
-                            List<String> argsTypes = new ArrayList<String>(
-                                methodTokens.length - 1);
-                            for (int jj = 0; jj < methodTokens.length - 1; ++jj) {
-                                String[] argTokens = methodTokens[jj].split(":");
-                                args.add(argTokens[0]);
-                                if (argTokens.length > 1) {
-                                    argsTypes.add(argTokens[1]);
-                                }
-//                                else {
-//                                    argsTypes.add(argTokens[1]);
-//                                }
-                            }
-                            cc.arguments = args;
-                            cc.argumentTypes = argsTypes;
-                        }
-                        codeCompletions.add(cc);
-                    }
-                }
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        GenericSideKickCompletion completion = new GenericSideKickCompletion(editPane.getView(),
-            "", codeCompletions, null);
-        return completion;
+    protected void trace(Object ... args)
+    {
+        HaXeSideKickPlugin.trace(args);
     }
 
     @Override
@@ -141,6 +93,9 @@ public class HaXeParser extends SideKickParser
     @Override
     public JPanel getPanel()
     {
+        if (_ctagsParser == null) {
+            return null;
+        }
         return _ctagsParser.getPanel();
     }
 
@@ -156,8 +111,11 @@ public class HaXeParser extends SideKickParser
     public SideKickParsedData parse (Buffer buffer, DefaultErrorSource errorSource)
     {
         Log.log(Log.DEBUG, this, "parse request");
-        _ctagsParsed = _ctagsParser.parse(buffer, errorSource);
-        return _ctagsParsed;
+        if (_ctagsParser != null) {
+            _ctagsParsed = _ctagsParser.parse(buffer, errorSource);
+            return _ctagsParsed;
+        }
+        return new SideKickParsedData(buffer.getPath());
     }
 
     @Override
@@ -167,7 +125,7 @@ public class HaXeParser extends SideKickParser
     }
 
     private SideKickParsedData _ctagsParsed;
-    private Parser _ctagsParser;
+    private SideKickParser _ctagsParser;
     private final static String COMPLETION_CHARS = ".";
 
 }
