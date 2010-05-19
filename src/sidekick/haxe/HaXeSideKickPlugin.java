@@ -545,9 +545,11 @@ public class HaXeSideKickPlugin extends EditPlugin
 // }
 // }
 
+    @Override
     public void start ()
     {}
 
+    @Override
     public void stop ()
     {}
 

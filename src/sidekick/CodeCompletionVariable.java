@@ -63,6 +63,7 @@ public class CodeCompletionVariable implements CodeCompletion
 		return type;
 	}
 
+	@Override
 	public String toString()
 	{
 		return name + "(" + superClasses + ") " + locations;

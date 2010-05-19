@@ -45,6 +45,8 @@ public class CodeCompletionMethod extends CodeCompletionVariable
 	{
 		return name;
 	}
+
+	@Override
 	public String getCodeCompletionString()
 	{
 		StringBuilder s = new StringBuilder(name + "(");
@@ -59,6 +61,7 @@ public class CodeCompletionMethod extends CodeCompletionVariable
 		return s.toString();
 	}
 
+	@Override
 	public String getStringForInsertion()
 	{
 		StringBuilder s = new StringBuilder(name+"(");

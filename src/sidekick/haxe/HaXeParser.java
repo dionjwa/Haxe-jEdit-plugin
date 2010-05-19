@@ -108,6 +108,7 @@ public class HaXeParser extends SideKickParser
     /**
      * We use the Ctags display of the code structure.
      */
+    @Override
     public SideKickParsedData parse (Buffer buffer, DefaultErrorSource errorSource)
     {
         Log.log(Log.DEBUG, this, "parse request");

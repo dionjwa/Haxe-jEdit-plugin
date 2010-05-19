@@ -18,6 +18,7 @@ public class HaxeCompilerOutput
         return buildFile == null ? null : buildFile.getParentFile().getAbsolutePath();
     }
 
+    @Override
     public String toString ()
     {
         return "HaxeCompilerOutput, buildFile=" + buildFile.getAbsolutePath() +
