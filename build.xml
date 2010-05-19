@@ -1,101 +1,59 @@
+<?xml version="1.0"?>
+<!--
+ This is the build.xml file for building the CtagsInterface plugin.
+ It is based on the standard build.xml file for jEdit plugins.
+-->
 <project name="HaXePlugin" default="build" basedir=".">
 
+    <property name="compiler.source" value="1.5" />
+	<property name="compiler.target" value="1.5" />
+	<property file="build.properties"/>
+	<property file="../build.properties"/>
+<!--	<property file="${user.home}/.build.properties"/>
+	<property file="${user.home}/build.properties"/> -->
 
-	<property name="build.support" value="../build-support" />
-	
+	<property file="build.support" value="../build-support" />
+	<import file="${build.support}/plugin-build.xml" />
+
 	<property name="jedit.plugins.dir" value="${install.dir}" />
-	
-   <property name="docs-proc.target" value="none" />
-	
-        <import file="${build.support}/plugin-build.xml" />
-	
-	
-	<!--<property file="../build.properties" />-->
-	<property file="build.properties" />
 
-	<property name="javadoc.packagenames"	value="sidekick.haxe.*" />
-	<property name="plugin.dependencies" 	value="SideKick,ErrorList,Console" />
-	<property name="version" value="0.6" />
+	<selector id="packageFiles">
+	  <or>
+	    <filename name="icons/*.png" />
+		<filename name="*.txt" />
+		<filename name="mysql.map" />
+		<filename name="description.html" />
+		<filename name="index.html" />
+		<filename name="docs/CHANGES.txt" />
+	  </or>
+	 </selector>
 
-	<property name="lib.home"	value="lib" />
+	<property name="jar.name"  value="${ant.project.name}.jar"/>
+	<property name="docs-proc.target"  value="xsltproc"/>
 
-	
-	<condition property="can.reload.plugins">
-        <and>
-            <available classname="org.gjt.sp.jedit.jEdit"/>
-            <available classname="ReloadPluginTask"/>
-        </and>
-    </condition>
-	
+	<property name="src.dir" location="${basedir}/src"/>
+	<property name="build.dir" value="build"/>
+
 	<path id="project.class.path">
 		<pathelement location="${jedit.install.dir}/jedit.jar" />
-		<pathelement location="${jedit.plugins.dir}/CommonControls.jar" />
-		<pathelement location="${jedit.plugins.dir}/Console.jar" />
 		<pathelement location="${jedit.plugins.dir}/CtagsSideKick.jar" />
 		<pathelement location="${jedit.plugins.dir}/ErrorList.jar" />
 		<pathelement location="${jedit.plugins.dir}/ProjectViewer.jar" />
 		<pathelement location="${jedit.plugins.dir}/SideKick.jar" />
-		<pathelement location="${jedit.plugins.dir}/kappalayout.jar" />
-		<fileset dir="${lib.home}" includes="**/*.jar"/>
 	</path>
-	
-	    <!-- This selector defines other files that should be packaged
-         in the plugin's jar file; by default it contains actions.xml,
-         dockables.xml, services.xml, any files ending in ".props",
-         "LICENSE" and "README". The context is "${basedir}". Override
-         it if your plugin needs special treatment for these files. -->
-    <selector id="extraFiles">
-        <and>
-            <or>
-                <filename name="**/actions.xml" />
-                <filename name="**/browser.actions.xml" />
-                <filename name="**/dockables.xml" />
-                <filename name="**/services.xml" />
-                <filename name="**/haxe.xml" />
-                <filename name="**/mode.xml" />
-                <filename name="**/*.props" />
-                <filename name="**/*.properties" />
-                <filename name="**/LICENSE" />
-                <filename name="**/README" />
-            </or>
-        </and>
-    </selector>
-    
-    
-    <property name="dist.target"    value="build" />
 
+	<target name="build.prepare" >
+	 	<mkdir dir="${build.dir}" />
+	</target>
 
-	<import file="${build.support}/plugin-build.xml" />
+	<target name="tags">
+		<exec executable="ctags">
+			<arg value="-f" />
+			<arg path="tags_" />
+			<arg value="-R" />
+			<arg path="." />
+		</exec>
+	</target>
 
-	
-	
-
-    <selector id="packageFiles">
-      <or>
-		<filename name="docs/*.html"/>
-		<filename name="icons/*.png"/>
-	  </or>
-	</selector>
-	
-    <target name="build.prepare"
-          depends="compile"
-          description="Builds the plugin JAR file">
-	  <mkdir dir="${build.classes}" />
-    </target>
-    
-    
-        <target name="reload" if="can.reload.plugins">
-        <echo>Reloading ${install.dir}/${ant.project.name}.jar</echo>
-        <taskdef name="reloadPlugin" classname="ReloadPluginTask"/>
-        <reloadPlugin jarfile="${install.dir}/${plugin.sidekick.haxe.HaXeSideKickPlugin.name}.jar"/>
-    </target>
-    
-<!--    <target name="build.post">
-    <copy todir="${jedit.user.home}/console/commando">
-    	    <fileset dir=".">
-    	      <include name="haxe.xml"/>
-    	    </fileset>
-    	  </copy>
-    </target>-->
 
 </project>
