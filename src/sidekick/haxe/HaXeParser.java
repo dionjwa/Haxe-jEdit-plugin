@@ -1,6 +1,7 @@
 package sidekick.haxe;
 
 import java.util.Arrays;
+
 import javax.swing.JPanel;
 
 import org.gjt.sp.jedit.Buffer;

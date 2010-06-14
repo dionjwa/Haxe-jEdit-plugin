@@ -19,7 +19,7 @@
 
 # general plugin properites
 plugin.sidekick.haxe.HaXeSideKickPlugin.activate=defer
-plugin.sidekick.haxe.HaXeSideKickPlugin.name=HaXePlugin 
+plugin.sidekick.haxe.HaXeSideKickPlugin.name=HaXeSideKick
 plugin.sidekick.haxe.HaXeSideKickPlugin.author=Dion Amago
 plugin.sidekick.haxe.HaXeSideKickPlugin.version=0.1
 plugin.sidekick.haxe.HaXeSideKickPlugin.docs=docs/index.html
@@ -37,10 +37,12 @@ plugin.sidekick.haxe.HaXeSideKickPlugin.depend.4=plugin projectviewer.ProjectPlu
 plugin.sidekick.haxe.HaXeSideKickPlugin.menu.label=HaXe
 plugin.sidekick.haxe.HaXeSideKickPlugin.menu=haxe-build-project \
              haxe-launch-project \
-             haxe-code-completion
+             haxe-code-completion \
+             haxe-add-missing-imports \
 haxe-build-project.label=Build current project
 haxe-launch-project.label=Run current project
 haxe-code-completion.label=Code completion
+haxe-add-missing-imports.label=Add missing imports
   
 # menu
 #plugin.sidekick.haxe.HaXeSideKickPlugin.menu=sidekick-tree 
@@ -62,15 +64,13 @@ options.haxe.code=new sidekick.haxe.HaXeOptionPane();
 # Option Pane values and labels
 options.haxe.launchCommand=/usr/bin/open deploy/out.swf
 options.haxe.launchCommand.label=Launch output command
+#Keep null to use the system default
+options.haxe.installDir=System Default
+options.haxe.installDir.label=Installation directory
 # options.haxe.compilerLocation.label=Compiler location:
-# options.haxe.compilerLocationMac=/usr/bin/haxe
-# options.haxe.compilerLocationMac.label=Mac
-# options.haxe.compilerLocationLinux=/usr/bin/haxe
-# options.haxe.compilerLocationLinux.label=Linux
-# options.haxe.compilerLocationWindows=﻿C:\Program Files\Motion-Twin\haxe\haxe.exe
-# options.haxe.compilerLocationWindows.label=Windows
-# options.haxe.buildOnSave=true
-# options.haxe.buildOnSave.label=Build on file save
+options.haxe.defaultInstallDirMac=/usr/lib/haxe
+options.haxe.defaultInstallDirLinux=/usr/lib/haxe
+options.haxe.defaultInstallDirWindows=C:\Program Files\Motion-Twin\\haxe
 
 #Errors
 haxe.error.noBuildFile.message=Attempting to build haxe project, but no *.hxml at the project root, or in a parent directory of the current buffer.

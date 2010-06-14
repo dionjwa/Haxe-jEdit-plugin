@@ -16,4 +16,9 @@
                         sidekick.haxe.HaXeSideKickPlugin.haxeCodeComplete(view);
 		</CODE>
 	</ACTION>
+	<ACTION NAME="haxe-add-missing-imports">
+                <CODE>
+                        sidekick.haxe.HaXeSideKickPlugin.addMissingImports(view);
+		</CODE>
+	</ACTION>
 </ACTIONS>

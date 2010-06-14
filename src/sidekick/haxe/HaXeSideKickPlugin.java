@@ -1,13 +1,25 @@
 package sidekick.haxe;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.FileReader;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
+import javax.swing.JOptionPane;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 
@@ -115,16 +127,12 @@ public class HaXeSideKickPlugin extends EditPlugin
 
         HaxeCompilerOutput output = HaXeSideKickPlugin.getHaxeBuildOutput(editPane, caret, true);
 
-//        trace("getSideKickCompletion=" + output);
-
         String completionXMLString = output.output.errors.trim();
 
         if (completionXMLString == null || completionXMLString.equals("")
             || !completionXMLString.startsWith("<")) {
             return null;
         }
-
-//        trace("completionXMLString=" + completionXMLString);
 
         List<CodeCompletion> codeCompletions = new ArrayList<CodeCompletion>();
 
@@ -144,9 +152,9 @@ public class HaXeSideKickPlugin extends EditPlugin
                 if (element.getNodeName().equals("i")) {
                     // Insertion
                     String codeName = element.getAttribute("n");
-                    //HaXeSideKickPlugin.trace(codeName);
+                    // HaXeSideKickPlugin.trace(codeName);
                     String argString = ((Element)element.getElementsByTagName("t").item(0)).getTextContent();
-                    //HaXeSideKickPlugin.trace(codeName + "=" + argString);
+                    // HaXeSideKickPlugin.trace(codeName + "=" + argString);
                     String[] methodTokens = argString.split("->");
                     String returns = methodTokens[methodTokens.length - 1];
                     if (methodTokens.length == 1) {
@@ -191,35 +199,29 @@ public class HaXeSideKickPlugin extends EditPlugin
         Buffer buffer = editPane.getBuffer();
         JEditTextArea textArea = editPane.getTextArea();
 
-        SideKickParser parser = SideKickPlugin
-            .getParserForBuffer(buffer);
+        SideKickParser parser = SideKickPlugin.getParserForBuffer(buffer);
 
         if (!buffer.getText(textArea.getCaretPosition() - 1, 1).equals(".")) {
-//            trace("haxeCodeComplete, not at char '.'");
             return;
         }
 
         if (parser == null) {
-//            trace("haxeCodeComplete, no parser");
             return;
         }
 
         SideKickCompletion complete = getSideKickCompletion(editPane, textArea.getCaretPosition());
 
-        if(complete == null || complete.size() == 0)
-        {
-//            trace("SideKickCompletion==null");
-        }
-        else if(complete.size() == 1)
-        {
+        if (complete == null || complete.size() == 0) {
+// trace("SideKickCompletion==null");
+        } else if (complete.size() == 1) {
             // if user invokes complete explicitly, insert the
             // completion immediately.
             //
             // if the user eg enters </ in XML mode, there will
             // only be one completion and / is an instant complete
             // key, so we insert it
-                complete.insert(0);
-                return;
+            complete.insert(0);
+            return;
         }
 
         // show the popup if
@@ -286,7 +288,6 @@ public class HaXeSideKickPlugin extends EditPlugin
                     return buildFile;
                 }
             }
-            //trace("getBuildFile(), no *.hxml in current project");
 
             if (editPane != null) {
                 // Try the project of the current buffer, even if it's a different project to the
@@ -302,7 +303,6 @@ public class HaXeSideKickPlugin extends EditPlugin
                     }
                 }
             }
-            //trace("getBuildFile(), no *.hxml in project of buffer");
         }
 
         // Otherwise, search up the file system tree, and grab the first *.hxml we find
@@ -313,7 +313,6 @@ public class HaXeSideKickPlugin extends EditPlugin
             if (buildFile != null) {
                 return buildFile;
             }
-            //trace("getBuildFile(), no *.hxml in " + curDir.getAbsolutePath());
             curDir = curDir.getParentFile();
         }
 
@@ -331,30 +330,6 @@ public class HaXeSideKickPlugin extends EditPlugin
         return null;
     }
 
-// private static boolean isWindows(){
-//
-// String os = System.getProperty("os.name").toLowerCase();
-// //windows
-// return (os.indexOf( "win" ) >= 0);
-//
-// }
-//
-// private static boolean isMac(){
-//
-// String os = System.getProperty("os.name").toLowerCase();
-// //Mac
-// return (os.indexOf( "mac" ) >= 0);
-//
-// }
-//
-// private static boolean isUnix(){
-//
-// String os = System.getProperty("os.name").toLowerCase();
-// //linux or unix
-// return (os.indexOf( "nix") >=0 || os.indexOf( "nux") >=0);
-//
-// }
-
     public static HaxeCompilerOutput getHaxeBuildOutput (EditPane editPane, int caret,
         boolean getCodeCompletion)
     {
@@ -364,26 +339,12 @@ public class HaXeSideKickPlugin extends EditPlugin
     public static HaxeCompilerOutput getHaxeBuildOutput (EditPane editPane, int caret,
         boolean getCodeCompletion, boolean showErrorPopups)
     {
-// if (!isProjectSelected() && editPane == null) {
-// Log.log(Log.WARNING, NAME, "buildProject but projectRootPath is null && editPane == null");
-// return null;
-// }
-
         if (getCodeCompletion && editPane == null) {
             Log.log(Log.ERROR, NAME, "getHaxeBuildOutput, getCodeCompletion=" + getCodeCompletion
                 + ", editPane == null");
             return null;
         }
 
-//        Log.log(Log.NOTICE, NAME, "getHaxeBuildOutput, caret=" + caret);
-// String projectRootPath = getProjectRoot(editPane);
-
-// Log.log(Log.DEBUG, NAME, "projectRootPath=" + projectRootPath);
-
-// if (projectRootPath == null) {
-// Log.log(Log.ERROR, NAME, "getProjectRoot(editPane) returns null");
-// return null;
-// }
         File hxmlFile = getBuildFile(editPane);
 
         if (hxmlFile == null) {
@@ -399,21 +360,6 @@ public class HaXeSideKickPlugin extends EditPlugin
 
         String projectRootPath = hxmlFile.getParentFile().getAbsolutePath();
 
-//        Log.log(Log.DEBUG, NAME, "hxmlFileName=" + hxmlFile);
-
-// if (hxmlFile == null) {
-// Log.log(Log.ERROR, NAME, "buildProject, but no *.hxml at the project root.");
-// return null;
-// }
-
-// String compiler = jEdit.getProperty("options.haxe.compilerLocationMac");
-
-// if(isWindows()){
-// compiler = jEdit.getProperty("options.haxe.compilerLocationWindows");
-// } else if(isUnix()){
-// compiler = jEdit.getProperty("options.haxe.compilerLocationLinux");
-// }
-
         String command = "haxe " + hxmlFile.getName();
         if (getCodeCompletion) {
             String path = editPane.getBuffer().getPath();
@@ -423,21 +369,9 @@ public class HaXeSideKickPlugin extends EditPlugin
             }
             command += " --display " + path + "@" + caret;
         }
-//        Log.log(Log.NOTICE, NAME, "command=" + command);
-//        Log.log(Log.NOTICE, NAME, "projectRootPath=" + projectRootPath);
+        Log.log(Log.MESSAGE, NAME, "command=" + command);
 
         SystemProcessOutput output = JavaSystemCaller.systemCall(command, projectRootPath);
-//        trace("waiting");
-//        try {
-//            Thread.sleep(200);
-//        } catch (InterruptedException e) {
-//            e.printStackTrace();
-//        }
-// List<String> out = HaXeSideKickPlugin.executeShellCommand(command, projectRootPath);
-// String output = out.get(0);
-// String errorOutput = out.get(1);
-//        Log.log(Log.MESSAGE, "command=" + command + "\ngetHaxeBuildOutput", "output="
-//            + output.output + ", errors=" + output.errors);
         return new HaxeCompilerOutput(hxmlFile, output);
     }
 
@@ -507,12 +441,6 @@ public class HaXeSideKickPlugin extends EditPlugin
 
     public static void launchProject ()
     {
-// String projectRoot = getProjectRoot();
-// if (projectRoot == null) {
-// Log.log(Log.ERROR, NAME, "No project project root.");
-// return;
-// }
-
         HaxeCompilerOutput output = buildProject();
         if (output != null && !isErrors()) {
             String launchCommand = jEdit.getProperty("options.haxe.launchCommand");
@@ -533,17 +461,322 @@ public class HaXeSideKickPlugin extends EditPlugin
         Log.log(Log.NOTICE, "HaXe", sb.toString());
     }
 
-// protected static void waitOnShell (Console console, Shell shell)
-// {
-// while (!shell.waitFor(console)) {
-// Log.log(Log.NOTICE, NAME, "waiting for console");
-// try {
-// Thread.sleep(100);
-// } catch (InterruptedException ie) {
-// Log.log(Log.ERROR, NAME, ie.getMessage());
-// }
-// }
-// }
+    public static void addMissingImports (View view)
+    {
+        HashSet<String> importTokens = getImportableClasses(view);
+        Set<String> existingImports = getCurrentImports(view);
+        Map<String, Set<String>> classPackages = getAllClassPackages(view);
+
+        List<String> importsToAdd = new ArrayList<String>();
+
+        for (String importToken : importTokens) {
+            if (!existingImports.contains(importToken)) {
+                if (classPackages.containsKey(importToken)) {
+                    if (classPackages.get(importToken).size() == 1) {
+                        importsToAdd.add("import " + classPackages.get(importToken).iterator().next() + ";");
+                    } else {//Handle the duplicates
+
+                        Set<String> dups = classPackages.get(importToken);
+                        String[] options = new String[dups.size()];
+                        options = dups.toArray(options);
+                        int n = JOptionPane.showOptionDialog(view,
+                            "Resolve import " + importToken,
+                            "Resolve import " + importToken,
+                            JOptionPane.NO_OPTION,
+                            JOptionPane.QUESTION_MESSAGE,
+                            null,
+                            options,
+                            options[0]);
+                        if (n >= 0) {
+                            importsToAdd.add("import " + options[n] + ";");
+                        }
+                    }
+                } else {
+                    Log.log(Log.NOTICE, "HaXe", "No import found for " + importToken);
+                }
+            }
+        }
+
+        //Sort imports
+        Collections.sort(importsToAdd);
+
+        // Insert imports
+        StringBuffer bufferText = new StringBuffer();
+        boolean addedImports = importsToAdd.size() == 0;
+        Buffer buffer = view.getBuffer();
+        Pattern packagePattern = Pattern.compile("^[ \t]*package[ \t;$].*");
+        Pattern packagePrefixPattern = Pattern.compile("^[ \t]*import[ \t]+([a-zA-Z0-9_]+)\\..*");
+
+        String line;
+        for (int ii = 0; ii < buffer.getLineCount(); ++ii) {
+            line = buffer.getLineText(ii);
+            bufferText.append(line + "\n");
+            if (!addedImports && packagePattern.matcher(line).matches()) {
+                String currentPackagePrefix = "";//packagePrefixPattern.matcher(importsToAdd.get(0)).group(1);
+                for (String newImport : importsToAdd) {
+                    Matcher m = packagePrefixPattern.matcher(newImport);
+                    String packagePrefix = null;
+                    if (m != null && m.matches()) {
+                        packagePrefix = m.group(1);
+                    }
+
+                    if (!currentPackagePrefix.equals(packagePrefix)) {
+                        bufferText.append("\n");
+                        currentPackagePrefix = packagePrefix;
+                    }
+                    bufferText.append(newImport + "\n");
+                }
+                addedImports = true;
+            }
+        }
+        view.getTextArea().setText(bufferText.toString());
+        view.getTextArea().goToBufferStart(false);
+        view.getTextArea().setFirstLine(0);
+    }
+
+    protected static HashSet<String> getImportableClasses (View view)
+    {
+        HashSet<String> importTokens = new HashSet<String>();
+
+        Pattern patternVar = Pattern.compile("^.*[ \t]var[ \t].*:[ \t]*([A-Za-z0-9_]+).*");
+        Pattern patternExtends = Pattern.compile("^.*class[ \t]+([A-Za-z0-9_]+)[ \t]extends[ \t]([A-Za-z0-9_]+).*");
+        Pattern patternImplements = Pattern.compile(".*[ \t]implements[ \t]+(.*)");
+        Pattern patternNew = Pattern.compile("^.*[ \t\\(\\[]+new[ \t]+([A-Za-z0-9_]+).*");
+        Pattern patternStatics = Pattern.compile("^.*[ \t]([A-Z][A-Za-z0-9_]*)\\..*");
+        Pattern patternArgument = Pattern.compile(".*:[ \t]*([A-Z][A-Za-z0-9_]*)[\\) \t$,<]+.*");
+
+        Buffer buffer = view.getBuffer();
+
+        Matcher m;
+
+        for (int i = 0; i < buffer.getLineCount(); i++) {
+            m = patternVar.matcher(buffer.getLineText(i));
+            if (m.matches()) {
+                importTokens.add(m.group(1));
+            }
+
+            m = patternExtends.matcher(buffer.getLineText(i));
+            if (m.matches()) {
+                importTokens.add(m.group(2));
+            }
+
+            m = patternNew.matcher(buffer.getLineText(i));
+            if (m.matches()) {
+                importTokens.add(m.group(1));
+            }
+
+            m = patternStatics.matcher(buffer.getLineText(i));
+            if (m.matches()) {
+                importTokens.add(m.group(1));
+            }
+
+            m = patternArgument.matcher(buffer.getLineText(i));
+            if (m.matches()) {
+                //Add the first
+                importTokens.add(m.group(1));
+                //And search for other arguments
+                String strippedLine = buffer.getLineText(i).replaceFirst(":" + m.group(1), "");
+                m = patternArgument.matcher(strippedLine);
+                while(m.matches()) {
+                    importTokens.add(m.group(1));
+                    strippedLine = strippedLine.replaceFirst(":" + m.group(1), "");
+                    m = patternArgument.matcher(strippedLine);
+                }
+            }
+
+            m = patternImplements.matcher(buffer.getLineText(i));
+            if (m.matches()) {
+                String implementsStuff = m.group(1);
+                implementsStuff = implementsStuff.replace("{", "");
+                String[] tokens = implementsStuff.split(",");
+                for (String token : tokens) {
+                    token = token.trim();
+                    if (!token.equals("")) {
+                        importTokens.add(token);
+                    }
+                }
+            }
+        }
+        return importTokens;
+    }
+
+    protected static Map<String, Set<String>> getAllClassPackages (View view)
+    {
+        File hxmlFile = getBuildFile(view.getEditPane());
+        if (hxmlFile == null) {
+            Log.log(Log.ERROR, "HaXe", "No .hxml file found to get class paths");
+            return null;
+        }
+        return getPackagesFromHXMLFile(hxmlFile);
+    }
+
+    protected static Map<String, Set<String>> getPackagesFromHXMLFile (File hxmlFile)
+    {
+        Map<String, Set<String>> classPackages = new HashMap<String, Set<String>>();
+        Set<String> classPaths = new HashSet<String>();
+
+        if (!hxmlFile.exists()) {
+            Log.log(Log.ERROR, "HaXe", "*.hxml file doesn't exist: " + hxmlFile);
+            return classPackages;
+        }
+        // Get the classpaths from the *.hxml file
+        try {
+            BufferedReader in = new BufferedReader(new FileReader(hxmlFile));
+            String str;
+            Pattern cp = Pattern.compile("^[ \t]*-cp[ \t]+(.*)");
+            Matcher m;
+            while ((str = in.readLine()) != null) {
+                m = cp.matcher(str);
+                if (m.matches()) {
+                    classPaths.add(hxmlFile.getParentFile().getAbsolutePath() + File.separator
+                        + m.group(1));
+                }
+            }
+            in.close();
+        } catch (IOException e) {
+            Log.log(Log.ERROR, "HaXe", e.toString());
+        }
+
+        //jEdit.getProperty("options.haxe.installDir");
+        //Add the system classpaths
+        String installDir = jEdit.getProperty("options.haxe.installDir");
+        if (installDir == null || installDir.trim().equals("") || installDir.indexOf("System Default") >= 0) {
+            installDir = getSystemDefaultHaxeInstallPath();
+        }
+        File stdlib = new File(installDir + File.separator + "lib");
+
+        Pattern startsWithNumber = Pattern.compile("^[0-9].*");
+        if (stdlib.exists() && stdlib.isDirectory()) {
+            for (File libDir : stdlib.listFiles()) {
+                if (libDir.isDirectory() && startsWithNumber.matcher(libDir.getName()).matches()) {
+                    for (File versioned : libDir.listFiles()) {
+                        if (versioned.isDirectory()) {
+                            classPaths.add(versioned.getAbsolutePath().replace("flash9", "flash"));
+                        }
+                    }
+                }
+            }
+        } else {
+            Log.log(Log.ERROR, "HaXe", "HaXe install directory doesn't exist: " + installDir);
+        }
+
+        classPaths.add("/usr/lib/haxe/std");
+        trace("classPaths=" + classPaths);
+        // Go through the classpaths and add the *.hx files
+
+        try {
+            for (String path : classPaths) {
+                List<File> haxeFiles = getFileListingNoSort(new File(path));
+
+                // Break down the name to correctly be the package
+                for (File haxeFile : haxeFiles) {
+                    String fullPath = haxeFile.getAbsolutePath();
+                    fullPath = fullPath.substring(0, fullPath.length() - 3);
+                    String packagePath = fullPath.substring(path.length() + 1);
+                    packagePath = packagePath.replace('/', '.');
+                    packagePath = packagePath.replace('\\', '.');
+                    packagePath = packagePath.replace("flash9", "flash");
+                    String className = haxeFile.getName();
+                    className = className.substring(0, className.length() - 3);
+
+                    if (className.length() == packagePath.length()) {
+                        continue;
+                    }
+
+                    if (!classPackages.containsKey(className)) {
+                        classPackages.put(className, new HashSet<String>());
+                    }
+
+                    classPackages.get(className).add(packagePath);
+                }
+            }
+        } catch (FileNotFoundException e) {
+            Log.log(Log.ERROR, "HaXe", e.toString());
+        }
+
+        return classPackages;
+    }
+
+    static protected List<File> getFileListingNoSort (File aStartingDir)
+        throws FileNotFoundException
+    {
+        List<File> result = new ArrayList<File>();
+        File[] filesAndDirs = aStartingDir.listFiles();
+        List<File> filesDirs = Arrays.asList(filesAndDirs);
+        for (File file : filesDirs) {
+            if (!file.exists()) {
+                Log.log(Log.ERROR, "HaXe", "getFileListingNoSort, file doesn't exist:" + file);
+                continue;
+            }
+            if (file.isDirectory()) {
+                // recursive call!
+                List<File> deeperList = getFileListingNoSort(file);
+                result.addAll(deeperList);
+            } else if (file.getName().endsWith(".hx")) {// add if haxe file
+                result.add(file);
+            }
+        }
+        return result;
+    }
+
+    static protected void removeExistingImports (View view)
+    {
+
+        StringBuffer newBuffer = new StringBuffer();
+        Pattern patternimport = Pattern.compile("^[ \t]*import[ \t]+.*");
+        Matcher m;
+
+        for (String line : view.getTextArea().getText().split("\n")) {
+            m = patternimport.matcher(line);
+            if (!m.matches()) {
+                newBuffer.append(line + "\n");
+            }
+        }
+        view.getTextArea().setText(newBuffer.toString());
+    }
+
+    static protected Set<String> getCurrentImports (View view)
+    {
+        Set<String> existingImports = new HashSet<String>();
+        Pattern patternimport = Pattern.compile("^[ \t]*import[ \t]+(.*);.*");
+        Matcher m;
+        String line;
+
+        Buffer buffer = view.getBuffer();
+        for (int ii = 0; ii < buffer.getLineCount(); ++ii) {
+
+            line = buffer.getLineText(ii);
+            m = patternimport.matcher(line);
+            if (m.matches()) {
+                String fullClassName = m.group(1);
+                String[] tokens = fullClassName.split("\\.");
+                existingImports.add(tokens[tokens.length - 1]);
+            }
+        }
+        return existingImports;
+    }
+
+    public static void main (String[] args)
+    {
+//        Map<String, String> packages = getPackagesFromHXMLFile(new File(
+//            "/Users/dion/Documents/storage/projects/turngame/build.hxml"));
+//        for (String cl : packages.keySet()) {
+//            System.out.println(cl + " : " + packages.get(cl));
+//        }
+    }
+
+    protected static String getSystemDefaultHaxeInstallPath ()
+    {
+        String os = System.getProperty("os.name").toLowerCase();
+
+        if(os.indexOf("win") >= 0) {
+            return jEdit.getProperty("options.haxe.defaultInstallDirWindows");
+        } else if (os.indexOf("mac") >= 0) {
+            return jEdit.getProperty("defaultInstallDirMac");
+        } else {
+            return jEdit.getProperty("options.haxe.defaultInstallDirLinux");
+        }
+    }
 
     @Override
     public void start ()

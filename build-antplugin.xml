@@ -141,11 +141,11 @@
         <!-- make the plugin jar file -->
         <tstamp/>
         <mkdir dir="${install.dir}" />
-        <jar jarfile="${install.dir}/${plugin.sidekick.haxe.HaXeSideKickPlugin.name}.jar">
+        <jar jarfile="${install.dir}/${plugin.sidekick.haxe.HaXeSideKick.name}.jar">
             <manifest>
-                <attribute name="AppName" value="${plugin.sidekick.haxe.HaXeSideKickPlugin.name}" />
-                <attribute name="AppVersion" value="${plugin.sidekick.haxe.HaXeSideKickPlugin.version}" />
-                <attribute name="Author" value="${plugin.sidekick.haxe.HaXeSideKickPlugin.author}" />
+                <attribute name="AppName" value="${plugin.sidekick.haxe.HaXeSideKick.name}" />
+                <attribute name="AppVersion" value="${plugin.sidekick.haxe.HaXeSideKick.version}" />
+                <attribute name="Author" value="${plugin.sidekick.haxe.HaXeSideKick.author}" />
                 <attribute name="Created-By" value="${user.name}" />
                 <attribute name="Created-On" value="${TODAY}"/>
             </manifest>
@@ -179,7 +179,7 @@
     <target name="reload" if="can.reload.plugins">
         <echo>Reloading ${install.dir}/${ant.project.name}.jar</echo>
         <taskdef name="reloadPlugin" classname="ReloadPluginTask"/>
-        <reloadPlugin jarfile="${install.dir}/${plugin.sidekick.haxe.HaXeSideKickPlugin.name}.jar"/>
+        <reloadPlugin jarfile="${install.dir}/${plugin.sidekick.haxe.HaXeSideKick.name}.jar"/>
     </target>
 
 
