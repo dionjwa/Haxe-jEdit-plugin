@@ -17,14 +17,15 @@
 <h2>HaXe plugin</h2>
 <p>
 (c) 2010 by Dion Amago<br/>
-Haxe editing mode: Kostas Michalopoulos
 </p>
 
-<p>Provides code completion and (optionally) a code browser for the <a href="http://haxe.org/">HaXe</a> language. Also provides utility functions for building and launching e.g. swfs.  
+<p>Provides code completion, code browsing, and automatic imports for the <a href="http://haxe.org/">HaXe</a> language. 
 
-<p>If you have Haxe installed, code completion should work out of the box.
+<p>If you have Haxe installed, code completion should work out of the box.  Code completion only works if you activate it immediately after a period e.g. "someVariable.".  The plugin will then list all the class members.
 
-The <a href="http://haxe.org/com/ide/jedit">HaXe mode</a> is automatically copied into the mode folder in your jEdit settings and the catalog.xml file is edited.</p>
+<p>
+Import can be automatically added.  By default, existing imports are not deleted.  Only HaXe source folders given in the *.hxml build file are used to search for imports.  Potential clashes are resolved with a dialog.
+</p>
 
 <p>Additional (optional) installation steps:</p>
 <p>The Haxe plugin can use the CtagsSideKick plugin to parse and display HaXe code in navigable browser.  Ctags doesn't support HaXe out of the box.  Append this to your ~/.ctags file (or create it if it doesn't exist:</p>
@@ -33,11 +34,11 @@ The <a href="http://haxe.org/com/ide/jedit">HaXe mode</a> is automatically copie
 <p>
 --langdef=haxe<br/>
 --langmap=haxe:.hx<br/>
---regex-haxe=/^[ \t]*import[ \t]+([A-Za-z0-9_.]+)[ \t]*; /\1 /F,import, imports/<br/>
---regex-haxe=/^[ \t]*enum[ \t]+([A-Za-z0-9_]+).* /\1 /e,enum, enumerators/<br/>
---regex-haxe=/^[ \t]*typedef[ \t]+([A-Za-z0-9_]+)[ \t]+.* /\1 /t,typedef, typedefs/ <br/>
---regex-haxe=/^[ \t]*((private|public|static|inline)[ \t])*[ \t]+var[ \t]+([A-Za-z0-9_]+)[ \t]*(: *([A-Za-z0-9_]+))? *(=|;)/\3 : \5/v,variable, variables/<br/> 
---regex-haxe=/^[ \t]*((private|public|static|override) *)*[ \t]*function[ \t]+(([A-Za-z0-9_]+)[ \t]*\(+([A-Za-z0-9_:<> ]*)*\).*)/\3/f,function, functions/ <br/>
+--regex-haxe=/^[ \t]*import[ \t]+([A-Za-z0-9_.]+)[ \t]*; /\1/F,import, imports/<br/>
+--regex-haxe=/^[ \t]*enum[ \t]+([A-Za-z0-9_]+).* /\1/e,enum, enumerators/<br/>
+--regex-haxe=/^[ \t]*typedef[ \t]+([A-Za-z0-9_]+)[ \t]+.*/\1/t,typedef, typedefs/ <br/>
+--regex-haxe=/^[ \t]*((private|public|static|inline)[ \t]*)*[ \t]+var[ \t]+([A-Za-z0-9_]+)[ \t]*(: *([A-Za-z0-9_<,> ]+))?[ \t]*.*[;=].*/\3/v,variable, variables/<br/> 
+--regex-haxe=/^[ \t]*((private|public|static|override|inline)[ \t]*)*[ \t]*function[ \t]+(([A-Za-z0-9_]+)[ \t]*.*)/\3/f,function, functions/ <br/>
 --regex-haxe=/^[ \t]*(class|interface)[ \t]+([A-Za-z0-9_]+)[ \t]*($|((extends|implements)?[ \t]+([A-Za-z0-9_]+))?.*)/\2 \5 \6 /c,class, classes/<br/>
 </p>
 
