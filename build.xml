@@ -54,12 +54,4 @@
                 </exec>
         </target>
 	
-        <target name="build.post">
-                <if>
-                        <equals arg1="${user.name}" arg2="dion" />
-                        <then>
-                                <copy file="${install.dir}/${jar.file}" tofile="${user.home}/.jedit/jars/${jar.file}" overwrite="true" />
-                        </then>
-                </if>
-        </target>
 </project>
