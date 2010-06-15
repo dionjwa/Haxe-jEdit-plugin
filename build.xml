@@ -5,57 +5,61 @@
 -->
 <project name="HaXeSideKick" default="build" basedir=".">
 
-    <property name="compiler.source" value="1.5" />
-	<property name="compiler.target" value="1.5" />
-	<property file="build.properties"/>
-	<property file="../build.properties"/>
+        <property name="compiler.source" value="1.5" />
+        <property name="compiler.target" value="1.5" />
+        <property file="build.properties"/>
+        <property file="../build.properties"/>
 <!--	<property file="${user.home}/.build.properties"/>
 	<property file="${user.home}/build.properties"/> -->
-
-	<property file="build.support" value="../build-support" />
-	<import file="${build.support}/plugin-build.xml" />
-
-	<property name="jedit.plugins.dir" value="${install.dir}" />
-
-	<selector id="packageFiles">
-	  <or>
-	    <filename name="icons/*.png" />
-		<filename name="*.txt" />
-		<filename name="description.html" />
-		<filename name="index.html" />
-		<filename name="docs/CHANGES.txt" />
-	  </or>
-	 </selector>
-
-	<property name="jar.name"  value="${ant.project.name}.jar"/>
-	<property name="docs-proc.target"  value="xsltproc"/>
-
-	<property name="src.dir" location="${basedir}/src"/>
-	<property name="build.dir" value="build"/>
-
-	<path id="project.class.path">
-		<pathelement location="${jedit.install.dir}/jedit.jar" />
-		<pathelement location="${jedit.plugins.dir}/CtagsSideKick.jar" />
-		<pathelement location="${jedit.plugins.dir}/ErrorList.jar" />
-		<pathelement location="${jedit.plugins.dir}/ProjectViewer.jar" />
-		<pathelement location="${jedit.plugins.dir}/SideKick.jar" />
-	</path>
-
-	<target name="build.prepare" >
-	 	<mkdir dir="${build.dir}" />
-	</target>
-
-	<target name="tags">
-		<exec executable="ctags">
-			<arg value="-f" />
-			<arg path="tags_" />
-			<arg value="-R" />
-			<arg path="." />
-		</exec>
-	</target>
-
-	<target name="build.post">
-	        <copy file="${install.dir}/${jar.file}" tofile="${user.home}/.jedit/jars/${jar.file}" overwrite="true" />
-
-	</target>
+	
+        <property file="build.support" value="../build-support" />
+        <import file="${build.support}/plugin-build.xml" />
+	
+        <property name="jedit.plugins.dir" value="${install.dir}" />
+	
+        <selector id="packageFiles">
+                <or>
+                        <filename name="icons/*.png" />
+                        <filename name="*.txt" />
+                        <filename name="description.html" />
+                        <filename name="index.html" />
+                        <filename name="docs/CHANGES.txt" />
+                </or>
+        </selector>
+	
+        <property name="jar.name" value="${ant.project.name}.jar"/>
+        <property name="docs-proc.target" value="xsltproc"/>
+	
+        <property name="src.dir" location="${basedir}/src"/>
+        <property name="build.dir" value="build"/>
+	
+        <path id="project.class.path">
+                <pathelement location="${jedit.install.dir}/jedit.jar" />
+                <pathelement location="${jedit.plugins.dir}/CtagsSideKick.jar" />
+                <pathelement location="${jedit.plugins.dir}/ErrorList.jar" />
+                <pathelement location="${jedit.plugins.dir}/ProjectViewer.jar" />
+                <pathelement location="${jedit.plugins.dir}/SideKick.jar" />
+        </path>
+	
+        <target name="build.prepare">
+                <mkdir dir="${build.dir}" />
+        </target>
+	
+        <target name="tags">
+                <exec executable="ctags">
+                        <arg value="-f" />
+                        <arg path="tags_" />
+                        <arg value="-R" />
+                        <arg path="." />
+                </exec>
+        </target>
+	
+        <target name="build.post">
+                <if>
+                        <equals arg1="${user.name}" arg2="dion" />
+                        <then>
+                                <copy file="${install.dir}/${jar.file}" tofile="${user.home}/.jedit/jars/${jar.file}" overwrite="true" />
+                        </then>
+                </if>
+        </target>
 </project>
