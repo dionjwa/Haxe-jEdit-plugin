@@ -29,7 +29,7 @@ public class HaXeParser extends SideKickParser
     public void activate (View view)
     {
         if (_ctagsParser == null && jEdit.getPlugin("ctags.sidekick.Plugin") != null) {
-            _ctagsParser = ServiceManager.getService(SideKickParser.class, "ctags");
+            _ctagsParser = (SideKickParser)ServiceManager.getService(SideKickParser.class.getName(), "ctags");
         }
         ErrorSource.registerErrorSource(HaXeSideKickPlugin._errorSource);
     }
