@@ -2,10 +2,10 @@
 <book xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:noNamespaceSchemaLocation='http://www.docbook.org/xsd/4.4/docbook.xsd' >
 <!-- :wrap=soft:maxLineLen=0: -->
-<title>jEdit CtagsInterface Plugin Guide</title>
+<title>jEdit Haxe SideKick Plugin Guide</title>
 <bookinfo>
  <authorgroup>
-  <author><firstname>Shlomy</firstname><surname>Reinstein</surname></author>
+  <author><firstname>Dion</firstname><surname>Amago</surname></author>
  </authorgroup>
 
  <legalnotice><title>Legal Notice</title>
@@ -22,252 +22,85 @@
  </legalnotice>
  </bookinfo>
 
+ 
  <chapter id="intro">
   <title> Introduction </title>
 
- <para> The CtagsInterfacePlugin provides two dockables, a <guilabel>Tag List</guilabel> and a <guilabel>Tag Preview</guilabel>. It also provides a number of operations that allow you to quickly jump from one file location to another in the editor, based on the context of the caret, and the indexed tag information obtained from the <ulink url="http://ctags.sourceforge.net/">Exuberant Ctags</ulink> executable. And finally, it provides a plugin interface through which other jedit plugins can easily access ctags data.
+ <para> Provides code completion, code browsing, and automatic imports for the <ulink url="http://haxe.org/">HaXe</ulink> language. 
  </para>
  </chapter>
-
- <chapter id="setup">
+ 
+ 
+ 
+ 
+ 
+ 
+  <chapter id="setup">
  <title> Setup and Configuration </title>
 
- <para> CtagsInterface will happily index all files in your project or source tree, unless you tell it otherwise.
- Under <literal>Plugin Options - CtagsInterface - General</literal> you will find a field for specifying <emphasis role="bold">Ctags Invocation Options</emphasis>. By adding extra options to this field, as shown below, you can specify that only certain file types are scanned and indexed. Read the manual pages of exuberant ctags for more information about the options available.</para>
-
- <literallayout> --languages=c,c++,java,python </literallayout>
-
- <note> <title> About Memory and Database Size </title>
- <para> Because the database can get rather large, depending on how much sourcecode is indexed, this can also mean that an in-process database will cause jEdit's JVM will to require a larger heap size. Be sure to keep that in mind, if you find that jEdit periodically grinds to a halt, or crashes, when CtagsInterface is used - out of heap memory errors can happen depending on the size of data, and may exhibit very different behavior depending on where it happens first, and which database you are using. You can increase the JVM heap size by editing the script that starts jEdit, or configuring your database for server mode.
- </para>
-
- <programlisting>
-export JAVA_HEAP_SIZE=750
-[...]
-exec "$JAVA_HOME/bin/java" -mx${JAVA_HEAP_SIZE}m  "-Djedit.home=$JEDIT_HOME"
- "-Dawt.useSystemAAFontSettings=on" "-Dswing.aatext=true"
- ${JEDIT} -jar "$JEDIT_HOME/jedit.jar" -reuseview $@
-</programlisting>
-</note>
-
- <section id="dbserver">
- <title> Database Server setup </title>
-
- <para> CtagsInterface will work out of the box with two open-source Java databases: <ulink url= "http://hsqldb.org/">hsql</ulink>, and <ulink url="http://www.h2database.com/html/main.html">h2</ulink>. We have also tried it (with mixed results) using MySQL. Its lack of a variable size string support makes picking a max string size difficult.  </para>
- <para> You must make sure that the JDBC database driver for at least one of them is available in the <literal>~/.jedit/jars</literal> directory.
- The in-process Java databases are preferred for their ability to be used without any configuration.
- However, for larger databases, you might consider using the database in server mode, so that the database does not occupy memory in jEdit's process or impact its performance.
- </para>
-
- <para> The option <emphasis role="bold">Rebuild new database using current projects and source trees</emphasis> can be used to easily bring over and reindex the current set of projects and directory trees from one existing ctags database to another. </para>
-
- <para> The rest of this chapter shows some examples of how to set up a database server for ctagsinterface. </para>
-
- <section id="hsql">
-   <title> hsql  </title>
-
-<para> To start hsql in server mode: </para>
-<literallayout>
-$ <emphasis role="bold">java -Xmx512M -cp hsqldb.jar org.hsqldb.Server -database.0
-file:mydb -dbname.0 Ctags</emphasis>
-</literallayout>
-<para> This sets up the server with a JVM heap size of 520mb, which should be enough for reasonably sized databases. You may need to add more to this value if you tag many big projects.
-</para>
- <para> To configure CtagsInterface to use hsql in server mode: </para>
- <orderedlist>
- <listitem><para> Open the "Change database settings" dialog and select the
-'hsqldb' database preset.
-</para></listitem>
-<listitem><para> Click 'Save as...', and name the new preset "hsqldbServer". </para></listitem>
-<listitem><para> Change the 'Connection string:' field to the following:
-<literal> jdbc:hsqldb:hsql://localhost/Ctags </literal></para></listitem>
-<listitem><para> Remove the <literal>SQL Statement to run on exit</literal>, which if left, there,
-would cause the shutdown of the server each time the plugin stopped, which is only desireable for an in-process database.
-</para> </listitem>
-</orderedlist>
-
-<para> If you'd like the new new server-based database to include the
-projects and source-trees in your current database, select the
-<literal>Rebuild the new database...</literal> check-box. </para>
-</section>
-<section id="h2">
-<title> h2 </title>
-
- <para> To start H2 in server mode: </para>
-<literallayout>
- $ <emphasis role="bold">java -mx520m -cp h2*.jar org.h2.tools.Server </emphasis>
-</literallayout>
-<para> This will open the system web browser and show  you a web page on localhost that lets you choose how the server should be configured.</para>
-
-<para> At this point, you can select "h2", then "custom", and copy/paste values from the web server configuration of H2 into another custom DB configuration in the CtagsInterface  Database Properties dialog. </para>
-
-</section>
-<section id="mysql">
-<title> MySQL </title>
-
- <para> To use a MySQL database called <literal>ctags</literal> on <literal>localhost</literal>, you can follow these steps. </para>
-
- <orderedlist>
-
-   <listitem><para>  As the root user, create a database and grant the user <literal>sa</literal> all priveleges to it: </para>
-   <literallayout>
-   create database ctags;
-   grant all on ctags.* to 'sa'@'localhost';
-   </literallayout>
-   </listitem>
-   <listitem><para> Place the mysql connector in <literal>~/.jedit/jars/mysql.jar</literal>. </para></listitem>
-   <listitem> <para> <emphasis role="bold">Plugins - CtagsInterface - Change Database Settings</emphasis> (You might want to map this to a shortcut now..) </para></listitem>
-   <listitem><para>
-    <literal>Select Preset Values</literal>: <emphasis>Custom</emphasis> </para>
-    <table>
-    <title>Mysql settings:</title>
-    <tgroup cols="2">
-        <thead> <row><entry>Entry</entry><entry>Value</entry></row> </thead>
-    <tbody>
-        <row> <entry> JDBC Driver Class</entry> <entry> com.mysql.jdbc.Driver </entry> </row>
-        <row> <entry> Connection String </entry> <entry> jdbc:mysql://localhost:3306/ctags </entry> </row>
-        <row> <entry> User </entry> <entry> sa </entry> </row>
-        <row> <entry> Password </entry> <entry>  </entry> </row>
-        <row> <entry> SQL Mappings file: </entry> <entry> <ulink url="jeditresource:/CtagsInterface.jar!/mysql.map">/path/to/local/mysql.map</ulink> </entry> </row>
-    </tbody>
-    </tgroup> </table>
-    </listitem>
-    <listitem><para> <literal>Save as:</literal> <emphasis role="bold">mysql</emphasis> </para></listitem>
-</orderedlist>
-    <para> The mappings file below, also included with CtagsInterface.jar, <literal>mysql.map</literal>, contains necessary type mappings for MySQL. Mappings can be
-    defined for other databases as well. The current mapping for MySQL contains only two lines.
-    You can copy and paste them, save as, and enter this path in the <literal>SQL Mappings
-    File</literal> above.
-    </para>
-
-<literallayout>
-    identityType=SERIAL
-    varcharType=VARCHAR(300)
-</literallayout>
-
-  <para> This means that when using MySQL, ctags generates SQL statements that, instead of using <literal>IDENTITY</literal>, uses <literal>SERIAL</literal>, and instead of <literal>VARCHAR</literal>, specifies a fixed-size string, since VARCHAR without a size is not supported in MySQL. The best size for this depends on the files you are indexing. </para>
-    </section>
-  </section>
+ 
+  <para> Haxe must be in your path for code completion to work.  To test this, open a shell or dos prompt and type "haxe".  If you see haxe related output, then good, otherwise see the 
+  <ulink url="http://haxe.org/">HaXe</ulink> website for installation help.</para>
+  
   </chapter>
+  
+  
+    <chapter id="usage">
+ <title> Usage </title>
+  
+  
+  <section id="code-completion">
+   <title> Code Completion </title>
+  <programlisting>
+var someVar = "blah";
+somevar.
+</programlisting>
 
- <chapter id="tagdbs">
-   <title> Tagging Projects and Source Trees </title>
+  <para> At the end of the code above, calling the "Code Completion" command will show a list of class members and functions.  Select one for insertion.
+   Code completion only works if you activate it immediately after a period e.g. "someVariable." (including imports, but you don't need that). </para>
+   </section>
+   
+   
+     <section id="imports">
+   <title> Imports </title>
 
-   <para> CtagsInterface uses an sql database to keep track of tag data from multiple projects and directory trees.    The <guimenuitem>Plugin Options - CtagsInterface</guimenuitem>
-   provides dialogs for adding projects and directory trees that should be indexed.
-   </para>
+  <para> The command "Add missing import" will search though the source folders listed in the project hxml file, and try to match classes used in the hx file with class and packages in the source folders.  For duplicates, a dialog will be shown.  Existing imports are not touched, in case you use imports that are not in the listed source folders. </para>
+   </section>
+   
+      <section id="buildrun">
+   <title> Building and running </title>
 
-   <para> The first step is to add the projects and source trees that you want to be tagged in
-   the database. Tag them in the background, and go back into jEdit.
-   When they are done, you should see no pending I/O requests in the <guimenuitem>Utilities -
-   Troubleshooting - I/O Progress Monitor</guimenuitem>. After your selected projects have been
-   added, you can lookup some tags. </para>
+  <para> The command "Build project" will attempt to build the haxe project.  The error will be passed to the Error List plugin so you can navigate directly to the source causing any compile problems.</para>
+  
+  <para> The command "Launch project" will attempt to build the haxe project, and if successful, will launch the project.  Due to the many ways to launch HaXe projects, the launch command must be given in the Plugin Options.</para>
+   </section>
+   
+      <section id="ctags">
+   <title>Code Browsing </title>
 
-   <para> You can add projects two ways. From the ProjectViewer, right click on the project and
-   <guimenuitem>Add Project to Database</guimenuitem>. Or, from <guimenuitem>Plugin Options -
-   CtagsInterface - Projects</guimenuitem>. </para>
+   <para> Like all "SideKick" plugins, this has no dockable
+view. Instead, it shares its view with other SideKick plugins through
+the SideKick Structure Browser. To use SideKick, dock the Structure
+Browser on the left or the right. </para>
 
-   <para> Similarly, you can add sourcetrees from the <guimenuitem>plugin options -
-   CtagsInterface - Source Trees</guimenuitem>, or from the file system browser context menu:
-   <guimenuitem>Plugins - Add source tree to Tags Database</guimenuitem>. </para>
+  <para> Code browsing relies on the CtagsInterface plugin.  As HaXe is not a standard langauage supported by Ctags, you have to add the following language definition to your ctags configuration file (located at ~/.ctags on Mac and Linux)</para>
 
- </chapter>
-
- <chapter id="lookup">
-   <title> Tag Lookup </title>
-
-   <para> By default, tag lookup will search the entire tag database for matching tags,
-   including all added projects and source trees. </para>
-
-   <para> When using jEdit with ProjectViewer, you might be working with a set of files, and have to frequently check another set of files that you are reusing. This means that you will probably want to restrict your search to only the projects and source trees that are related to your project. </para>
-
-   <para> By editing the properties of the current project, you can see a <guilabel>Dependencies</guilabel> pane, which allows you to set the related projects or source trees on an individual project basis. While running the Tag Preview, or performing a Jump to Tag while working in a project that has dependencies set, CtagsInterface should restrict its searches to tag data from only those projects and directory trees.
-   </para>
-
-   <para> This is especially useful in the case where there are many projects / source trees indexed in the tags database that are not related to each other.
-   </para>
-
- </chapter>
-
- <chapter id="actions">
-   <title> Actions </title>
-
-   <formalpara><title> Add tag File </title>
-   <para> Adds an already generated ctags file to the database. </para>
-   </formalpara>
-
-   <formalpara><title> Tag all projects </title>
-   <para> This does exactly what it says: it goes through <emphasis role="bold">every</emphasis> project that ProjectViewer knows about, and tags their files, adding the tag data to the embedded database.
-   </para>
-   </formalpara>
-
-   <formalpara><title> Suggest completion options </title>
-   <para> Suggests code-completion options from the tag database. This includes completion of function calls, using SuperAbbrevs for conveniently filling-in the parameter values. </para>
-   </formalpara>
-
-   <section id="dynamic-actions">
-   <title> Dynamic Actions </title>
-
-
-   <para> In addition to these built-in actions, CtagsInterface allows you to create dynamic Actions, which are custom SQL queries, which can be bound to keyboard shortcuts. Each such SQL query should retrieve a list of tags from the database. The dynamic action associated with the query will execute the query and show the list of tags it retrieved in the <guilabel>Tag List</guilabel> dockable, allowing you to jump to any of them. In case the query returns a single tag, the dynamic action jumps to it directly, without showing it in the dockable.
-   </para>
-   <para> To manage (create/delete/modify) dynamic actions, select the <guilabel>Actions</guilabel> pane in the plugin options.
-   To define a new dynamic action, click the <guilabel>+</guilabel> button. You will be asked to provide a name for the action and an SQL query. The action name you provide should not contain spaces, as it is used to define an ordinary edit action. The SQL query is an ordinary SQL <guilabel>select</guilabel> statement, which can make use of the following keywords:
-   <itemizedlist>
-      <listitem><para><guilabel>{tag}</guilabel>: The tag being looked up</para></listitem>
-      <listitem><para><guilabel>{project}</guilabel>: The name of the active project</para></listitem>
-   </itemizedlist>
-   Here are a few examples:
-   <itemizedlist>
-      <listitem><para>select * from tags,files,map,origins where tags.file_id=files.id and tags.name='{tag}' and a_kind='function' and files.id=map.file_id and map.origin_id=origins.id and origins.name='{project}'
-	  </para></listitem>
-      <listitem><para>select * from tags,files,map,origins where tags.file_id=files.id and tags.name='{tag}' and a_kind='prototype'  and files.id=map.file_id and map.origin_id=origins.id and origins.name='{project}'
-	  </para></listitem>
-   </itemizedlist>
-   </para>
-
+  
+    <programlisting>
+--langdef=haxe
+--langmap=haxe:.hx
+--regex-haxe=/^[ \t]*import[ \t]+([A-Za-z0-9_.]+)[ \t]*; /\1/F,import, imports/
+--regex-haxe=/^[ \t]*enum[ \t]+([A-Za-z0-9_]+).* /\1/e,enum, enumerators/
+--regex-haxe=/^[ \t]*typedef[ \t]+([A-Za-z0-9_]+)[ \t]+.*/\1/t,typedef, typedefs/ 
+--regex-haxe=/^[ \t]*((private|public|static|inline)[ \t]*)*[ \t]+var[ \t]+([A-Za-z0-9_]+)[ \t]*(: *([A-Za-z0-9_&lt;,&gt; ]+))?[ \t]*.*[;=].*/\3/v,variable, variables/ 
+--regex-haxe=/^[ \t]*((private|public|static|override|inline)[ \t]*)*[ \t]*function[ \t]+(([A-Za-z0-9_]+)[ \t]*.*)/\3/f,function, functions/ 
+--regex-haxe=/^[ \t]*(class|interface)[ \t]+([A-Za-z0-9_]+)[ \t]*($|((extends|implements)?[ \t]+([A-Za-z0-9_]+))?.*)/\2 \5 \6 /c,class, classes/
+</programlisting>
    </section>
 
- </chapter>
-
- <chapter id="dockables">
-   <title> CtagsInterface Dockables </title>
-
-   <para> There are two dockables that you can use from CtagsInterface. </para>
-
-   <formalpara> <title> Tag List </title>
-   <para> When <action>jump to tag</action> is invoked, if there is more than one possible match, the Tag List dockable is displayed, where you can preview and select the choices of jump locations. </para>
-
-   </formalpara>
-   <formalpara> <title> Tag Preview </title>
-   <para> This dockable is updated automatically (after a configurable delay) whenever the caret is moved over a location that is a known symbol in the tag database.
-   </para>
-
-   </formalpara>
-
- </chapter>
-
- <chapter id="pluginservices">
-   <title> Services to other plugins </title>
-   <para> CtagsInterface also offers services to other plugins: ClassBrowser, and Tags: </para>
-
-   <orderedlist>
-   <listitem><para> Queries of the tags database </para></listitem>
-   <listitem><para> Jumping to tags. </para></listitem>
-   </orderedlist>
-
-   <para> Since the CtagsInterface manages the tags information and runs ctags, this means that other plugins do not need to call/depend on ctags directly. This also means that in the future, the CtagsInterface may be extended to work with other code-indexing tools. </para>
-
   </chapter>
+  
 
-<appendix id="changelog">
- <title> Changelog </title>
-  <para> For a list of changes in this plugin, see the
-  <ulink url="docs/CHANGES.txt">change log</ulink>.
-  </para>
-
-
-</appendix>
 
 
 </book>

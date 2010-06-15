@@ -39,8 +39,8 @@ plugin.sidekick.haxe.HaXeSideKickPlugin.menu=haxe-build-project \
              haxe-launch-project \
              haxe-code-completion \
              haxe-add-missing-imports \
-haxe-build-project.label=Build current project
-haxe-launch-project.label=Run current project
+haxe-build-project.label=Build project
+haxe-launch-project.label=Launch project
 haxe-code-completion.label=Code completion
 haxe-add-missing-imports.label=Add missing imports
   

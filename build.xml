@@ -8,11 +8,13 @@
         <property name="compiler.source" value="1.5" />
         <property name="compiler.target" value="1.5" />
         <property file="build.properties"/>
+        <property name="build.support" value="../build-support" />
         <property file="../build.properties"/>
-<!--	<property file="${user.home}/.build.properties"/>
-	<property file="${user.home}/build.properties"/> -->
+        
+        <echo message="${ant-contrib.jar}"/>
+	<property file="${user.home}/.build.properties"/>
+	<property file="${user.home}/build.properties"/>
 	
-        <property file="build.support" value="../build-support" />
         <import file="${build.support}/plugin-build.xml" />
 	
         <property name="jedit.plugins.dir" value="${install.dir}" />
