@@ -1,5 +1,6 @@
 package sidekick.haxe;
 
+import java.awt.TextArea;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -276,7 +277,7 @@ public class HaXeSideKickPlugin extends EditPlugin
     }
 
     // Get the first *.hxml file we find
-    public static File getBuildFile (EditPane editPane)
+    public static File getBuildFile (Buffer buffer)
     {
         File buildFile;
         // If there's a project selected, try looking there first
@@ -289,11 +290,11 @@ public class HaXeSideKickPlugin extends EditPlugin
                 }
             }
 
-            if (editPane != null) {
+            if (buffer != null) {
                 // Try the project of the current buffer, even if it's a different project to the
                 // current selected project
                 ProjectManager pm = ProjectManager.getInstance();
-                String path = editPane.getBuffer().getPath();
+                String path = buffer.getPath();
                 for (VPTProject prj : pm.getProjects()) {
                     if (prj.isInProject(path)) {
                         buildFile = getFirstBuildFileInDir(prj.getRootPath());
@@ -306,8 +307,8 @@ public class HaXeSideKickPlugin extends EditPlugin
         }
 
         // Otherwise, search up the file system tree, and grab the first *.hxml we find
-        File curDir = editPane == null ? null
-            : new File(editPane.getBuffer().getPath()).getParentFile();
+        File curDir = buffer == null ? null
+            : new File(buffer.getPath()).getParentFile();
         while (curDir != null) {
             buildFile = getFirstBuildFileInDir(curDir.getAbsolutePath());
             if (buildFile != null) {
@@ -345,7 +346,7 @@ public class HaXeSideKickPlugin extends EditPlugin
             return null;
         }
 
-        File hxmlFile = getBuildFile(editPane);
+        File hxmlFile = getBuildFile(editPane.getBuffer());
 
         if (hxmlFile == null) {
             Log.log(
@@ -461,11 +462,44 @@ public class HaXeSideKickPlugin extends EditPlugin
         Log.log(Log.NOTICE, "HaXe", sb.toString());
     }
 
+
+//    public static void addMissingImports (View view)
+//    {
+//        new Thread(new ImportThread(view)).start();
+////        ThreadUtilities.runInBackground(new ImportThread(view));
+//    }
+
+    public static void main (String[] args)
+    {
+//        Map<String, String> packages = getPackagesFromHXMLFile(new File(
+//            "/Users/dion/Documents/storage/projects/turngame/build.hxml"));
+//        for (String cl : packages.keySet()) {
+//            System.out.println(cl + " : " + packages.get(cl));
+//        }
+    }
+
+    protected static String getSystemDefaultHaxeInstallPath ()
+    {
+        String os = System.getProperty("os.name").toLowerCase();
+
+        if(os.indexOf("win") >= 0) {
+            return jEdit.getProperty("options.haxe.defaultInstallDirWindows");
+        } else if (os.indexOf("mac") >= 0) {
+            return jEdit.getProperty("defaultInstallDirMac");
+        } else {
+            return jEdit.getProperty("options.haxe.defaultInstallDirLinux");
+        }
+    }
+
     public static void addMissingImports (View view)
     {
-        HashSet<String> importTokens = getImportableClasses(view);
-        Set<String> existingImports = getCurrentImports(view);
-        Map<String, Set<String>> classPackages = getAllClassPackages(view);
+        System.out.println("addMissingImports");
+        Buffer buffer = view.getBuffer();
+        JEditTextArea textArea = view.getTextArea();
+
+        HashSet<String> importTokens = getImportableClasses(buffer);
+        Set<String> existingImports = getCurrentImports(buffer);
+        Map<String, Set<String>> classPackages = getAllClassPackages(buffer);
 
         List<String> importsToAdd = new ArrayList<String>();
 
@@ -479,6 +513,7 @@ public class HaXeSideKickPlugin extends EditPlugin
                         Set<String> dups = classPackages.get(importToken);
                         String[] options = new String[dups.size()];
                         options = dups.toArray(options);
+
                         int n = JOptionPane.showOptionDialog(view,
                             "Resolve import " + importToken,
                             "Resolve import " + importToken,
@@ -503,7 +538,6 @@ public class HaXeSideKickPlugin extends EditPlugin
         // Insert imports
         StringBuffer bufferText = new StringBuffer();
         boolean addedImports = importsToAdd.size() == 0;
-        Buffer buffer = view.getBuffer();
         Pattern packagePattern = Pattern.compile("^[ \t]*package[ \t;$].*");
         Pattern packagePrefixPattern = Pattern.compile("^[ \t]*import[ \t]+([a-zA-Z0-9_]+)\\..*");
 
@@ -529,12 +563,64 @@ public class HaXeSideKickPlugin extends EditPlugin
                 addedImports = true;
             }
         }
-        view.getTextArea().setText(bufferText.toString());
-        view.getTextArea().goToBufferStart(false);
-        view.getTextArea().setFirstLine(0);
+        textArea.setText(bufferText.toString());
+        textArea.goToBufferStart(false);
+        textArea.setFirstLine(0);
     }
 
-    protected static HashSet<String> getImportableClasses (View view)
+    protected static Map<String, Set<String>> getAllClassPackages (Buffer buffer)
+    {
+        File hxmlFile = HaXeSideKickPlugin.getBuildFile(buffer);
+        if (hxmlFile == null) {
+            Log.log(Log.ERROR, "HaXe", "No .hxml file found to get class paths");
+            return null;
+        }
+        return getPackagesFromHXMLFile(hxmlFile);
+    }
+
+    static protected Set<String> getCurrentImports (Buffer buffer)
+    {
+        Set<String> existingImports = new HashSet<String>();
+        Pattern patternimport = Pattern.compile("^[ \t]*import[ \t]+(.*);.*");
+        Matcher m;
+        String line;
+
+        for (int ii = 0; ii < buffer.getLineCount(); ++ii) {
+
+            line = buffer.getLineText(ii);
+            m = patternimport.matcher(line);
+            if (m.matches()) {
+                String fullClassName = m.group(1);
+                String[] tokens = fullClassName.split("\\.");
+                existingImports.add(tokens[tokens.length - 1]);
+            }
+        }
+        return existingImports;
+    }
+
+    static protected List<File> getFileListingNoSort (File aStartingDir)
+        throws FileNotFoundException
+    {
+        List<File> result = new ArrayList<File>();
+        File[] filesAndDirs = aStartingDir.listFiles();
+        List<File> filesDirs = Arrays.asList(filesAndDirs);
+        for (File file : filesDirs) {
+            if (!file.exists()) {
+                Log.log(Log.ERROR, "HaXe", "getFileListingNoSort, file doesn't exist:" + file);
+                continue;
+            }
+            if (file.isDirectory()) {
+                // recursive call!
+                List<File> deeperList = getFileListingNoSort(file);
+                result.addAll(deeperList);
+            } else if (file.getName().endsWith(".hx")) {// add if haxe file
+                result.add(file);
+            }
+        }
+        return result;
+    }
+
+    protected static HashSet<String> getImportableClasses (Buffer buffer)
     {
         HashSet<String> importTokens = new HashSet<String>();
 
@@ -544,8 +630,6 @@ public class HaXeSideKickPlugin extends EditPlugin
         Pattern patternNew = Pattern.compile("^.*[ \t\\(\\[]+new[ \t]+([A-Za-z0-9_]+).*");
         Pattern patternStatics = Pattern.compile("^.*[ \t]([A-Z][A-Za-z0-9_]*)\\..*");
         Pattern patternArgument = Pattern.compile(".*:[ \t]*([A-Z][A-Za-z0-9_]*)[\\) \t$,<]+.*");
-
-        Buffer buffer = view.getBuffer();
 
         Matcher m;
 
@@ -600,16 +684,6 @@ public class HaXeSideKickPlugin extends EditPlugin
         return importTokens;
     }
 
-    protected static Map<String, Set<String>> getAllClassPackages (View view)
-    {
-        File hxmlFile = getBuildFile(view.getEditPane());
-        if (hxmlFile == null) {
-            Log.log(Log.ERROR, "HaXe", "No .hxml file found to get class paths");
-            return null;
-        }
-        return getPackagesFromHXMLFile(hxmlFile);
-    }
-
     protected static Map<String, Set<String>> getPackagesFromHXMLFile (File hxmlFile)
     {
         Map<String, Set<String>> classPackages = new HashMap<String, Set<String>>();
@@ -641,7 +715,7 @@ public class HaXeSideKickPlugin extends EditPlugin
         //Add the system classpaths
         String installDir = jEdit.getProperty("options.haxe.installDir");
         if (installDir == null || installDir.trim().equals("") || installDir.indexOf("System Default") >= 0) {
-            installDir = getSystemDefaultHaxeInstallPath();
+            installDir = HaXeSideKickPlugin.getSystemDefaultHaxeInstallPath();
         }
         File stdlib = new File(installDir + File.separator + "lib");
 
@@ -661,7 +735,7 @@ public class HaXeSideKickPlugin extends EditPlugin
         }
 
         classPaths.add("/usr/lib/haxe/std");
-        trace("classPaths=" + classPaths);
+        HaXeSideKickPlugin.trace("classPaths=" + classPaths);
         // Go through the classpaths and add the *.hx files
 
         try {
@@ -697,85 +771,20 @@ public class HaXeSideKickPlugin extends EditPlugin
         return classPackages;
     }
 
-    static protected List<File> getFileListingNoSort (File aStartingDir)
-        throws FileNotFoundException
-    {
-        List<File> result = new ArrayList<File>();
-        File[] filesAndDirs = aStartingDir.listFiles();
-        List<File> filesDirs = Arrays.asList(filesAndDirs);
-        for (File file : filesDirs) {
-            if (!file.exists()) {
-                Log.log(Log.ERROR, "HaXe", "getFileListingNoSort, file doesn't exist:" + file);
-                continue;
-            }
-            if (file.isDirectory()) {
-                // recursive call!
-                List<File> deeperList = getFileListingNoSort(file);
-                result.addAll(deeperList);
-            } else if (file.getName().endsWith(".hx")) {// add if haxe file
-                result.add(file);
-            }
-        }
-        return result;
-    }
-
-    static protected void removeExistingImports (View view)
+    static protected void removeExistingImports (TextArea text)
     {
 
         StringBuffer newBuffer = new StringBuffer();
         Pattern patternimport = Pattern.compile("^[ \t]*import[ \t]+.*");
         Matcher m;
 
-        for (String line : view.getTextArea().getText().split("\n")) {
+        for (String line : text.getText().split("\n")) {
             m = patternimport.matcher(line);
             if (!m.matches()) {
                 newBuffer.append(line + "\n");
             }
         }
-        view.getTextArea().setText(newBuffer.toString());
-    }
-
-    static protected Set<String> getCurrentImports (View view)
-    {
-        Set<String> existingImports = new HashSet<String>();
-        Pattern patternimport = Pattern.compile("^[ \t]*import[ \t]+(.*);.*");
-        Matcher m;
-        String line;
-
-        Buffer buffer = view.getBuffer();
-        for (int ii = 0; ii < buffer.getLineCount(); ++ii) {
-
-            line = buffer.getLineText(ii);
-            m = patternimport.matcher(line);
-            if (m.matches()) {
-                String fullClassName = m.group(1);
-                String[] tokens = fullClassName.split("\\.");
-                existingImports.add(tokens[tokens.length - 1]);
-            }
-        }
-        return existingImports;
-    }
-
-    public static void main (String[] args)
-    {
-//        Map<String, String> packages = getPackagesFromHXMLFile(new File(
-//            "/Users/dion/Documents/storage/projects/turngame/build.hxml"));
-//        for (String cl : packages.keySet()) {
-//            System.out.println(cl + " : " + packages.get(cl));
-//        }
-    }
-
-    protected static String getSystemDefaultHaxeInstallPath ()
-    {
-        String os = System.getProperty("os.name").toLowerCase();
-
-        if(os.indexOf("win") >= 0) {
-            return jEdit.getProperty("options.haxe.defaultInstallDirWindows");
-        } else if (os.indexOf("mac") >= 0) {
-            return jEdit.getProperty("defaultInstallDirMac");
-        } else {
-            return jEdit.getProperty("options.haxe.defaultInstallDirLinux");
-        }
+        text.setText(newBuffer.toString());
     }
 
     @Override
