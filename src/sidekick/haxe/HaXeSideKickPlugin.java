@@ -581,14 +581,14 @@ public class HaXeSideKickPlugin extends EditPlugin
     static protected Set<String> getCurrentImports (Buffer buffer)
     {
         Set<String> existingImports = new HashSet<String>();
-        Pattern patternimport = Pattern.compile("^[ \t]*import[ \t]+(.*);.*");
+
         Matcher m;
         String line;
 
         for (int ii = 0; ii < buffer.getLineCount(); ++ii) {
 
             line = buffer.getLineText(ii);
-            m = patternimport.matcher(line);
+            m = patternImport.matcher(line);
             if (m.matches()) {
                 String fullClassName = m.group(1);
                 String[] tokens = fullClassName.split("\\.");
@@ -623,14 +623,6 @@ public class HaXeSideKickPlugin extends EditPlugin
     protected static HashSet<String> getImportableClasses (Buffer buffer)
     {
         HashSet<String> importTokens = new HashSet<String>();
-
-        Pattern patternVar = Pattern.compile("^.*[ \t]var[ \t].*:[ \t]*([A-Za-z0-9_]+).*");
-        Pattern patternExtends = Pattern.compile("^.*class[ \t]+([A-Za-z0-9_]+)[ \t]extends[ \t]([A-Za-z0-9_]+).*");
-        Pattern patternImplements = Pattern.compile(".*[ \t]implements[ \t]+(.*)");
-        Pattern patternNew = Pattern.compile("^.*[ \t\\(\\[]+new[ \t]+([A-Za-z0-9_]+).*");
-        Pattern patternStatics = Pattern.compile("^.*[ \t\\(]([A-Z][A-Za-z0-9_]*)\\..*");
-        Pattern patternArgument = Pattern.compile(".*:[ \t]*([A-Z][A-Za-z0-9_]*)[\\) \t$,<]+.*");
-
         Matcher m;
 
         for (int i = 0; i < buffer.getLineCount(); i++) {
@@ -773,7 +765,6 @@ public class HaXeSideKickPlugin extends EditPlugin
 
     static protected void removeExistingImports (TextArea text)
     {
-
         StringBuffer newBuffer = new StringBuffer();
         Pattern patternimport = Pattern.compile("^[ \t]*import[ \t]+.*");
         Matcher m;
@@ -795,4 +786,11 @@ public class HaXeSideKickPlugin extends EditPlugin
     public void stop ()
     {}
 
+    protected static Pattern patternVar = Pattern.compile("^.*[ \t]var[ \t].*:[ \t]*([A-Za-z0-9_]+).*");
+    protected static Pattern patternExtends = Pattern.compile("^.*class[ \t]+([A-Za-z0-9_]+)[ \t]extends[ \t]([A-Za-z0-9_]+).*");
+    protected static Pattern patternImplements = Pattern.compile(".*[ \t]implements[ \t]+(.*)");
+    protected static Pattern patternNew = Pattern.compile("^.*[ \t\\(\\[]+new[ \t]+([A-Za-z0-9_]+).*");
+    protected static Pattern patternStatics = Pattern.compile("^.*[ \t\\(]([A-Z][A-Za-z0-9_]*).*");
+    protected static Pattern patternArgument = Pattern.compile(".*:[ \t]*([A-Z][A-Za-z0-9_]*)[\\) \t$,<]+.*");
+    protected static Pattern patternImport = Pattern.compile("^[ \t]*import[ \t]+(.*);.*");
 }
