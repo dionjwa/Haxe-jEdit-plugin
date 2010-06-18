@@ -628,7 +628,7 @@ public class HaXeSideKickPlugin extends EditPlugin
         Pattern patternExtends = Pattern.compile("^.*class[ \t]+([A-Za-z0-9_]+)[ \t]extends[ \t]([A-Za-z0-9_]+).*");
         Pattern patternImplements = Pattern.compile(".*[ \t]implements[ \t]+(.*)");
         Pattern patternNew = Pattern.compile("^.*[ \t\\(\\[]+new[ \t]+([A-Za-z0-9_]+).*");
-        Pattern patternStatics = Pattern.compile("^.*[ \t]([A-Z][A-Za-z0-9_]*)\\..*");
+        Pattern patternStatics = Pattern.compile("^.*[ \t\\(]([A-Z][A-Za-z0-9_]*)\\..*");
         Pattern patternArgument = Pattern.compile(".*:[ \t]*([A-Z][A-Za-z0-9_]*)[\\) \t$,<]+.*");
 
         Matcher m;
