@@ -55,7 +55,7 @@ public class HaXeSideKickPlugin extends EditPlugin
 {
     static HaXeErrorSource _errorSource = new HaXeErrorSource();
     public final static String NAME = "sidekick.haxe";
-    public final static String OPTION_PREFIX = "options.sidekick.haxe.";
+    public final static String OPTION_PREFIX = "options.haxe.";
     public final static String PROPERTY_PREFIX = "plugin.sidekick.haxe.";
 
     public static HaxeCompilerOutput buildProject ()
@@ -153,9 +153,9 @@ public class HaXeSideKickPlugin extends EditPlugin
                 if (element.getNodeName().equals("i")) {
                     // Insertion
                     String codeName = element.getAttribute("n");
-                    // HaXeSideKickPlugin.trace(codeName);
+                    // trace(codeName);
                     String argString = ((Element)element.getElementsByTagName("t").item(0)).getTextContent();
-                    // HaXeSideKickPlugin.trace(codeName + "=" + argString);
+                    // trace(codeName + "=" + argString);
                     String[] methodTokens = argString.split("->");
                     String returns = methodTokens[methodTokens.length - 1];
                     if (methodTokens.length == 1) {
@@ -483,11 +483,11 @@ public class HaXeSideKickPlugin extends EditPlugin
         String os = System.getProperty("os.name").toLowerCase();
 
         if(os.indexOf("win") >= 0) {
-            return jEdit.getProperty("options.haxe.defaultInstallDirWindows");
+            return jEdit.getProperty(OPTION_PREFIX + "defaultInstallDirWindows");
         } else if (os.indexOf("mac") >= 0) {
-            return jEdit.getProperty("defaultInstallDirMac");
+            return jEdit.getProperty(OPTION_PREFIX + "defaultInstallDirMac");
         } else {
-            return jEdit.getProperty("options.haxe.defaultInstallDirLinux");
+            return jEdit.getProperty(OPTION_PREFIX + "defaultInstallDirLinux");
         }
     }
 
@@ -705,18 +705,28 @@ public class HaXeSideKickPlugin extends EditPlugin
 
         //jEdit.getProperty("options.haxe.installDir");
         //Add the system classpaths
-        String installDir = jEdit.getProperty("options.haxe.installDir");
+        String installDir = jEdit.getProperty(OPTION_PREFIX + "installDir");
+
+        trace(OPTION_PREFIX + "installDir=" + installDir);
+        trace("HaXeSideKickPlugin.getSystemDefaultHaxeInstallPath()=" + HaXeSideKickPlugin.getSystemDefaultHaxeInstallPath());
+
         if (installDir == null || installDir.trim().equals("") || installDir.indexOf("System Default") >= 0) {
             installDir = HaXeSideKickPlugin.getSystemDefaultHaxeInstallPath();
         }
+        trace("installDir=" + installDir);
         File stdlib = new File(installDir + File.separator + "lib");
 
         Pattern startsWithNumber = Pattern.compile("^[0-9].*");
         if (stdlib.exists() && stdlib.isDirectory()) {
+            trace("Looking in " + stdlib);
             for (File libDir : stdlib.listFiles()) {
-                if (libDir.isDirectory() && startsWithNumber.matcher(libDir.getName()).matches()) {
+                trace("   Looking in sub dir" + libDir);
+
+                if (libDir.isDirectory()) {
+                    trace("   Looking in sub-sub dir" + libDir);
                     for (File versioned : libDir.listFiles()) {
-                        if (versioned.isDirectory()) {
+                        trace("startsWithNumber=" + startsWithNumber.matcher(versioned.getName()).matches());
+                        if (versioned.isDirectory() && startsWithNumber.matcher(versioned.getName()).matches()) {
                             classPaths.add(versioned.getAbsolutePath().replace("flash9", "flash"));
                         }
                     }
@@ -727,7 +737,7 @@ public class HaXeSideKickPlugin extends EditPlugin
         }
 
         classPaths.add("/usr/lib/haxe/std");
-        HaXeSideKickPlugin.trace("classPaths=" + classPaths);
+        trace("classPaths=" + classPaths);
         // Go through the classpaths and add the *.hx files
 
         try {
@@ -791,6 +801,6 @@ public class HaXeSideKickPlugin extends EditPlugin
     protected static Pattern patternImplements = Pattern.compile(".*[ \t]implements[ \t]+(.*)");
     protected static Pattern patternNew = Pattern.compile("^.*[ \t\\(\\[]+new[ \t]+([A-Za-z0-9_]+).*");
     protected static Pattern patternStatics = Pattern.compile("^.*[ \t\\(]([A-Z][A-Za-z0-9_]*).*");
-    protected static Pattern patternArgument = Pattern.compile(".*:[ \t]*([A-Z][A-Za-z0-9_]*)[\\) \t$,<]+.*");
+    protected static Pattern patternArgument = Pattern.compile(".*:[ \t]*([A-Z][A-Za-z0-9_]*).*");
     protected static Pattern patternImport = Pattern.compile("^[ \t]*import[ \t]+(.*);.*");
 }
