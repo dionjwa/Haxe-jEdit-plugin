@@ -407,15 +407,16 @@ public class HaXeSideKickPlugin extends EditPlugin
             errorSource.clear();
 
             String[] errorLines = errorOutput.split("\\n");
+            Matcher m;
             for (String errorLine : errorLines) {
-                if (errorLine.matches("((?:\\w:)?[^:]+?):(\\d+):\\s*(.+)")) {
-                    String[] tokens = errorLine.split(":");
-                    String fileName = projectRootPath + File.separatorChar + tokens[0];
-                    int line = Integer.parseInt(tokens[1]) - 1;
-                    String comment = tokens[3];
+                m = patternError.matcher(errorLine);
+                if (m.matches()) {
                     DefaultError error = new DefaultError(errorSource, ErrorSource.ERROR,
-                        fileName, line, 0, 0, comment);
+                        projectRootPath + File.separatorChar + m.group(1), Integer.parseInt(m.group(2)), 0, 0, m.group(3));
                     errorSource.addError(error);
+                }
+                else {
+                    trace("no match");
                 }
             }
         }
@@ -803,4 +804,6 @@ public class HaXeSideKickPlugin extends EditPlugin
     protected static Pattern patternStatics = Pattern.compile("^.*[ \t\\(]([A-Z][A-Za-z0-9_]*).*");
     protected static Pattern patternArgument = Pattern.compile(".*:[ \t]*([A-Z][A-Za-z0-9_]*).*");
     protected static Pattern patternImport = Pattern.compile("^[ \t]*import[ \t]+(.*);.*");
+    protected static Pattern patternError = Pattern.compile("(.*):[ ]*([0-9]+):(.*:.*)");
+
 }
