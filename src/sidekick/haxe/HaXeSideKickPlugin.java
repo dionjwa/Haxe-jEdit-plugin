@@ -412,7 +412,7 @@ public class HaXeSideKickPlugin extends EditPlugin
                 m = patternError.matcher(errorLine);
                 if (m.matches()) {
                     DefaultError error = new DefaultError(errorSource, ErrorSource.ERROR,
-                        projectRootPath + File.separatorChar + m.group(1), Integer.parseInt(m.group(2)), 0, 0, m.group(3));
+                        projectRootPath + File.separatorChar + m.group(1), Integer.parseInt(m.group(2)) - 1, 0, 0, m.group(3));
                     errorSource.addError(error);
                 }
                 else {
@@ -543,6 +543,7 @@ public class HaXeSideKickPlugin extends EditPlugin
         Pattern packagePrefixPattern = Pattern.compile("^[ \t]*import[ \t]+([a-zA-Z0-9_]+)\\..*");
 
         String line;
+        int additionalimports = 0;
         for (int ii = 0; ii < buffer.getLineCount(); ++ii) {
             line = buffer.getLineText(ii);
             bufferText.append(line + "\n");
@@ -560,13 +561,18 @@ public class HaXeSideKickPlugin extends EditPlugin
                         currentPackagePrefix = packagePrefix;
                     }
                     bufferText.append(newImport + "\n");
+                    additionalimports++;
                 }
                 addedImports = true;
             }
         }
+        int firstLine = textArea.getFirstLine();
+        firstLine += additionalimports;
+
         textArea.setText(bufferText.toString());
-        textArea.goToBufferStart(false);
-        textArea.setFirstLine(0);
+        textArea.setFirstLine(firstLine);
+//        textArea.goToBufferStart(false);
+//        textArea.setFirstLine(0);
     }
 
     protected static Map<String, Set<String>> getAllClassPackages (Buffer buffer)
