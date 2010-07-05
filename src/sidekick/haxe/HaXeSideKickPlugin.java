@@ -653,6 +653,11 @@ public class HaXeSideKickPlugin extends EditPlugin
                     importTokens.add(m.group(1));
                 }
 
+                m = patternGenerics.matcher(line);
+                if (m.matches()) {
+                    importTokens.add(m.group(1));
+                }
+
                 m = patternArgument.matcher(line);
                 if (m.matches()) {
 
@@ -826,5 +831,6 @@ public class HaXeSideKickPlugin extends EditPlugin
     protected static Pattern patternArgument = Pattern.compile(".*:[ \t]*([A-Z][A-Za-z0-9_]*).*");
     protected static Pattern patternImport = Pattern.compile("^[ \t]*import[ \t]+(.*);.*");
     protected static Pattern patternError = Pattern.compile("(.*):[ ]*([0-9]+):(.*:.*)");
+    protected static Pattern patternGenerics = Pattern.compile(".*<[ \t]*([A-Z_]+[A-Za-z0-9_]*)[ \t]*>.*");
 
 }
