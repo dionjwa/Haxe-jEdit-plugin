@@ -279,45 +279,46 @@ public class HaXeSideKickPlugin extends EditPlugin
     // Get the first *.hxml file we find
     public static File getBuildFile (Buffer buffer)
     {
-        File buildFile;
-        // If there's a project selected, try looking there first
-        if (jEdit.getPlugin("projectviewer.ProjectPlugin", false) != null) {
-            String projectRoot = getProjectRoot();
-            if (projectRoot != null) {
-                buildFile = getFirstBuildFileInDir(projectRoot);
-                if (buildFile != null) {
-                    return buildFile;
-                }
-            }
-
-            if (buffer != null) {
-                // Try the project of the current buffer, even if it's a different project to the
-                // current selected project
-                ProjectManager pm = ProjectManager.getInstance();
-                String path = buffer.getPath();
-                for (VPTProject prj : pm.getProjects()) {
-                    if (prj.isInProject(path)) {
-                        buildFile = getFirstBuildFileInDir(prj.getRootPath());
-                        if (buildFile != null) {
-                            return buildFile;
-                        }
-                    }
-                }
-            }
-        }
-
-        // Otherwise, search up the file system tree, and grab the first *.hxml we find
-        File curDir = buffer == null ? null
-            : new File(buffer.getPath()).getParentFile();
-        while (curDir != null) {
-            buildFile = getFirstBuildFileInDir(curDir.getAbsolutePath());
-            if (buildFile != null) {
-                return buildFile;
-            }
-            curDir = curDir.getParentFile();
-        }
-
-        return null;
+        return new File("/Users/dion/Documents/projects/turngame/build.hxml");
+//        File buildFile;
+//        // If there's a project selected, try looking there first
+//        if (jEdit.getPlugin("projectviewer.ProjectPlugin", false) != null) {
+//            String projectRoot = getProjectRoot();
+//            if (projectRoot != null) {
+//                buildFile = getFirstBuildFileInDir(projectRoot);
+//                if (buildFile != null) {
+//                    return buildFile;
+//                }
+//            }
+//
+//            if (buffer != null) {
+//                // Try the project of the current buffer, even if it's a different project to the
+//                // current selected project
+//                ProjectManager pm = ProjectManager.getInstance();
+//                String path = buffer.getPath();
+//                for (VPTProject prj : pm.getProjects()) {
+//                    if (prj.isInProject(path)) {
+//                        buildFile = getFirstBuildFileInDir(prj.getRootPath());
+//                        if (buildFile != null) {
+//                            return buildFile;
+//                        }
+//                    }
+//                }
+//            }
+//        }
+//
+//        // Otherwise, search up the file system tree, and grab the first *.hxml we find
+//        File curDir = buffer == null ? null
+//            : new File(buffer.getPath()).getParentFile();
+//        while (curDir != null) {
+//            buildFile = getFirstBuildFileInDir(curDir.getAbsolutePath());
+//            if (buildFile != null) {
+//                return buildFile;
+//            }
+//            curDir = curDir.getParentFile();
+//        }
+//
+//        return null;
     }
 
     protected static File getFirstBuildFileInDir (String path)
@@ -492,14 +493,13 @@ public class HaXeSideKickPlugin extends EditPlugin
         }
     }
 
-    public static void addMissingImports (View view)
+    public static void addMissingImports (final View view)
     {
-        System.out.println("addMissingImports");
         Buffer buffer = view.getBuffer();
+        String[] lines = view.getTextArea().getText().split("\n");
         JEditTextArea textArea = view.getTextArea();
-
-        HashSet<String> importTokens = getImportableClasses(buffer);
-        Set<String> existingImports = getCurrentImports(buffer);
+        Set<String> importTokens = getImportableClasses(lines);
+        Set<String> existingImports = getCurrentImports(lines);
         Map<String, Set<String>> classPackages = getAllClassPackages(buffer);
 
         List<String> importsToAdd = new ArrayList<String>();
@@ -571,8 +571,6 @@ public class HaXeSideKickPlugin extends EditPlugin
 
         textArea.setText(bufferText.toString());
         textArea.setFirstLine(firstLine);
-//        textArea.goToBufferStart(false);
-//        textArea.setFirstLine(0);
     }
 
     protected static Map<String, Set<String>> getAllClassPackages (Buffer buffer)
@@ -585,16 +583,13 @@ public class HaXeSideKickPlugin extends EditPlugin
         return getPackagesFromHXMLFile(hxmlFile);
     }
 
-    static protected Set<String> getCurrentImports (Buffer buffer)
+    static protected Set<String> getCurrentImports (String[] lines)
     {
         Set<String> existingImports = new HashSet<String>();
 
         Matcher m;
-        String line;
 
-        for (int ii = 0; ii < buffer.getLineCount(); ++ii) {
-
-            line = buffer.getLineText(ii);
+        for (String line : lines) {
             m = patternImport.matcher(line);
             if (m.matches()) {
                 String fullClassName = m.group(1);
@@ -608,6 +603,7 @@ public class HaXeSideKickPlugin extends EditPlugin
     static protected List<File> getFileListingNoSort (File aStartingDir)
         throws FileNotFoundException
     {
+        trace(aStartingDir);
         List<File> result = new ArrayList<File>();
         File[] filesAndDirs = aStartingDir.listFiles();
         List<File> filesDirs = Arrays.asList(filesAndDirs);
@@ -627,58 +623,76 @@ public class HaXeSideKickPlugin extends EditPlugin
         return result;
     }
 
-    protected static HashSet<String> getImportableClasses (Buffer buffer)
+    protected static Set<String> getImportableClasses (final String[] lines)
     {
-        HashSet<String> importTokens = new HashSet<String>();
-        Matcher m;
+        Set<String> importTokens = new HashSet<String>();
 
-        for (int i = 0; i < buffer.getLineCount(); i++) {
-            m = patternVar.matcher(buffer.getLineText(i));
-            if (m.matches()) {
-                importTokens.add(m.group(1));
-            }
-
-            m = patternExtends.matcher(buffer.getLineText(i));
-            if (m.matches()) {
-                importTokens.add(m.group(2));
-            }
-
-            m = patternNew.matcher(buffer.getLineText(i));
-            if (m.matches()) {
-                importTokens.add(m.group(1));
-            }
-
-            m = patternStatics.matcher(buffer.getLineText(i));
-            if (m.matches()) {
-                importTokens.add(m.group(1));
-            }
-
-            m = patternArgument.matcher(buffer.getLineText(i));
-            if (m.matches()) {
-                //Add the first
-                importTokens.add(m.group(1));
-                //And search for other arguments
-                String strippedLine = buffer.getLineText(i).replaceFirst(":" + m.group(1), "");
-                m = patternArgument.matcher(strippedLine);
-                while(m.matches()) {
+        if (lines == null || lines.length == 0) {
+            return importTokens;
+        }
+        try {
+            Matcher m;
+            for (String line : lines) {
+                m = patternVar.matcher(line);
+                if (m.matches()) {
+                    trace(m.group(1));
                     importTokens.add(m.group(1));
-                    strippedLine = strippedLine.replaceFirst(":" + m.group(1), "");
-                    m = patternArgument.matcher(strippedLine);
                 }
-            }
 
-            m = patternImplements.matcher(buffer.getLineText(i));
-            if (m.matches()) {
-                String implementsStuff = m.group(1);
-                implementsStuff = implementsStuff.replace("{", "");
-                String[] tokens = implementsStuff.split(",");
-                for (String token : tokens) {
-                    token = token.trim();
-                    if (!token.equals("")) {
-                        importTokens.add(token);
+                m = patternExtends.matcher(line);
+                if (m.matches()) {
+                    importTokens.add(m.group(2));
+                }
+
+                m = patternNew.matcher(line);
+                if (m.matches()) {
+                    importTokens.add(m.group(1));
+                }
+
+                m = patternStatics.matcher(line);
+                if (m.matches()) {
+                    importTokens.add(m.group(1));
+                }
+
+                m = patternArgument.matcher(line);
+                if (m.matches()) {
+
+                    String strippedLine = line;
+                    String group = m.group(1);
+                    int groupIndex = strippedLine.indexOf(group);
+                    //Add the first
+                    //And search for other arguments
+
+                    do  {
+                        importTokens.add(m.group(1));
+                        group = m.group(1);
+                        groupIndex = strippedLine.indexOf(group);
+                        if (groupIndex < 0 || group.length() == 0) {
+                            break;
+                        }
+                        strippedLine = strippedLine.substring(groupIndex + group.length());
+                        m = patternArgument.matcher(strippedLine);
+
+                    } while (m.matches());
+                }
+
+                m = patternImplements.matcher(line);
+                if (m.matches()) {
+                    String implementsStuff = m.group(1);
+                    implementsStuff = implementsStuff.replace("{", "");
+                    String[] tokens = implementsStuff.split(",");
+                    for (String token : tokens) {
+                        token = token.trim();
+                        if (!token.equals("")) {
+                            importTokens.add(token);
+                        }
                     }
                 }
             }
+        } catch (Exception e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+            trace("EXCEPTION=" + e);
         }
         return importTokens;
     }
@@ -694,7 +708,8 @@ public class HaXeSideKickPlugin extends EditPlugin
         }
         // Get the classpaths from the *.hxml file
         try {
-            BufferedReader in = new BufferedReader(new FileReader(hxmlFile));
+            FileReader reader = new FileReader(hxmlFile);
+            BufferedReader in = new BufferedReader(reader);
             String str;
             Pattern cp = Pattern.compile("^[ \t]*-cp[ \t]+(.*)");
             Matcher m;
@@ -706,6 +721,7 @@ public class HaXeSideKickPlugin extends EditPlugin
                 }
             }
             in.close();
+            reader.close();
         } catch (IOException e) {
             Log.log(Log.ERROR, "HaXe", e.toString());
         }
