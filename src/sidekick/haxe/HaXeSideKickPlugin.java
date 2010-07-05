@@ -279,46 +279,45 @@ public class HaXeSideKickPlugin extends EditPlugin
     // Get the first *.hxml file we find
     public static File getBuildFile (Buffer buffer)
     {
-        return new File("/Users/dion/Documents/projects/turngame/build.hxml");
-//        File buildFile;
-//        // If there's a project selected, try looking there first
-//        if (jEdit.getPlugin("projectviewer.ProjectPlugin", false) != null) {
-//            String projectRoot = getProjectRoot();
-//            if (projectRoot != null) {
-//                buildFile = getFirstBuildFileInDir(projectRoot);
-//                if (buildFile != null) {
-//                    return buildFile;
-//                }
-//            }
-//
-//            if (buffer != null) {
-//                // Try the project of the current buffer, even if it's a different project to the
-//                // current selected project
-//                ProjectManager pm = ProjectManager.getInstance();
-//                String path = buffer.getPath();
-//                for (VPTProject prj : pm.getProjects()) {
-//                    if (prj.isInProject(path)) {
-//                        buildFile = getFirstBuildFileInDir(prj.getRootPath());
-//                        if (buildFile != null) {
-//                            return buildFile;
-//                        }
-//                    }
-//                }
-//            }
-//        }
-//
-//        // Otherwise, search up the file system tree, and grab the first *.hxml we find
-//        File curDir = buffer == null ? null
-//            : new File(buffer.getPath()).getParentFile();
-//        while (curDir != null) {
-//            buildFile = getFirstBuildFileInDir(curDir.getAbsolutePath());
-//            if (buildFile != null) {
-//                return buildFile;
-//            }
-//            curDir = curDir.getParentFile();
-//        }
-//
-//        return null;
+        File buildFile;
+        // If there's a project selected, try looking there first
+        if (jEdit.getPlugin("projectviewer.ProjectPlugin", false) != null) {
+            String projectRoot = getProjectRoot();
+            if (projectRoot != null) {
+                buildFile = getFirstBuildFileInDir(projectRoot);
+                if (buildFile != null) {
+                    return buildFile;
+                }
+            }
+
+            if (buffer != null) {
+                // Try the project of the current buffer, even if it's a different project to the
+                // current selected project
+                ProjectManager pm = ProjectManager.getInstance();
+                String path = buffer.getPath();
+                for (VPTProject prj : pm.getProjects()) {
+                    if (prj.isInProject(path)) {
+                        buildFile = getFirstBuildFileInDir(prj.getRootPath());
+                        if (buildFile != null) {
+                            return buildFile;
+                        }
+                    }
+                }
+            }
+        }
+
+        // Otherwise, search up the file system tree, and grab the first *.hxml we find
+        File curDir = buffer == null ? null
+            : new File(buffer.getPath()).getParentFile();
+        while (curDir != null) {
+            buildFile = getFirstBuildFileInDir(curDir.getAbsolutePath());
+            if (buildFile != null) {
+                return buildFile;
+            }
+            curDir = curDir.getParentFile();
+        }
+
+        return null;
     }
 
     protected static File getFirstBuildFileInDir (String path)
