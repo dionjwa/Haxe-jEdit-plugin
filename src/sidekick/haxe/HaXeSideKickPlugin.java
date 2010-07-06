@@ -660,27 +660,29 @@ public class HaXeSideKickPlugin extends EditPlugin
 //                    importTokens.add(m.group(1));
 //                }
 
-                m = patternArgument.matcher(line);
-                if (m.matches()) {
+                getRepeatedMatches(patternArgument, line, importTokens);
 
-                    String strippedLine = line;
-                    String group = m.group(1);
-                    int groupIndex = strippedLine.indexOf(group);
-                    //Add the first
-                    //And search for other arguments
-
-                    do  {
-                        importTokens.add(m.group(1));
-                        group = m.group(1);
-                        groupIndex = strippedLine.indexOf(group);
-                        if (groupIndex < 0 || group.length() == 0) {
-                            break;
-                        }
-                        strippedLine = strippedLine.substring(groupIndex + group.length());
-                        m = patternArgument.matcher(strippedLine);
-
-                    } while (m.matches());
-                }
+//                m = patternArgument.matcher(line);
+//                if (m.matches()) {
+//
+//                    String strippedLine = line;
+//                    String group = m.group(1);
+//                    int groupIndex = strippedLine.indexOf(group);
+//                    //Add the first
+//                    //And search for other arguments
+//
+//                    do  {
+//                        importTokens.add(m.group(1));
+//                        group = m.group(1);
+//                        groupIndex = strippedLine.indexOf(group);
+//                        if (groupIndex < 0 || group.length() == 0) {
+//                            break;
+//                        }
+//                        strippedLine = strippedLine.substring(groupIndex + group.length());
+//                        m = patternArgument.matcher(strippedLine);
+//
+//                    } while (m.matches());
+//                }
 
                 m = patternImplements.matcher(line);
                 if (m.matches()) {
