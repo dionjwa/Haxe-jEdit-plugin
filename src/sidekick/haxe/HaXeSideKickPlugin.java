@@ -648,15 +648,17 @@ public class HaXeSideKickPlugin extends EditPlugin
                     importTokens.add(m.group(1));
                 }
 
-                m = patternStatics.matcher(line);
-                if (m.matches()) {
-                    importTokens.add(m.group(1));
-                }
+                getRepeatedMatches(patternStatics, line, importTokens);
+//                m = patternStatics.matcher(line);
+//                if (m.matches()) {
+//                    importTokens.add(m.group(1));
+//                }
 
-                m = patternGenerics.matcher(line);
-                if (m.matches()) {
-                    importTokens.add(m.group(1));
-                }
+                getRepeatedMatches(patternGenerics, line, importTokens);
+//                m = patternGenerics.matcher(line);
+//                if (m.matches()) {
+//                    importTokens.add(m.group(1));
+//                }
 
                 m = patternArgument.matcher(line);
                 if (m.matches()) {
@@ -823,11 +825,36 @@ public class HaXeSideKickPlugin extends EditPlugin
     public void stop ()
     {}
 
-    protected static Pattern patternVar = Pattern.compile("^.*[ \t]var[ \t].*:[ \t]*([A-Za-z0-9_]+).*");
+    public static void getRepeatedMatches (Pattern pattern, String line, Set<String> matches)
+    {
+        Matcher m = pattern.matcher(line);
+        if (m.matches()) {
+
+            String strippedLine = line;
+            String group = m.group(1);
+            int groupIndex = strippedLine.indexOf(group);
+            //Add the first
+            //And search for other arguments
+
+            do  {
+                matches.add(m.group(1));
+                group = m.group(1);
+                groupIndex = strippedLine.indexOf(group);
+                if (groupIndex < 0 || group.length() == 0) {
+                    break;
+                }
+                strippedLine = strippedLine.replace(m.group(1), "");
+                m = pattern.matcher(strippedLine);
+
+            } while (m.matches());
+        }
+    }
+
+    protected static Pattern patternVar = Pattern.compile(".*[ \t]var[ \t].*:[ \t]*([A-Za-z0-9_]+).*");
     protected static Pattern patternExtends = Pattern.compile("^.*class[ \t]+([A-Za-z0-9_]+)[ \t]extends[ \t]([A-Za-z0-9_]+).*");
     protected static Pattern patternImplements = Pattern.compile(".*[ \t]implements[ \t]+(.*)");
     protected static Pattern patternNew = Pattern.compile("^.*[ \t\\(\\[]+new[ \t]+([A-Za-z0-9_]+).*");
-    protected static Pattern patternStatics = Pattern.compile("^.*[ \t\\(]([A-Z][A-Za-z0-9_]*).*");
+    protected static Pattern patternStatics = Pattern.compile(".*[{ \t\\(]([A-Z_][A-Za-z0-9_]*).*");
     protected static Pattern patternArgument = Pattern.compile(".*:[ \t]*([A-Z][A-Za-z0-9_]*).*");
     protected static Pattern patternImport = Pattern.compile("^[ \t]*import[ \t]+(.*);.*");
     protected static Pattern patternError = Pattern.compile("(.*):[ ]*([0-9]+):(.*:.*)");

@@ -1,7 +1,5 @@
 package sidekick.haxe;
 
-import java.util.Arrays;
-
 import javax.swing.JPanel;
 
 import org.gjt.sp.jedit.Buffer;
@@ -49,8 +47,8 @@ public class HaXeParser extends SideKickParser
             return completion;
         } else if (_ctagsParser != null) {
             trace("complete, _ctagsParser=" + _ctagsParser);
-            String[] keywords = editPane.getBuffer().getKeywordMapAtOffset(caret).getKeywords();
-            System.out.println("keywords=" + Arrays.toString(keywords));
+//            String[] keywords = editPane.getBuffer().getKeywordMapAtOffset(caret).getKeywords();
+//            System.out.println("keywords=" + Arrays.toString(keywords));
 //            if (keywords.length > 0) {
 //                String word = getWordAtCaret( editPane, caret );
 //                if (word != null && word.length() > 0) {
@@ -66,10 +64,15 @@ public class HaXeParser extends SideKickParser
 //                }
 //            }
             SideKickCompletion ctagsCompletion = _ctagsParser.complete(editPane, caret);
-//            for (int ii = 0; ii < ctagsCompletion.size(); ++ii) {
-//                CodeCompletionVariable ccvar = new CodeCompletionVariable();
-//                ccvar.name = ctagsCompletion.get(ii).toString();
-//            }
+            if (ctagsCompletion != null && ctagsCompletion.size() == 0) {
+                for (int ii = 0; ii < ctagsCompletion.size(); ++ii) {
+    //                CodeCompletionVariable ccvar = new CodeCompletionVariable();
+    //                ccvar.name = ctagsCompletion.get(ii).toString();
+                    trace(ctagsCompletion.get(ii).toString());
+                }
+            } else {
+                trace("No completions");
+            }
 
 
 //            if (ctagsCompletion.size())
