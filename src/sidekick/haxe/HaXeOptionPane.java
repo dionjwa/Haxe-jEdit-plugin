@@ -26,7 +26,7 @@ public class HaXeOptionPane extends AbstractOptionPane
         addComponent(jEdit.getProperty("options.haxe.launchCommand.label"), launchCommand);
 
         String installDirTxt = jEdit.getProperty("options.haxe.installDir");
-        installDirTxt = installDirTxt == null || installDirTxt.trim().equals("") ? "System Default" : installDirTxt;
+        installDirTxt = installDirTxt == null || installDirTxt.trim().equals("") ? HaXeSideKickPlugin.getSystemDefaultHaxeInstallPath() : installDirTxt;
         installDir = new JTextField(installDirTxt);
         addComponent(jEdit.getProperty("options.haxe.installDir.label"), installDir);
 
@@ -40,7 +40,7 @@ public class HaXeOptionPane extends AbstractOptionPane
     public void _save ()
     {
         jEdit.setProperty("options.haxe.launchCommand", launchCommand.getText());
-        jEdit.setProperty("options.haxe.installDir", installDir.getText() == null || installDir.getText().trim().equals("") ? "System Default" : installDir.getText());
+        jEdit.setProperty("options.haxe.installDir", installDir.getText() == null || installDir.getText().trim().equals("") ? HaXeSideKickPlugin.getSystemDefaultHaxeInstallPath() : installDir.getText());
 //        jEdit.setBooleanProperty("options.haxe.buildOnSave", buildOnSave.isSelected());
     }
 

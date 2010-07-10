@@ -48,8 +48,8 @@ import sidekick.SideKickCompletion;
 import sidekick.SideKickParser;
 import sidekick.SideKickPlugin;
 import sidekick.haxe.JavaSystemCaller.StreamGobbler;
-import errorlist.ErrorSource;
 import errorlist.DefaultErrorSource.DefaultError;
+import errorlist.ErrorSource;
 
 public class HaXeSideKickPlugin extends EditPlugin
 {
@@ -65,7 +65,11 @@ public class HaXeSideKickPlugin extends EditPlugin
 
     public static HaxeCompilerOutput buildProject (EditPane editPane)
     {
-        if (editPane != null && editPane.getBuffer().isDirty()) {
+    	if (editPane == null) {
+            JOptionPane.showMessageDialog(null, "EditPane is null", "Error", JOptionPane.ERROR_MESSAGE);
+    		return null;
+    	}
+        if (editPane.getBuffer().isDirty()) {
             editPane.getBuffer().save(editPane.getView(), null, false, true);
             try {
                 Thread.sleep(50);
@@ -76,7 +80,7 @@ public class HaXeSideKickPlugin extends EditPlugin
 
         HaxeCompilerOutput output = getHaxeBuildOutput(editPane, 0, false, true);
         if (output != null) {
-            handleBuildErrors(output.output.errors, _errorSource, output.getProjectRoot());
+            handleBuildErrors(output.output.errors, _errorSource, output.getProjectRoot(), getBuildFile(editPane.getBuffer()));
         }
         return output;
     }
@@ -316,7 +320,7 @@ public class HaXeSideKickPlugin extends EditPlugin
             }
             curDir = curDir.getParentFile();
         }
-
+        JOptionPane.showMessageDialog(null, "No .hxml file found in the project root folder, nor any parent folder.", "Error", JOptionPane.ERROR_MESSAGE);
         return null;
     }
 
@@ -340,11 +344,15 @@ public class HaXeSideKickPlugin extends EditPlugin
     public static HaxeCompilerOutput getHaxeBuildOutput (EditPane editPane, int caret,
         boolean getCodeCompletion, boolean showErrorPopups)
     {
-        if (getCodeCompletion && editPane == null) {
-            Log.log(Log.ERROR, NAME, "getHaxeBuildOutput, getCodeCompletion=" + getCodeCompletion
-                + ", editPane == null");
-            return null;
-        }
+    	if (editPane == null) {
+    		Log.log(Log.ERROR, NAME, "getHaxeBuildOutput, editPane=" + editPane);
+    		return null;
+    	}
+//        if (getCodeCompletion && editPane == null) {
+//            Log.log(Log.ERROR, NAME, "getHaxeBuildOutput, getCodeCompletion=" + getCodeCompletion
+//                + ", editPane == null");
+//            return null;
+//        }
 
         File hxmlFile = getBuildFile(editPane.getBuffer());
 
@@ -401,14 +409,18 @@ public class HaXeSideKickPlugin extends EditPlugin
     }
 
     public static void handleBuildErrors (String errorOutput, HaXeErrorSource errorSource,
-        String projectRootPath)
+        String projectRootPath, File buildFile)
     {
         if (errorSource != null) {
             errorSource.clear();
 
-            String[] errorLines = errorOutput.split("\\n");
+            String[] errorLines = errorOutput.split(System.getProperty("line.separator"));
             Matcher m;
             for (String errorLine : errorLines) {
+            	if (errorLine == null || errorLine.trim().length() == 0) {
+            		continue;
+            	}
+            	trace("Errorline:" + errorLine);
                 m = patternError.matcher(errorLine);
                 if (m.matches()) {
                     DefaultError error = new DefaultError(errorSource, ErrorSource.ERROR,
@@ -416,7 +428,10 @@ public class HaXeSideKickPlugin extends EditPlugin
                     errorSource.addError(error);
                 }
                 else {
-                    trace("no match");
+                    trace("no error pattern match: " + errorLine);
+                    errorSource.addError(new DefaultError(errorSource, ErrorSource.ERROR,
+                    		buildFile.getAbsolutePath().replace(System.getProperty("user.dir"), ""), 0, 0, 0, errorLine));
+                        
                 }
             }
         }
@@ -483,7 +498,9 @@ public class HaXeSideKickPlugin extends EditPlugin
     {
         String os = System.getProperty("os.name").toLowerCase();
 
-        if(os.indexOf("win") >= 0) {
+        if(os.equalsIgnoreCase("Windows 7")) {
+            return jEdit.getProperty(OPTION_PREFIX + "defaultInstallDirWindows7");
+        } else if(os.indexOf("win") >= 0) {
             return jEdit.getProperty(OPTION_PREFIX + "defaultInstallDirWindows");
         } else if (os.indexOf("mac") >= 0) {
             return jEdit.getProperty(OPTION_PREFIX + "defaultInstallDirMac");
@@ -499,8 +516,15 @@ public class HaXeSideKickPlugin extends EditPlugin
         JEditTextArea textArea = view.getTextArea();
         Set<String> importTokens = getImportableClasses(lines);
         Set<String> existingImports = getCurrentImports(lines);
+        for (String existing : existingImports) {
+        	trace(existing);
+        }
         Map<String, Set<String>> classPackages = getAllClassPackages(buffer);
-
+        
+        if (classPackages == null || classPackages.size() == 0) {
+        	return;
+        }
+        
         List<String> importsToAdd = new ArrayList<String>();
 
         for (String importToken : importTokens) {
@@ -577,6 +601,7 @@ public class HaXeSideKickPlugin extends EditPlugin
         File hxmlFile = HaXeSideKickPlugin.getBuildFile(buffer);
         if (hxmlFile == null) {
             Log.log(Log.ERROR, "HaXe", "No .hxml file found to get class paths");
+            JOptionPane.showMessageDialog(null, "No .hxml file found to get class paths", "Warning", JOptionPane.ERROR_MESSAGE);
             return null;
         }
         return getPackagesFromHXMLFile(hxmlFile);
@@ -602,8 +627,10 @@ public class HaXeSideKickPlugin extends EditPlugin
     static protected List<File> getFileListingNoSort (File aStartingDir)
         throws FileNotFoundException
     {
-        trace(aStartingDir);
         List<File> result = new ArrayList<File>();
+        if (!aStartingDir.exists()) {
+        	return result;
+        }
         File[] filesAndDirs = aStartingDir.listFiles();
         List<File> filesDirs = Arrays.asList(filesAndDirs);
         for (File file : filesDirs) {
@@ -736,16 +763,17 @@ public class HaXeSideKickPlugin extends EditPlugin
 
         //jEdit.getProperty("options.haxe.installDir");
         //Add the system classpaths
-        String installDir = jEdit.getProperty(OPTION_PREFIX + "installDir");
+        String installDirString = jEdit.getProperty(OPTION_PREFIX + "installDir");
 
-        trace(OPTION_PREFIX + "installDir=" + installDir);
+        trace(OPTION_PREFIX + "installDir=" + installDirString);
         trace("HaXeSideKickPlugin.getSystemDefaultHaxeInstallPath()=" + HaXeSideKickPlugin.getSystemDefaultHaxeInstallPath());
 
-        if (installDir == null || installDir.trim().equals("") || installDir.indexOf("System Default") >= 0) {
-            installDir = HaXeSideKickPlugin.getSystemDefaultHaxeInstallPath();
+        if (installDirString == null || installDirString.trim().equals("") || installDirString.indexOf("System Default") >= 0) {
+        	installDirString = HaXeSideKickPlugin.getSystemDefaultHaxeInstallPath();
         }
-        trace("installDir=" + installDir);
-        File stdlib = new File(installDir + File.separator + "lib");
+        
+        File installDir = new File(installDirString);
+        File stdlib = new File(installDir.getAbsolutePath() + File.separator + "lib");
 
         Pattern startsWithNumber = Pattern.compile("^[0-9].*");
         if (stdlib.exists() && stdlib.isDirectory()) {
@@ -764,13 +792,15 @@ public class HaXeSideKickPlugin extends EditPlugin
                 }
             }
         } else {
-            Log.log(Log.ERROR, "HaXe", "HaXe install directory doesn't exist: " + installDir);
+            Log.log(Log.ERROR, "HaXe", "HaXe stdlib directory doesn't exist: " + stdlib);
         }
 
-        classPaths.add("/usr/lib/haxe/std");
-        trace("classPaths=" + classPaths);
+        if (!installDir.exists()) {
+        	JOptionPane.showMessageDialog(null, "Haxe install folder " + installDir + " doesn't exist.  Check the \"Installation Directory\" option in Plugins->Plugin Options->Haxe", "Error", JOptionPane.ERROR_MESSAGE);
+        }
+        
+        classPaths.add(installDir.getAbsolutePath() + File.separator + "std");
         // Go through the classpaths and add the *.hx files
-
         try {
             for (String path : classPaths) {
                 List<File> haxeFiles = getFileListingNoSort(new File(path));
