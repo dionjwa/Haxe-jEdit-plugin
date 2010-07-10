@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
 	<classpathentry kind="src" path="src"/>
+	<classpathentry kind="var" path="JEDIT_JARS/SideKick.jar"/>
+	<classpathentry kind="var" path="JEDIT_APP_DIR/jedit.jar"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
-	<classpathentry kind="lib" path="C:/Program Files/jEdit/jedit.jar"/>
-	<classpathentry kind="lib" path="C:/Users/dion/.jedit/jars/SideKick.jar" sourcepath="C:/Users/dion/.jedit/jars/SideKick"/>
-	<classpathentry kind="lib" path="C:/Users/dion/.jedit/jars/CtagsSideKick.jar" sourcepath="C:/Users/dion/.jedit/jars/CtagsSideKick"/>
-	<classpathentry kind="lib" path="C:/Users/dion/.jedit/jars/ErrorList.jar" sourcepath="C:/Users/dion/.jedit/jars/ErrorList"/>
-	<classpathentry kind="lib" path="C:/Users/dion/.jedit/jars/ProjectViewer.jar" sourcepath="C:/Users/dion/.jedit/jars/ProjectViewer"/>
-	<classpathentry kind="lib" path="C:/Users/dion/.jedit/jars/Console.jar" sourcepath="C:/Users/dion/.jedit/jars/Console"/>
+	<classpathentry kind="var" path="JEDIT_JARS/CtagsSideKick.jar"/>
+	<classpathentry kind="var" path="JEDIT_JARS/ProjectViewer.jar"/>
+	<classpathentry kind="var" path="JEDIT_JARS/ErrorList.jar"/>
+	<classpathentry kind="var" path="JEDIT_JARS/Console.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
