@@ -25,8 +25,7 @@
  <chapter id="intro">
   <title> Introduction </title>
 
- <para> Provides code completion, code browsing, and automatic imports for
-         the <ulink url="http://haxe.org/">HaXe</ulink> language. 
+ <para> Provides code completion, code browsing, and automatic imports for the <ulink url="http://haxe.org/">HaXe</ulink> language. 
  </para>
  </chapter>
  
@@ -35,9 +34,7 @@
  
 
  
-  <para> Haxe must be in your path for code completion to work.  
-        To test this, open a shell or dos prompt and type "haxe". 
-        If you see haxe related output, then good, otherwise see the 
+  <para> Haxe must be in your path for code completion to work.  To test this, open a shell or dos prompt and type "haxe".  If you see haxe related output, then good, otherwise see the 
   <ulink url="http://haxe.org/">HaXe</ulink> website for installation help.</para>
   
   </chapter> 
@@ -51,34 +48,23 @@ var someVar = "blah";
 somevar.
 </programlisting>
 
-  <para> At the end of the code above, calling the "Code Completion" 
-        command will show a list of class members and functions.  
-        Select one for insertion.
-        Code completion only works if you activate it immediately after a 
-        period e.g. "someVariable." (including imports, but you don't need that). </para>
+  <para> At the end of the code above, calling the "Code Completion" command will show a list of class members and functions.  Select one for insertion.
+   Code completion only works if you activate it immediately after a period e.g. "someVariable." (including imports, but you don't need that). </para>
    </chapter>
    
    
      <chapter id="imports">
    <title> Imports </title>
 
-  <para> The command "Add missing import" will search though 
-  the source folders listed in the project hxml file, and try to match 
-  classes used in the hx file with class and packages in the source folders.  
-  For duplicates, a dialog will be shown.  Existing imports are not touched,
-  in case you use imports that are not in the listed source folders. </para>
+  <para> The command "Add missing import" will search though the source folders listed in the project hxml file, and try to match classes used in the hx file with class and packages in the source folders.  For duplicates, a dialog will be shown.  Existing imports are not touched, in case you use imports that are not in the listed source folders. </para>
    </chapter>
    
       <chapter id="buildrun">
    <title> Building and running </title>
 
-  <para> The command "Build project" will attempt to build the haxe project.  
-  The error will be passed to the Error List plugin so you can navigate 
-  directly to the source causing any compile problems.</para>
+  <para> The command "Build project" will attempt to build the haxe project.  The error will be passed to the Error List plugin so you can navigate directly to the source causing any compile problems.</para>
   
-  <para> The command "Launch project" will attempt to build the haxe project, 
-  and if successful, will launch the project.  Due to the many ways to launch 
-  HaXe projects, the launch command must be given in the Plugin Options.</para>
+  <para> The command "Launch project" will attempt to build the haxe project, and if successful, will launch the project.  Due to the many ways to launch HaXe projects, the launch command must be given in the Plugin Options.</para>
    </chapter>
    
       <chapter id="ctags">
@@ -89,10 +75,7 @@ view. Instead, it shares its view with other SideKick plugins through
 the SideKick Structure Browser. To use SideKick, dock the Structure
 Browser on the left or the right. </para>
 
-  <para> Code browsing relies on the CtagsInterface plugin.  
-  As HaXe is not a standard langauage supported by Ctags, you have
-  to add the following language definition to your ctags configuration 
-  file (located at ~/.ctags on Mac and Linux)</para>
+  <para> Code browsing relies on the CtagsInterface plugin.  As HaXe is not a standard langauage supported by Ctags, you have to add the following language definition to your ctags configuration file (located at ~/.ctags on Mac and Linux)</para>
 
   
     <programlisting>

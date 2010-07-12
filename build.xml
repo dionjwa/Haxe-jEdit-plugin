@@ -12,7 +12,6 @@
         <property file="../build.properties"/>
         
         <echo message="${ant-contrib.jar}"/>
-	<property file="${user.home}/.build.properties"/>
 	<property file="${user.home}/build.properties"/>
 	
         <import file="${build.support}/plugin-build.xml" />
@@ -31,9 +30,10 @@
 	
         <property name="jar.name" value="${ant.project.name}.jar"/>
         <property name="docs-proc.target" value="xsltproc"/>
+        <property name="docbook.xsl.sheet" value="html/onechunk.xsl"/>
+        
 	
         <property name="src.dir" location="${basedir}/src"/>
-        <property name="build.dir" value="build"/>
 	
         <path id="project.class.path">
                 <pathelement location="${jedit.install.dir}/jedit.jar" />
@@ -41,10 +41,6 @@
                 <pathelement location="${jedit.plugins.dir}/ProjectViewer.jar" />
                 <pathelement location="${jedit.plugins.dir}/SideKick.jar" />
         </path>
-	
-        <target name="build.prepare">
-                <mkdir dir="${build.dir}" />
-        </target>
 	
         <target name="tags">
                 <exec executable="ctags">
