@@ -3,3 +3,4 @@ v0.2
 -improved auto imports
 -fixed bug that caused infinite looping for some auto-imports
 -fixed docs
+-switched dependency from SideKickPlugin to the CtagsSideKick plugin, as without Ctags, the code browser is useless.
