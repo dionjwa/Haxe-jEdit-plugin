@@ -31,6 +31,7 @@ plugin.sidekick.haxe.HaXeSideKickPlugin.depend.1=jedit 04.03.99.02
 plugin.sidekick.haxe.HaXeSideKickPlugin.depend.2=plugin errorlist.ErrorListPlugin 1.9
 plugin.sidekick.haxe.HaXeSideKickPlugin.depend.3=plugin ctags.sidekick.Plugin 1.4
 plugin.sidekick.haxe.HaXeSideKickPlugin.depend.4=plugin projectviewer.ProjectPlugin 3.1.0
+plugin.sidekick.haxe.HaXeSideKickPlugin.depend.3=plugin ctags.sidekick.Plugin 1.4
 
 
 # Plugins menu items
