@@ -431,7 +431,7 @@ public class HaXeSideKickPlugin extends EditPlugin
                     trace("no error pattern match: " + errorLine);
                     errorSource.addError(new DefaultError(errorSource, ErrorSource.ERROR,
                     		buildFile.getAbsolutePath().replace(System.getProperty("user.dir"), ""), 0, 0, 0, errorLine));
-                        
+
                 }
             }
         }
@@ -515,16 +515,21 @@ public class HaXeSideKickPlugin extends EditPlugin
         String[] lines = view.getTextArea().getText().split("\n");
         JEditTextArea textArea = view.getTextArea();
         Set<String> importTokens = getImportableClasses(lines);
+
+        //Remove the class name from the list of import tokens, so you don't import yourself
+        String filename = view.getBuffer().getName();
+        importTokens.remove(filename.substring(0, filename.length() - 3));
+
         Set<String> existingImports = getCurrentImports(lines);
         for (String existing : existingImports) {
         	trace(existing);
         }
         Map<String, Set<String>> classPackages = getAllClassPackages(buffer);
-        
+
         if (classPackages == null || classPackages.size() == 0) {
         	return;
         }
-        
+
         List<String> importsToAdd = new ArrayList<String>();
 
         for (String importToken : importTokens) {
@@ -556,6 +561,17 @@ public class HaXeSideKickPlugin extends EditPlugin
             }
         }
 
+        //Add existing imports
+        String line;
+        Matcher m;
+        for (int ii = 0; ii < buffer.getLineCount(); ++ii) {
+            line = buffer.getLineText(ii);
+            m = patternImport.matcher(line);
+            if (m.matches()) {
+                importsToAdd.add(line.trim());
+            }
+        }
+
         //Sort imports
         Collections.sort(importsToAdd);
 
@@ -563,17 +579,16 @@ public class HaXeSideKickPlugin extends EditPlugin
         StringBuffer bufferText = new StringBuffer();
         boolean addedImports = importsToAdd.size() == 0;
         Pattern packagePattern = Pattern.compile("^[ \t]*package[ \t;$].*");
-        Pattern packagePrefixPattern = Pattern.compile("^[ \t]*import[ \t]+([a-zA-Z0-9_]+)\\..*");
+        Pattern packagePrefixPattern = Pattern.compile("^[ \t]*import[ \t]+([a-zA-Z0-9_]+(\\.[a-zA-Z0-9_]+)?+).*");
 
-        String line;
         int additionalimports = 0;
         for (int ii = 0; ii < buffer.getLineCount(); ++ii) {
             line = buffer.getLineText(ii);
-            bufferText.append(line + "\n");
             if (!addedImports && packagePattern.matcher(line).matches()) {
-                String currentPackagePrefix = "";//packagePrefixPattern.matcher(importsToAdd.get(0)).group(1);
+                bufferText.append(line + "\n");
+                String currentPackagePrefix = "";
                 for (String newImport : importsToAdd) {
-                    Matcher m = packagePrefixPattern.matcher(newImport);
+                    m = packagePrefixPattern.matcher(newImport);
                     String packagePrefix = null;
                     if (m != null && m.matches()) {
                         packagePrefix = m.group(1);
@@ -587,13 +602,34 @@ public class HaXeSideKickPlugin extends EditPlugin
                     additionalimports++;
                 }
                 addedImports = true;
+            } else if (!patternImport.matcher(line).matches()) {
+                bufferText.append(line + "\n");
             }
         }
-        int firstLine = textArea.getFirstLine();
-        firstLine += additionalimports;
+        String firstLineTest = textArea.getLineText(textArea.getFirstLine()).trim();
+        String textString = bufferText.toString();
 
-        textArea.setText(bufferText.toString());
-        textArea.setFirstLine(firstLine);
+        textString = removeDuplicateEmptyLines(textString);
+
+        textArea.setText(textString);
+
+        //Make sure the text area stays with the same view
+        for (int ii = 0; ii < textArea.getLineCount(); ii++) {
+            if (textArea.getLineText(ii).trim().equals(firstLineTest)) {
+                textArea.setFirstLine(ii);
+                break;
+            }
+        }
+    }
+
+    protected static String removeDuplicateEmptyLines (String s)
+    {
+        int idx = s.indexOf("\n\n\n");
+        while (idx > -1) {
+            s = s.replace("\n\n\n", "\n\n");
+            idx = s.indexOf("\n\n\n");
+        }
+        return s;
     }
 
     protected static Map<String, Set<String>> getAllClassPackages (Buffer buffer)
@@ -771,7 +807,7 @@ public class HaXeSideKickPlugin extends EditPlugin
         if (installDirString == null || installDirString.trim().equals("") || installDirString.indexOf("System Default") >= 0) {
         	installDirString = HaXeSideKickPlugin.getSystemDefaultHaxeInstallPath();
         }
-        
+
         File installDir = new File(installDirString);
         File stdlib = new File(installDir.getAbsolutePath() + File.separator + "lib");
 
@@ -798,7 +834,7 @@ public class HaXeSideKickPlugin extends EditPlugin
         if (!installDir.exists()) {
         	JOptionPane.showMessageDialog(null, "Haxe install folder " + installDir + " doesn't exist.  Check the \"Installation Directory\" option in Plugins->Plugin Options->Haxe", "Error", JOptionPane.ERROR_MESSAGE);
         }
-        
+
         classPaths.add(installDir.getAbsolutePath() + File.separator + "std");
         // Go through the classpaths and add the *.hx files
         try {

@@ -2,7 +2,7 @@
 <classpath>
 	<classpathentry kind="src" path="src"/>
 	<classpathentry kind="var" path="JEDIT_JARS/SideKick.jar"/>
-	<classpathentry kind="var" path="JEDIT_APP_DIR/jedit.jar"/>
+	<classpathentry kind="var" path="JEDIT_APP_DIR/jedit.jar" sourcepath="/JEDIT_SRC"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry kind="var" path="JEDIT_JARS/CtagsSideKick.jar"/>
 	<classpathentry kind="var" path="JEDIT_JARS/ProjectViewer.jar"/>
