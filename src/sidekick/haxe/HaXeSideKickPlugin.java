@@ -1,6 +1,5 @@
 package sidekick.haxe;
 
-import java.awt.TextArea;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -157,9 +156,7 @@ public class HaXeSideKickPlugin extends EditPlugin
                 if (element.getNodeName().equals("i")) {
                     // Insertion
                     String codeName = element.getAttribute("n");
-                    // trace(codeName);
                     String argString = ((Element)element.getElementsByTagName("t").item(0)).getTextContent();
-                    // trace(codeName + "=" + argString);
                     String[] methodTokens = argString.split("->");
                     String returns = methodTokens[methodTokens.length - 1];
                     if (methodTokens.length == 1) {
@@ -265,7 +262,6 @@ public class HaXeSideKickPlugin extends EditPlugin
 
             // any error???
             final int exitVal = proc.waitFor();
-            System.out.println("ExitValue: " + exitVal);
 
             output = outputGobbler.getOutput();
             errors = errorGobbler.getOutput();
@@ -519,6 +515,7 @@ public class HaXeSideKickPlugin extends EditPlugin
         //Remove the class name from the list of import tokens, so you don't import yourself
         String filename = view.getBuffer().getName();
         importTokens.remove(filename.substring(0, filename.length() - 3));
+        importTokens.remove("Public");
 
         Set<String> existingImports = getCurrentImports(lines);
         for (String existing : existingImports) {
@@ -579,7 +576,7 @@ public class HaXeSideKickPlugin extends EditPlugin
         StringBuffer bufferText = new StringBuffer();
         boolean addedImports = importsToAdd.size() == 0;
         Pattern packagePattern = Pattern.compile("^[ \t]*package[ \t;$].*");
-        Pattern packagePrefixPattern = Pattern.compile("^[ \t]*import[ \t]+([a-zA-Z0-9_]+(\\.[a-zA-Z0-9_]+)?+).*");
+        Pattern packagePrefixPattern = Pattern.compile("^[ \t]*(import|using)[ \t]+([a-zA-Z0-9_]+(\\.[a-zA-Z0-9_]+)?+).*");
 
         int additionalimports = 0;
         for (int ii = 0; ii < buffer.getLineCount(); ++ii) {
@@ -591,7 +588,7 @@ public class HaXeSideKickPlugin extends EditPlugin
                     m = packagePrefixPattern.matcher(newImport);
                     String packagePrefix = null;
                     if (m != null && m.matches()) {
-                        packagePrefix = m.group(1);
+                        packagePrefix = m.group(2);
                     }
 
                     if (!currentPackagePrefix.equals(packagePrefix)) {
@@ -606,11 +603,10 @@ public class HaXeSideKickPlugin extends EditPlugin
                 bufferText.append(line + "\n");
             }
         }
+
         String firstLineTest = textArea.getLineText(textArea.getFirstLine()).trim();
         String textString = bufferText.toString();
-
         textString = removeDuplicateEmptyLines(textString);
-
         textArea.setText(textString);
 
         //Make sure the text area stays with the same view
@@ -652,7 +648,7 @@ public class HaXeSideKickPlugin extends EditPlugin
         for (String line : lines) {
             m = patternImport.matcher(line);
             if (m.matches()) {
-                String fullClassName = m.group(1);
+                String fullClassName = m.group(2);
                 String[] tokens = fullClassName.split("\\.");
                 existingImports.add(tokens[tokens.length - 1]);
             }
@@ -695,6 +691,11 @@ public class HaXeSideKickPlugin extends EditPlugin
         try {
             Matcher m;
             for (String line : lines) {
+
+                if (line.trim().startsWith("//") || line.trim().startsWith("*") || line.trim().startsWith("/*")) {
+                    continue;
+                }
+
                 m = patternVar.matcher(line);
                 if (m.matches()) {
                     trace(m.group(1));
@@ -712,40 +713,8 @@ public class HaXeSideKickPlugin extends EditPlugin
                 }
 
                 getRepeatedMatches(patternStatics, line, importTokens);
-//                m = patternStatics.matcher(line);
-//                if (m.matches()) {
-//                    importTokens.add(m.group(1));
-//                }
-
                 getRepeatedMatches(patternGenerics, line, importTokens);
-//                m = patternGenerics.matcher(line);
-//                if (m.matches()) {
-//                    importTokens.add(m.group(1));
-//                }
-
                 getRepeatedMatches(patternArgument, line, importTokens);
-
-//                m = patternArgument.matcher(line);
-//                if (m.matches()) {
-//
-//                    String strippedLine = line;
-//                    String group = m.group(1);
-//                    int groupIndex = strippedLine.indexOf(group);
-//                    //Add the first
-//                    //And search for other arguments
-//
-//                    do  {
-//                        importTokens.add(m.group(1));
-//                        group = m.group(1);
-//                        groupIndex = strippedLine.indexOf(group);
-//                        if (groupIndex < 0 || group.length() == 0) {
-//                            break;
-//                        }
-//                        strippedLine = strippedLine.substring(groupIndex + group.length());
-//                        m = patternArgument.matcher(strippedLine);
-//
-//                    } while (m.matches());
-//                }
 
                 m = patternImplements.matcher(line);
                 if (m.matches()) {
@@ -761,7 +730,6 @@ public class HaXeSideKickPlugin extends EditPlugin
                 }
             }
         } catch (Exception e) {
-            // TODO Auto-generated catch block
             e.printStackTrace();
             trace("EXCEPTION=" + e);
         }
@@ -801,9 +769,6 @@ public class HaXeSideKickPlugin extends EditPlugin
         //Add the system classpaths
         String installDirString = jEdit.getProperty(OPTION_PREFIX + "installDir");
 
-        trace(OPTION_PREFIX + "installDir=" + installDirString);
-        trace("HaXeSideKickPlugin.getSystemDefaultHaxeInstallPath()=" + HaXeSideKickPlugin.getSystemDefaultHaxeInstallPath());
-
         if (installDirString == null || installDirString.trim().equals("") || installDirString.indexOf("System Default") >= 0) {
         	installDirString = HaXeSideKickPlugin.getSystemDefaultHaxeInstallPath();
         }
@@ -813,14 +778,9 @@ public class HaXeSideKickPlugin extends EditPlugin
 
         Pattern startsWithNumber = Pattern.compile("^[0-9].*");
         if (stdlib.exists() && stdlib.isDirectory()) {
-            trace("Looking in " + stdlib);
             for (File libDir : stdlib.listFiles()) {
-                trace("   Looking in sub dir" + libDir);
-
                 if (libDir.isDirectory()) {
-                    trace("   Looking in sub-sub dir" + libDir);
                     for (File versioned : libDir.listFiles()) {
-                        trace("startsWithNumber=" + startsWithNumber.matcher(versioned.getName()).matches());
                         if (versioned.isDirectory() && startsWithNumber.matcher(versioned.getName()).matches()) {
                             classPaths.add(versioned.getAbsolutePath().replace("flash9", "flash"));
                         }
@@ -870,21 +830,6 @@ public class HaXeSideKickPlugin extends EditPlugin
         return classPackages;
     }
 
-    static protected void removeExistingImports (TextArea text)
-    {
-        StringBuffer newBuffer = new StringBuffer();
-        Pattern patternimport = Pattern.compile("^[ \t]*import[ \t]+.*");
-        Matcher m;
-
-        for (String line : text.getText().split("\n")) {
-            m = patternimport.matcher(line);
-            if (!m.matches()) {
-                newBuffer.append(line + "\n");
-            }
-        }
-        text.setText(newBuffer.toString());
-    }
-
     @Override
     public void start ()
     {}
@@ -924,7 +869,7 @@ public class HaXeSideKickPlugin extends EditPlugin
     protected static Pattern patternNew = Pattern.compile("^.*[ \t\\(\\[]+new[ \t]+([A-Za-z0-9_]+).*");
     protected static Pattern patternStatics = Pattern.compile(".*[{ \t\\(]([A-Z_][A-Za-z0-9_]*).*");
     protected static Pattern patternArgument = Pattern.compile(".*:[ \t]*([A-Z][A-Za-z0-9_]*).*");
-    protected static Pattern patternImport = Pattern.compile("^[ \t]*import[ \t]+(.*);.*");
+    protected static Pattern patternImport = Pattern.compile("^[ \t]*(import|using)[ \t]+(.*);.*");
     protected static Pattern patternError = Pattern.compile("(.*):[ ]*([0-9]+):(.*:.*)");
     protected static Pattern patternGenerics = Pattern.compile(".*<[ \t]*([A-Z_]+[A-Za-z0-9_]*)[ \t]*>.*");
 
