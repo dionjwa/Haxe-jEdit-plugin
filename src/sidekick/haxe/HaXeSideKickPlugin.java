@@ -256,7 +256,6 @@ public class HaXeSideKickPlugin extends EditPlugin
             try {
                 Thread.sleep(100);
             } catch (Exception e) {
-                // TODO Auto-generated catch block
                 e.printStackTrace();
             }
 
@@ -813,6 +812,10 @@ public class HaXeSideKickPlugin extends EditPlugin
                     className = className.substring(0, className.length() - 3);
 
                     if (className.length() == packagePath.length()) {
+                        continue;
+                    }
+
+                    if (packagePath.contains("_std")) {
                         continue;
                     }
 
