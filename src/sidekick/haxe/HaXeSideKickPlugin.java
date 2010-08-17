@@ -13,6 +13,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -739,6 +740,7 @@ public class HaXeSideKickPlugin extends EditPlugin
     {
         Map<String, Set<String>> classPackages = new HashMap<String, Set<String>>();
         Set<String> classPaths = new HashSet<String>();
+        Set<String> stdLibs = new HashSet<String>();
 
         if (!hxmlFile.exists()) {
             Log.log(Log.ERROR, "HaXe", "*.hxml file doesn't exist: " + hxmlFile);
@@ -750,6 +752,7 @@ public class HaXeSideKickPlugin extends EditPlugin
             BufferedReader in = new BufferedReader(reader);
             String str;
             Pattern cp = Pattern.compile("^[ \t]*-cp[ \t]+(.*)");
+            Pattern libPattern = Pattern.compile("^[ \t]*-lib[ \t]+(.*)");
             Matcher m;
             while ((str = in.readLine()) != null) {
                 m = cp.matcher(str);
@@ -757,12 +760,29 @@ public class HaXeSideKickPlugin extends EditPlugin
                     classPaths.add(hxmlFile.getParentFile().getAbsolutePath() + File.separator
                         + m.group(1));
                 }
+
+                m = libPattern.matcher(str);
+                if (m.matches()) {
+                    stdLibs.add(m.group(1));
+                }
             }
             in.close();
             reader.close();
         } catch (IOException e) {
             Log.log(Log.ERROR, "HaXe", e.toString());
         }
+
+        StringBuilder libsString = new StringBuilder();
+        libsString.append(".*(");
+        Iterator<String> libsIter = stdLibs.iterator();
+        if (libsIter.hasNext()) {
+            libsString.append(libsIter.next());
+        }
+        while (libsIter.hasNext()) {
+            libsString.append("|" + libsIter.next());
+        }
+        libsString.append(").*");
+        Pattern libsPattern = Pattern.compile(libsString.toString());
 
         //jEdit.getProperty("options.haxe.installDir");
         //Add the system classpaths
@@ -780,7 +800,7 @@ public class HaXeSideKickPlugin extends EditPlugin
             for (File libDir : stdlib.listFiles()) {
                 if (libDir.isDirectory()) {
                     for (File versioned : libDir.listFiles()) {
-                        if (versioned.isDirectory() && startsWithNumber.matcher(versioned.getName()).matches()) {
+                        if (versioned.isDirectory() && libsPattern.matcher(versioned.getAbsolutePath()).matches() && startsWithNumber.matcher(versioned.getName()).matches()) {
                             classPaths.add(versioned.getAbsolutePath().replace("flash9", "flash"));
                         }
                     }
