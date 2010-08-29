@@ -48,8 +48,8 @@ import sidekick.SideKickCompletion;
 import sidekick.SideKickParser;
 import sidekick.SideKickPlugin;
 import sidekick.haxe.JavaSystemCaller.StreamGobbler;
-import errorlist.DefaultErrorSource.DefaultError;
 import errorlist.ErrorSource;
+import errorlist.DefaultErrorSource.DefaultError;
 
 public class HaXeSideKickPlugin extends EditPlugin
 {
@@ -604,10 +604,20 @@ public class HaXeSideKickPlugin extends EditPlugin
             }
         }
 
+        String caretLine = textArea.getLineText(textArea.getCaretLine()).trim();
+
         String firstLineTest = textArea.getLineText(textArea.getFirstLine()).trim();
         String textString = bufferText.toString();
         textString = removeDuplicateEmptyLines(textString);
         textArea.setText(textString);
+
+        //Make sure the caret is in the same loc
+        for (int ii = 0; ii < textArea.getLineCount(); ii++) {
+            if (textArea.getLineText(ii).trim().equals(caretLine)) {
+                textArea.setCaretPosition(textArea.getLineStartOffset(ii));
+                break;
+            }
+        }
 
         //Make sure the text area stays with the same view
         for (int ii = 0; ii < textArea.getLineCount(); ii++) {
@@ -616,6 +626,7 @@ public class HaXeSideKickPlugin extends EditPlugin
                 break;
             }
         }
+
     }
 
     protected static String removeDuplicateEmptyLines (String s)
