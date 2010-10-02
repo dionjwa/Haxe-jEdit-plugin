@@ -9,7 +9,6 @@ import org.gjt.sp.jedit.View;
 import org.gjt.sp.jedit.jEdit;
 import org.gjt.sp.util.Log;
 
-import sidekick.GenericSideKickCompletion;
 import sidekick.SideKickCompletion;
 import sidekick.SideKickParsedData;
 import sidekick.SideKickParser;
@@ -41,46 +40,25 @@ public class HaXeParser extends SideKickParser
     @Override
     public SideKickCompletion complete (EditPane editPane, int caret)
     {
-        //If the caret is at a ".", use the Haxe compiler to provide completion hints
-        if (editPane.getBuffer().getText(caret - 1, 1).equals(".")) {
-            GenericSideKickCompletion completion = HaXeSideKickPlugin.getSideKickCompletion(editPane, caret);
-            return completion;
-        } else if (_ctagsParser != null) {
-            trace("complete, _ctagsParser=" + _ctagsParser);
-//            String[] keywords = editPane.getBuffer().getKeywordMapAtOffset(caret).getKeywords();
-//            System.out.println("keywords=" + Arrays.toString(keywords));
-//            if (keywords.length > 0) {
-//                String word = getWordAtCaret( editPane, caret );
-//                if (word != null && word.length() > 0) {
-//                    List possibles = new ArrayList();
-//                    for (int i = 0; i < keywords.length; i++) {
-//                        String kw = keywords[i];
-//                        if (kw.startsWith(word) && !kw.equals(word)) {
-//                            possibles.add(keywords[i]);
-//                        }
-//                    }
-//                    Collections.sort(possibles);
-//                    return new ConcreteSideKickCompletion(editPane.getView(), word, possibles);
-//                }
-//            }
-            SideKickCompletion ctagsCompletion = _ctagsParser.complete(editPane, caret);
-            if (ctagsCompletion != null && ctagsCompletion.size() == 0) {
-                for (int ii = 0; ii < ctagsCompletion.size(); ++ii) {
-    //                CodeCompletionVariable ccvar = new CodeCompletionVariable();
-    //                ccvar.name = ctagsCompletion.get(ii).toString();
-                    trace(ctagsCompletion.get(ii).toString());
-                }
-            } else {
-                trace("No completions");
-            }
-
-
-//            if (ctagsCompletion.size())
-//            EditAction action = jEdit.getAction("ctags-interface-complete-from-db");
-//            action.invoke(editPane.getView());
-            return ctagsCompletion;
-        }
+        //The Completion plugin handles code completion
         return null;
+//        If the caret is at a ".", use the Haxe compiler to provide completion hints
+//        if (editPane.getBuffer().getText(caret - 1, 1).equals(".")) {
+//            GenericSideKickCompletion completion = HaXeSideKickPlugin.getSideKickCompletion(editPane, caret);
+//            return completion;
+//        } else if (_ctagsParser != null) {
+//            trace("complete, _ctagsParser=" + _ctagsParser);
+//            SideKickCompletion ctagsCompletion = _ctagsParser.complete(editPane, caret);
+//            if (ctagsCompletion != null && ctagsCompletion.size() == 0) {
+//                for (int ii = 0; ii < ctagsCompletion.size(); ++ii) {
+//                    trace(ctagsCompletion.get(ii).toString());
+//                }
+//            } else {
+//                trace("No completions");
+//            }
+//            return ctagsCompletion;
+//        }
+//        return null;
     }
 
     protected void trace(Object ... args)
@@ -103,11 +81,11 @@ public class HaXeParser extends SideKickParser
         return _ctagsParser.getPanel();
     }
 
-    @Override
-    public String getInstantCompletionTriggers ()
-    {
-        return COMPLETION_CHARS;
-    }
+//    @Override
+//    public String getInstantCompletionTriggers ()
+//    {
+//        return COMPLETION_CHARS;
+//    }
 
     /**
      * We use the Ctags display of the code structure.
@@ -131,6 +109,6 @@ public class HaXeParser extends SideKickParser
 
     private SideKickParsedData _ctagsParsed;
     private SideKickParser _ctagsParser;
-    private final static String COMPLETION_CHARS = ".";
+//    private final static String COMPLETION_CHARS = ".";
 
 }

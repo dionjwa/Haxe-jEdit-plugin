@@ -40,6 +40,9 @@
                 <pathelement location="${jedit.plugins.dir}/ErrorList.jar" />
                 <pathelement location="${jedit.plugins.dir}/ProjectViewer.jar" />
                 <pathelement location="${jedit.plugins.dir}/SideKick.jar" />
+                <pathelement location="${jedit.plugins.dir}/Completion.jar" />
+                <pathelement location="${jedit.plugins.dir}/CtagsInterface.jar" />
+                <pathelement location="${jedit.plugins.dir}/SuperAbbrevs.jar" />
         </path>
 	
         <target name="tags">

@@ -93,6 +93,12 @@ public final class JavaSystemCaller
         {
             return this.output.toString();
         }
+
+        @Override
+        public String toString ()
+        {
+            return type +": " + this.output.toString();
+        }
     }
     /**
      * Execute a system command in the appropriate shell. <br />
@@ -120,8 +126,6 @@ public final class JavaSystemCaller
 
                 final Runtime rt = Runtime.getRuntime();
                 final String processCommand = aShell.getShellCommand() + " " + aCommandLine;
-//                System.out.println("Executing: " + processCommand);
-//                Log.log(Log.NOTICE, "JavaSystemCaller", "Executing " + processCommand + " in " +workingDirectory);
 
                 File workingDir = new File(workingDirectory);
                 if (!workingDir.exists()) {

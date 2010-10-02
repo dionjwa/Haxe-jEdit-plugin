@@ -5,4 +5,7 @@
 	<SERVICE CLASS="sidekick.SideKickParser" NAME="haxe">
 		new sidekick.haxe.HaXeParser();
 	</SERVICE>
+	<SERVICE CLASS="completion.service.CompletionProvider" NAME="haxe">
+		new sidekick.haxe.HaxeCodeCompletion();
+	</SERVICE>
 </SERVICES>

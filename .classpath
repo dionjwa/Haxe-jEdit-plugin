@@ -1,12 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
 	<classpathentry kind="src" path="src"/>
-	<classpathentry kind="var" path="JEDIT_JARS/SideKick.jar"/>
+	<classpathentry kind="var" path="JEDIT_JARS/SideKick.jar" sourcepath="/JEDIT_PROJECTS/SideKick"/>
 	<classpathentry kind="var" path="JEDIT_APP_DIR/jedit.jar" sourcepath="/JEDIT_SRC"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry kind="var" path="JEDIT_JARS/CtagsSideKick.jar"/>
 	<classpathentry kind="var" path="JEDIT_JARS/ProjectViewer.jar"/>
 	<classpathentry kind="var" path="JEDIT_JARS/ErrorList.jar"/>
 	<classpathentry kind="var" path="JEDIT_JARS/Console.jar"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/Completion"/>
+	<classpathentry kind="var" path="JEDIT_JARS/SuperAbbrevs.jar" sourcepath="/JEDIT_PROJECTS/SuperAbbrevs"/>
+	<classpathentry kind="var" path="JEDIT_JARS/CtagsInterface.jar" sourcepath="/JEDIT_PROJECTS/CtagsInterface"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
