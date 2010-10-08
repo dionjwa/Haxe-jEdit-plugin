@@ -41,11 +41,13 @@ plugin.sidekick.haxe.HaXeSideKickPlugin.menu.label=HaXe
 plugin.sidekick.haxe.HaXeSideKickPlugin.menu=haxe-build-project \
              haxe-launch-project \
              haxe-code-completion \
-             haxe-add-missing-imports
+             haxe-add-missing-imports \
+             haxe-add-import-at-caret
 haxe-build-project.label=Build project
 haxe-launch-project.label=Launch project
 haxe-code-completion.label=Code completion
 haxe-add-missing-imports.label=Add missing imports
+haxe-add-import-at-caret.label=Add import at caret
   
 # menu
 #plugin.sidekick.haxe.HaXeSideKickPlugin.menu=sidekick-tree 

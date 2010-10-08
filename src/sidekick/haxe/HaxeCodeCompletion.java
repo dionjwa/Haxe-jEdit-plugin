@@ -4,6 +4,7 @@ import static sidekick.haxe.HaXeSideKickPlugin.trace;
 
 import java.io.StringReader;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -36,7 +37,8 @@ import ctagsinterface.main.Tag;
 /**
  * Service for the Completion plugin.
  */
-public class HaxeCodeCompletion implements CompletionProvider
+public class HaxeCodeCompletion
+    implements CompletionProvider
 {
     public HaxeCodeCompletion ()
     {
@@ -91,21 +93,21 @@ public class HaxeCodeCompletion implements CompletionProvider
         String q = (islowercase ? TagIndex._NAME_LOWERCASE_FLD : TagIndex._NAME_FLD) + ":" + prefix + "*"
             + " AND " + TagIndex._PATH_FLD + ":" + view.getBuffer().getPath() + " AND (kind:function OR kind:variable)";
 
-        //Log.log(Log.NOTICE, "", "query=" + q);
         Vector<Tag> tags = CtagsInterfacePlugin.runScopedQuery(view, q);
 
         List<CompletionCandidate> candidates = new ArrayList<CompletionCandidate>();
 
         for (Tag t : tags) {
-            candidates.add(new CtagsCompletionCandidate(t));
+            if (t.getName().length() > 1) {
+                candidates.add(new CtagsCompletionCandidate(t));
+            }
         }
 
         TextArea ta = view.getTextArea();
         //If we're not dot-completing, look for classes
-        if (!ta.getText(ta.getCaretPosition() - 1 - prefix.length(), 1).equals(".")) {
+        if (prefix.length() > 0 && !ta.getText(ta.getCaretPosition() - 1 - prefix.length(), 1).equals(".")) {
             q = (islowercase ? TagIndex._NAME_LOWERCASE_FLD : TagIndex._NAME_FLD) + ":" + prefix + "* AND kind:class" +
                 " AND " + TagIndex._PATH_FLD + ":*.hx";
-            //Log.log(Log.NOTICE, "", "query=" + q);
             tags = CtagsInterfacePlugin.runScopedQuery(view, q);
             Set<String> classes = new HashSet<String>();
             for (Tag t : tags) {
@@ -115,7 +117,7 @@ public class HaxeCodeCompletion implements CompletionProvider
                 }
             }
         }
-
+        Collections.sort(candidates);
         return candidates;
     }
 

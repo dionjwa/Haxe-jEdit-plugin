@@ -21,4 +21,9 @@
                         sidekick.haxe.HaXeSideKickPlugin.addMissingImports(view);
 		</CODE>
 	</ACTION>
+	<ACTION NAME="haxe-add-import-at-caret">
+                <CODE>
+                        sidekick.haxe.HaXeSideKickPlugin.addImport(view);
+		</CODE>
+	</ACTION>
 </ACTIONS>

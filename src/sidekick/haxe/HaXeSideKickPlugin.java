@@ -28,6 +28,9 @@ import org.gjt.sp.jedit.View;
 import org.gjt.sp.jedit.jEdit;
 import org.gjt.sp.jedit.textarea.JEditTextArea;
 import org.gjt.sp.util.Log;
+
+import completion.util.CompletionUtil;
+
 import projectviewer.ProjectManager;
 import projectviewer.ProjectViewer;
 import projectviewer.vpt.VPTProject;
@@ -490,10 +493,23 @@ public class HaXeSideKickPlugin extends EditPlugin
 
     public static void addMissingImports (final View view)
     {
+        addImports(view, false);
+    }
+
+    protected static void addImports (final View view, boolean onlyAtCaret)
+    {
         Buffer buffer = view.getBuffer();
-        String[] lines = view.getTextArea().getText().split("\n");
         JEditTextArea textArea = view.getTextArea();
-        Set<String> importTokens = getImportableClasses(lines);
+        Set<String> importTokens = null;
+        String[] lines = view.getTextArea().getText().split("\n");
+        if (onlyAtCaret) {
+            String importString = CompletionUtil.getWordAtCaret(view);
+            importTokens = new HashSet<String>();
+            importTokens.add(importString);
+        } else {
+            importTokens = getImportableClasses(lines);
+        }
+
 
         //Remove the class name from the list of import tokens, so you don't import yourself
         String filename = view.getBuffer().getName();
@@ -501,9 +517,6 @@ public class HaXeSideKickPlugin extends EditPlugin
         importTokens.remove("Public");
 
         Set<String> existingImports = getCurrentImports(lines);
-        for (String existing : existingImports) {
-        	trace(existing);
-        }
         Map<String, Set<String>> classPackages = getAllClassPackages(buffer);
 
         if (classPackages == null || classPackages.size() == 0) {
@@ -544,11 +557,25 @@ public class HaXeSideKickPlugin extends EditPlugin
         //Add existing imports
         String line;
         Matcher m;
+
+        //To keep the conditional imports in the correct order
+        Map<String, String> conditionalCompilationCodeBefore = new HashMap<String, String>();
+        Map<String, String> conditionalCompilationCodeAfter = new HashMap<String, String>();
+
+        Pattern packagePrefixPattern = Pattern.compile("^[ \t]*(import|using)[ \t]+([a-zA-Z0-9_]+(\\.[a-zA-Z0-9_]+)?+).*");
+
         for (int ii = 0; ii < buffer.getLineCount(); ++ii) {
             line = buffer.getLineText(ii);
             m = patternImport.matcher(line);
             if (m.matches()) {
                 importsToAdd.add(line.trim());
+                if (ii - 1 >= 0 && buffer.getLineText(ii - 1).trim().startsWith("#")) {
+                    conditionalCompilationCodeBefore.put(line.trim(), buffer.getLineText(ii - 1).trim());
+                }
+                //If there's conditional compilation code under us, AND there's no import under that, bind the code to this line
+                if (ii + 1 < buffer.getLineCount() && buffer.getLineText(ii + 1).trim().startsWith("#") && (ii + 2 >= buffer.getLineCount() || !packagePrefixPattern.matcher(buffer.getLineText(ii + 2)).matches())) {
+                    conditionalCompilationCodeAfter.put(line.trim(), buffer.getLineText(ii + 1).trim());
+                }
             }
         }
 
@@ -559,14 +586,23 @@ public class HaXeSideKickPlugin extends EditPlugin
         StringBuffer bufferText = new StringBuffer();
         boolean addedImports = importsToAdd.size() == 0;
         Pattern packagePattern = Pattern.compile("^[ \t]*package[ \t;$].*");
-        Pattern packagePrefixPattern = Pattern.compile("^[ \t]*(import|using)[ \t]+([a-zA-Z0-9_]+(\\.[a-zA-Z0-9_]+)?+).*");
 
-        int additionalimports = 0;
+        boolean pastImportZone = false;
         for (int ii = 0; ii < buffer.getLineCount(); ++ii) {
             line = buffer.getLineText(ii);
-            if (!addedImports && packagePattern.matcher(line).matches()) {
-                bufferText.append(line + "\n");
+            if (!pastImportZone && addedImports && patternPastImportZone.matcher(line).matches()) {
+                pastImportZone = true;
+            }
+            if (addedImports && !pastImportZone) {
+                continue;//Delete this line
+            } else
+            //Find the package string to begin to add imports
+            if (!pastImportZone && !addedImports && (packagePattern.matcher(line).matches() || line.trim().startsWith("#"))) {
+                if (!line.trim().startsWith("#")) {
+                    bufferText.append(line + "\n");
+                }
                 String currentPackagePrefix = "";
+                //Add all the imports
                 for (String newImport : importsToAdd) {
                     m = packagePrefixPattern.matcher(newImport);
                     String packagePrefix = null;
@@ -578,16 +614,22 @@ public class HaXeSideKickPlugin extends EditPlugin
                         bufferText.append("\n");
                         currentPackagePrefix = packagePrefix;
                     }
+                    if (conditionalCompilationCodeBefore.containsKey(newImport)) {
+                        bufferText.append(conditionalCompilationCodeBefore.get(newImport) + "\n");
+                    }
                     bufferText.append(newImport + "\n");
-                    additionalimports++;
+                    if (conditionalCompilationCodeAfter.containsKey(newImport)) {
+                        bufferText.append(conditionalCompilationCodeAfter.get(newImport) + "\n");
+                    }
                 }
                 addedImports = true;
-            } else if (!patternImport.matcher(line).matches()) {
+            } else if (pastImportZone && !patternImport.matcher(line).matches()) {
                 bufferText.append(line + "\n");
             }
         }
 
         String caretLine = textArea.getLineText(textArea.getCaretLine()).trim();
+        int caretLineOffset = textArea.getCaretPosition() - textArea.getLineStartOffset(textArea.getCaretLine());
 
         String firstLineTest = textArea.getLineText(textArea.getFirstLine()).trim();
         String textString = bufferText.toString();
@@ -597,7 +639,7 @@ public class HaXeSideKickPlugin extends EditPlugin
         //Make sure the caret is in the same loc
         for (int ii = 0; ii < textArea.getLineCount(); ii++) {
             if (textArea.getLineText(ii).trim().equals(caretLine)) {
-                textArea.setCaretPosition(textArea.getLineStartOffset(ii));
+                textArea.setCaretPosition(textArea.getLineStartOffset(ii) + caretLineOffset);
                 break;
             }
         }
@@ -609,45 +651,15 @@ public class HaXeSideKickPlugin extends EditPlugin
                 break;
             }
         }
-
     }
 
-    protected static String removeDuplicateEmptyLines (String s)
+    /**
+     * Adds the import at the cursor
+     * @param view
+     */
+    public static void addImport (final View view)
     {
-        int idx = s.indexOf("\n\n\n");
-        while (idx > -1) {
-            s = s.replace("\n\n\n", "\n\n");
-            idx = s.indexOf("\n\n\n");
-        }
-        return s;
-    }
-
-    protected static Map<String, Set<String>> getAllClassPackages (Buffer buffer)
-    {
-        File hxmlFile = HaXeSideKickPlugin.getBuildFile(buffer);
-        if (hxmlFile == null) {
-            Log.log(Log.ERROR, "HaXe", "No .hxml file found to get class paths");
-            JOptionPane.showMessageDialog(null, "No .hxml file found to get class paths", "Warning", JOptionPane.ERROR_MESSAGE);
-            return null;
-        }
-        return getPackagesFromHXMLFile(hxmlFile);
-    }
-
-    static protected Set<String> getCurrentImports (String[] lines)
-    {
-        Set<String> existingImports = new HashSet<String>();
-
-        Matcher m;
-
-        for (String line : lines) {
-            m = patternImport.matcher(line);
-            if (m.matches()) {
-                String fullClassName = m.group(2);
-                String[] tokens = fullClassName.split("\\.");
-                existingImports.add(tokens[tokens.length - 1]);
-            }
-        }
-        return existingImports;
+        addImports(view, true);
     }
 
     static protected List<File> getFileListingNoSort (File aStartingDir)
@@ -728,6 +740,44 @@ public class HaXeSideKickPlugin extends EditPlugin
             trace("EXCEPTION=" + e);
         }
         return importTokens;
+    }
+
+    protected static Map<String, Set<String>> getAllClassPackages (Buffer buffer)
+    {
+        File hxmlFile = HaXeSideKickPlugin.getBuildFile(buffer);
+        if (hxmlFile == null) {
+            Log.log(Log.ERROR, "HaXe", "No .hxml file found to get class paths");
+            JOptionPane.showMessageDialog(null, "No .hxml file found to get class paths", "Warning", JOptionPane.ERROR_MESSAGE);
+            return null;
+        }
+        return getPackagesFromHXMLFile(hxmlFile);
+    }
+
+    static protected Set<String> getCurrentImports (String[] lines)
+    {
+        Set<String> existingImports = new HashSet<String>();
+
+        Matcher m;
+
+        for (String line : lines) {
+            m = patternImport.matcher(line);
+            if (m.matches()) {
+                String fullClassName = m.group(2);
+                String[] tokens = fullClassName.split("\\.");
+                existingImports.add(tokens[tokens.length - 1]);
+            }
+        }
+        return existingImports;
+    }
+
+    protected static String removeDuplicateEmptyLines (String s)
+    {
+        int idx = s.indexOf("\n\n\n");
+        while (idx > -1) {
+            s = s.replace("\n\n\n", "\n\n");
+            idx = s.indexOf("\n\n\n");
+        }
+        return s;
     }
 
     protected static Map<String, Set<String>> getPackagesFromHXMLFile (File hxmlFile)
@@ -895,5 +945,6 @@ public class HaXeSideKickPlugin extends EditPlugin
     protected static Pattern patternImport = Pattern.compile("^[ \t]*(import|using)[ \t]+(.*);.*");
     protected static Pattern patternError = Pattern.compile("(.*):[ ]*([0-9]+):(.*:.*)");
     protected static Pattern patternGenerics = Pattern.compile(".*<[ \t]*([A-Z_]+[A-Za-z0-9_]*)[ \t]*>.*");
+    protected static Pattern patternPastImportZone = Pattern.compile("^[ \t]*(class|interface|/\\*|typedef|enum).*");
 
 }
