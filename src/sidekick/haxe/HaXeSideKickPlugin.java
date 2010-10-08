@@ -402,7 +402,7 @@ public class HaXeSideKickPlugin extends EditPlugin
             	if (errorLine == null || errorLine.trim().length() == 0) {
             		continue;
             	}
-            	trace("Errorline:" + errorLine);
+//            	trace("Errorline:" + errorLine);
                 m = patternError.matcher(errorLine);
                 if (m.matches()) {
                     DefaultError error = new DefaultError(errorSource, ErrorSource.ERROR,
@@ -704,7 +704,6 @@ public class HaXeSideKickPlugin extends EditPlugin
 
                 m = patternVar.matcher(line);
                 if (m.matches()) {
-                    trace(m.group(1));
                     importTokens.add(m.group(1));
                 }
 
