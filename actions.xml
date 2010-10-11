@@ -26,4 +26,9 @@
                         sidekick.haxe.HaXeSideKickPlugin.addImport(view);
 		</CODE>
 	</ACTION>
+	<ACTION NAME="haxe-go-to-last-edit-location">
+                <CODE>
+                        sidekick.haxe.HaXeSideKickPlugin.goToLastEditLocation(view);
+		</CODE>
+	</ACTION>
 </ACTIONS>

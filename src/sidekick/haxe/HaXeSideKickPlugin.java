@@ -41,6 +41,8 @@ import errorlist.DefaultErrorSource.DefaultError;
 public class HaXeSideKickPlugin extends EditPlugin
 {
     static HaXeErrorSource _errorSource = new HaXeErrorSource();
+
+    public static LastEditLocation lastEditLocation;
     public final static String NAME = "sidekick.haxe";
     public final static String OPTION_PREFIX = "options.haxe.";
     public final static String PROPERTY_PREFIX = "plugin.sidekick.haxe.";
@@ -662,6 +664,11 @@ public class HaXeSideKickPlugin extends EditPlugin
         addImports(view, true);
     }
 
+    public static void goToLastEditLocation (final View view)
+    {
+        lastEditLocation.goToLastEditLocation();
+    }
+
     static protected List<File> getFileListingNoSort (File aStartingDir)
         throws FileNotFoundException
     {
@@ -904,7 +911,11 @@ public class HaXeSideKickPlugin extends EditPlugin
 
     @Override
     public void start ()
-    {}
+    {
+        if (lastEditLocation == null) {
+            lastEditLocation = new LastEditLocation();
+        }
+    }
 
     @Override
     public void stop ()
