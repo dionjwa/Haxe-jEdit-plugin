@@ -1,34 +1,39 @@
 <?xml version="1.0"?>
 <!DOCTYPE ACTIONS SYSTEM "actions.dtd">
 <ACTIONS>
-        <ACTION NAME="haxe-build-project">
-                <CODE>
+    <ACTION NAME="haxe-build-project">
+        <CODE>
                         sidekick.haxe.HaXeSideKickPlugin.buildProject();
-                </CODE>
-        </ACTION>
-        <ACTION NAME="haxe-launch-project">
-                <CODE>
+        </CODE>
+    </ACTION>
+    <ACTION NAME="haxe-launch-project">
+        <CODE>
                         sidekick.haxe.HaXeSideKickPlugin.launchProject();
 		</CODE>
-	</ACTION>
-	<ACTION NAME="haxe-code-completion">
-                <CODE>
+    </ACTION>
+    <ACTION NAME="haxe-code-completion">
+        <CODE>
                         sidekick.haxe.HaXeSideKickPlugin.haxeCodeComplete(view);
 		</CODE>
-	</ACTION>
-	<ACTION NAME="haxe-add-missing-imports">
-                <CODE>
+    </ACTION>
+    <ACTION NAME="haxe-add-missing-imports">
+        <CODE>
                         sidekick.haxe.HaXeSideKickPlugin.addMissingImports(view);
 		</CODE>
-	</ACTION>
-	<ACTION NAME="haxe-add-import-at-caret">
-                <CODE>
+    </ACTION>
+    <ACTION NAME="haxe-add-import-at-caret">
+        <CODE>
                         sidekick.haxe.HaXeSideKickPlugin.addImport(view);
 		</CODE>
-	</ACTION>
-	<ACTION NAME="haxe-go-to-last-edit-location">
-                <CODE>
+    </ACTION>
+    <ACTION NAME="haxe-go-to-last-edit-location">
+        <CODE>
                         sidekick.haxe.HaXeSideKickPlugin.goToLastEditLocation(view);
 		</CODE>
-	</ACTION>
+    </ACTION>
+    <ACTION NAME="haxe-clear-import-cache">
+        <CODE>
+                        sidekick.haxe.HaXeSideKickPlugin.clearImportCache();
+		</CODE>
+    </ACTION>
 </ACTIONS>

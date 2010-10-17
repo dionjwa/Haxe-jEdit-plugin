@@ -48,7 +48,7 @@ for fileName in fileSet:
 
             if packageString != filePackage:
                 write = True
-                lines[i] = "package " + filePackage + ";"
+                lines[i] = "package " + filePackage + ";\n"
                 print fileName +": " + packageString + " -> " + filePackage
                 packagesOk = False
             break

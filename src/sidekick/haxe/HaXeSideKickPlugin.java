@@ -519,7 +519,7 @@ public class HaXeSideKickPlugin extends EditPlugin
         importTokens.remove("Public");
 
         Set<String> existingImports = getCurrentImports(lines);
-        Map<String, Set<String>> classPackages = getAllClassPackages(buffer);
+        Map<String, Set<String>> classPackages = getImportableClasses(buffer);
 
         if (classPackages == null || classPackages.size() == 0) {
         	return;
@@ -624,6 +624,7 @@ public class HaXeSideKickPlugin extends EditPlugin
                         bufferText.append(conditionalCompilationCodeAfter.get(newImport) + "\n");
                     }
                 }
+                bufferText.append("\n");
                 addedImports = true;
             } else if (pastImportZone && !patternImport.matcher(line).matches()) {
                 bufferText.append(line + "\n");
@@ -921,6 +922,12 @@ public class HaXeSideKickPlugin extends EditPlugin
     public void stop ()
     {}
 
+    public static void clearImportCache ()
+    {
+        importableClassesCache = null;
+        currentProjectRootForImporting = null;
+    }
+
     public static void getRepeatedMatches (Pattern pattern, String line, Set<String> matches)
     {
         Matcher m = pattern.matcher(line);
@@ -946,6 +953,24 @@ public class HaXeSideKickPlugin extends EditPlugin
         }
     }
 
+    protected static Map<String, Set<String>> getImportableClasses (Buffer buffer)
+    {
+        if (jEdit.getPlugin("projectviewer.ProjectPlugin", false) != null) {
+            String projectRoot = getProjectRoot();
+            if (currentProjectRootForImporting != projectRoot) {
+                currentProjectRootForImporting = projectRoot;
+                importableClassesCache = getAllClassPackages(buffer);
+            }
+        }
+
+        if (importableClassesCache != null) {
+            return importableClassesCache;
+        }
+
+        return getAllClassPackages(buffer);
+    }
+
+
     protected static Pattern patternVar = Pattern.compile(".*[ \t]var[ \t].*:[ \t]*([A-Za-z0-9_]+).*");
     protected static Pattern patternExtends = Pattern.compile("^.*class[ \t]+([A-Za-z0-9_]+)[ \t]extends[ \t]([A-Za-z0-9_]+).*");
     protected static Pattern patternImplements = Pattern.compile(".*[ \t]implements[ \t]+(.*)");
@@ -955,6 +980,9 @@ public class HaXeSideKickPlugin extends EditPlugin
     protected static Pattern patternImport = Pattern.compile("^[ \t]*(import|using)[ \t]+(.*);.*");
     protected static Pattern patternError = Pattern.compile("(.*):[ ]*([0-9]+):(.*:.*)");
     protected static Pattern patternGenerics = Pattern.compile(".*<[ \t]*([A-Z_]+[A-Za-z0-9_]*)[ \t]*>.*");
-    protected static Pattern patternPastImportZone = Pattern.compile("^[ \t]*(class|interface|/\\*|typedef|enum).*");
+    protected static Pattern patternPastImportZone = Pattern.compile("^[ \t]*(@|class|interface|/\\*|typedef|enum).*");
+
+    private static Map<String, Set<String>> importableClassesCache;
+    private static String currentProjectRootForImporting;
 
 }
