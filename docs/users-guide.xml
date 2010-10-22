@@ -40,6 +40,8 @@
         If you see haxe related output, then good, otherwise see the 
   <ulink url="http://haxe.org/">HaXe</ulink> website for installation help.</para>
   
+  <para> To display the class outline, Ctags must be installed. </para>
+  
   </chapter> 
  <!--<title> Usage </title>-->
   
@@ -55,7 +57,8 @@ somevar.
         command will show a list of class members and functions.  
         Select one for insertion.
         Code completion only works if you activate it immediately after a 
-        period e.g. "someVariable." (including imports, but you don't need that). </para>
+        period e.g. "someVariable." (including imports, but you don't need those 
+        due to the auto-import feature). </para>
    </chapter>
    
    
@@ -101,9 +104,12 @@ Browser on the left or the right. </para>
 --regex-haxe=/^[ \t]*import[ \t]+([A-Za-z0-9_.]+)[ \t]*; /\1/F,import, imports/
 --regex-haxe=/^[ \t]*enum[ \t]+([A-Za-z0-9_]+).* /\1/e,enum, enumerators/
 --regex-haxe=/^[ \t]*typedef[ \t]+([A-Za-z0-9_]+)[ \t]+.*/\1/t,typedef, typedefs/ 
---regex-haxe=/^[ \t]*((private|public|static|inline)[ \t]*)*[ \t]+var[ \t]+([A-Za-z0-9_]+)[ \t]*(: *([A-Za-z0-9_&lt;,&gt; ]+))?[ \t]*.*[;=].*/\3/v,variable, variables/ 
---regex-haxe=/^[ \t]*((private|public|static|override|inline)[ \t]*)*[ \t]*function[ \t]+(([A-Za-z0-9_]+)[ \t]*.*)/\3/f,function, functions/ 
---regex-haxe=/^[ \t]*(class|interface)[ \t]+([A-Za-z0-9_]+)[ \t]*($|((extends|implements)?[ \t]+([A-Za-z0-9_]+))?.*)/\2 \5 \6 /c,class, classes/
+--regex-haxe=/^[ \t]*((private|public|static|inline)[ \t]*)*[ \t]+var[ \t]+([A-Za-z0-9_]
++)[ \t]*(: *([A-Za-z0-9_&lt;,&gt; ]+))?[ \t]*.*[;=].*/\3/v,variable, variables/ 
+--regex-haxe=/^[ \t]*((private|public|static|override|inline)[ \t]*)*[ \t]*function[ \t]
++(([A-Za-z0-9_]+)[ \t]*.*)/\3/f,function, functions/ 
+--regex-haxe=/^[ \t]*(class|interface)[ \t]+([A-Za-z0-9_]+)[ \t]*($|((extends|
+implements)?[ \t]+([A-Za-z0-9_]+))?.*)/\2 \5 \6 /c,class, classes/
 </programlisting>
    </chapter>
  
