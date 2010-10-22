@@ -892,7 +892,7 @@ public class HaXeSideKickPlugin extends EditPlugin
                         continue;
                     }
 
-                    if (packagePath.contains("_std")) {
+                    if (packagePath.contains("_std") || packagePath.startsWith("std.")) {
                         continue;
                     }
 
