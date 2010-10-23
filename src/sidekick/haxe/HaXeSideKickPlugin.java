@@ -586,7 +586,7 @@ public class HaXeSideKickPlugin extends EditPlugin
 
         // Insert imports
         StringBuffer bufferText = new StringBuffer();
-        boolean addedImports = importsToAdd.size() == 0;
+        boolean addedImports = false;
         Pattern packagePattern = Pattern.compile("^[ \t]*package[ \t;$].*");
 
         boolean pastImportZone = false;
