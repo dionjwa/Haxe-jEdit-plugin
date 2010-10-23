@@ -592,41 +592,39 @@ public class HaXeSideKickPlugin extends EditPlugin
         boolean pastImportZone = false;
         for (int ii = 0; ii < buffer.getLineCount(); ++ii) {
             line = buffer.getLineText(ii);
-            if (!pastImportZone && addedImports && patternPastImportZone.matcher(line).matches()) {
-                pastImportZone = true;
-            }
-            if (addedImports && !pastImportZone) {
-                continue;//Delete this line
-            } else
-            //Find the package string to begin to add imports
-            if (!pastImportZone && !addedImports && (packagePattern.matcher(line).matches() || line.trim().startsWith("#"))) {
-                if (!line.trim().startsWith("#")) {
-                    bufferText.append(line + "\n");
-                }
-                String currentPackagePrefix = "";
-                //Add all the imports
-                for (String newImport : importsToAdd) {
-                    m = packagePrefixPattern.matcher(newImport);
-                    String packagePrefix = null;
-                    if (m != null && m.matches()) {
-                        packagePrefix = m.group(2);
-                    }
+            if (!addedImports) {
+                bufferText.append(line + "\n");
+                if (packagePattern.matcher(line).matches()) {
+                    String currentPackagePrefix = "";
+                    //Add all the imports
+                    for (String newImport : importsToAdd) {
+                        m = packagePrefixPattern.matcher(newImport);
+                        String packagePrefix = null;
+                        if (m != null && m.matches()) {
+                            packagePrefix = m.group(2);
+                        }
 
-                    if (!currentPackagePrefix.equals(packagePrefix)) {
-                        bufferText.append("\n");
-                        currentPackagePrefix = packagePrefix;
+                        if (!currentPackagePrefix.equals(packagePrefix)) {
+                            bufferText.append("\n");
+                            currentPackagePrefix = packagePrefix;
+                        }
+                        if (conditionalCompilationCodeBefore.containsKey(newImport)) {
+                            bufferText.append(conditionalCompilationCodeBefore.get(newImport) + "\n");
+                        }
+                        bufferText.append(newImport + "\n");
+                        if (conditionalCompilationCodeAfter.containsKey(newImport)) {
+                            bufferText.append(conditionalCompilationCodeAfter.get(newImport) + "\n");
+                        }
                     }
-                    if (conditionalCompilationCodeBefore.containsKey(newImport)) {
-                        bufferText.append(conditionalCompilationCodeBefore.get(newImport) + "\n");
-                    }
-                    bufferText.append(newImport + "\n");
-                    if (conditionalCompilationCodeAfter.containsKey(newImport)) {
-                        bufferText.append(conditionalCompilationCodeAfter.get(newImport) + "\n");
-                    }
+                    bufferText.append("\n");
+                    addedImports = true;
                 }
-                bufferText.append("\n");
-                addedImports = true;
-            } else if (pastImportZone && !patternImport.matcher(line).matches()) {
+            } else if (!pastImportZone) {
+                if (patternPastImportZone.matcher(line).matches()) {
+                    bufferText.append(line + "\n");
+                    pastImportZone = true;
+                }
+            } else if (!patternImport.matcher(line).matches()) {
                 bufferText.append(line + "\n");
             }
         }
@@ -981,8 +979,10 @@ public class HaXeSideKickPlugin extends EditPlugin
     protected static Pattern patternError = Pattern.compile("(.*):[ ]*([0-9]+):(.*:.*)");
     protected static Pattern patternGenerics = Pattern.compile(".*<[ \t]*([A-Z_]+[A-Za-z0-9_]*)[ \t]*>.*");
     protected static Pattern patternPastImportZone = Pattern.compile("^[ \t]*(@|class|interface|/\\*|typedef|enum).*");
+    protected static Pattern patternComment = Pattern.compile("^[ \t]*(/\\*|\\*|#|//).*");
 
     private static Map<String, Set<String>> importableClassesCache;
     private static String currentProjectRootForImporting;
 
 }
+
