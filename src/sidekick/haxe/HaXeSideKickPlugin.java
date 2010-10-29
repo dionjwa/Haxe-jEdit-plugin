@@ -48,11 +48,7 @@ public class HaXeSideKickPlugin extends EditPlugin
 
     public static HaxeCompilerOutput buildProject ()
     {
-        return buildProject(jEdit.getActiveView().getEditPane());
-    }
-
-    public static HaxeCompilerOutput buildProject (EditPane editPane)
-    {
+        EditPane editPane = jEdit.getActiveView().getEditPane();
     	if (editPane == null) {
             JOptionPane.showMessageDialog(null, "EditPane is null", "Error", JOptionPane.ERROR_MESSAGE);
     		return null;
@@ -70,7 +66,8 @@ public class HaXeSideKickPlugin extends EditPlugin
 
         HaxeCompilerOutput output = getHaxeBuildOutput(editPane, 0, false, true);
         if (output != null) {
-            handleBuildErrors(output.output.errors, _errorSource, output.getProjectRoot(), getBuildFile(editPane.getBuffer()));
+            handleBuildErrors(output.output.errors, _errorSource, output.getProjectRoot(), getBuildFile());
+            trace(output);
         }
         return output;
     }
@@ -160,8 +157,8 @@ public class HaXeSideKickPlugin extends EditPlugin
         return null;
     }
 
-    // Get the first *.hxml file we find
-    public static File getBuildFile (Buffer buffer)
+    // Get the project defined hxml file.
+    public static File getBuildFile ()
     {
         VPTProject prj = getCurrentProject();
         if (prj == null) {
@@ -173,7 +170,7 @@ public class HaXeSideKickPlugin extends EditPlugin
             return buildFile;
         }
 
-        JOptionPane.showMessageDialog(null, "No .hxml file found in the project root folder, nor any parent folder.", "Error", JOptionPane.ERROR_MESSAGE);
+        JOptionPane.showMessageDialog(null, "No .hxml file found in the project root folder", "Error", JOptionPane.ERROR_MESSAGE);
         return null;
     }
 
@@ -212,14 +209,14 @@ public class HaXeSideKickPlugin extends EditPlugin
     	    return null;
     	}
 
-        File hxmlFile = getBuildFile(editPane.getBuffer());
+        File hxmlFile = getBuildFile();
 
 
         if (hxmlFile == null) {
             Log.log(
                 Log.ERROR,
                 NAME,
-                "Attempting to build haxe project, but no *.hxml at the project root, or in a parent directory of the current buffer.");
+                "Attempting to build haxe project, but no *.hxml at the project root.");
             if (showErrorPopups) {
                 GUIUtilities.error(jEdit.getActiveView(), "haxe.error.noBuildFile", null);
             }
@@ -324,13 +321,20 @@ public class HaXeSideKickPlugin extends EditPlugin
     {
         HaxeCompilerOutput output = buildProject();
         if (output != null && !isErrors()) {
-            String launchCommand = jEdit.getProperty("options.haxe.launchCommand");
-            executeShellCommand(launchCommand, output.buildFile.getParentFile().getAbsolutePath());
-        } else {
-            String msg = "Cannot launch project due to errors or failed build";
-            Log.log(Log.MESSAGE, NAME, msg);
-            jEdit.getFirstView().getStatus().setMessage(msg);
+            String launchCommand = getLaunchCommand();//jEdit.getProperty("options.haxe.launchCommand");
+            if (launchCommand != null) {
+                executeShellCommand(launchCommand, output.buildFile.getParentFile().getAbsolutePath());
+            }
         }
+    }
+
+    protected static String getLaunchCommand ()
+    {
+        VPTProject prj = getCurrentProject();
+        if (prj == null) {
+            return null;
+        }
+        return prj.getProperty(ProjectOptionPane.PROJECT_LAUNCH_CMD);
     }
 
     public static void trace (Object... arguments)
@@ -373,7 +377,7 @@ public class HaXeSideKickPlugin extends EditPlugin
             importTokens = new HashSet<String>();
             importTokens.add(importString);
         } else {
-            importTokens = getImportableClasses(lines);
+            importTokens = getImportableTokens(lines);
         }
 
 
@@ -383,7 +387,7 @@ public class HaXeSideKickPlugin extends EditPlugin
         importTokens.remove("Public");
 
         Set<String> existingImports = getCurrentImports(lines);
-        Map<String, Set<String>> classPackages = getImportableClasses(buffer);
+        Map<String, Set<String>> classPackages = getAllImportableClasses();
 
         if (classPackages == null || classPackages.size() == 0) {
         	return;
@@ -557,7 +561,7 @@ public class HaXeSideKickPlugin extends EditPlugin
         return result;
     }
 
-    protected static Set<String> getImportableClasses (final String[] lines)
+    protected static Set<String> getImportableTokens (final String[] lines)
     {
         Set<String> importTokens = new HashSet<String>();
 
@@ -611,9 +615,9 @@ public class HaXeSideKickPlugin extends EditPlugin
         return importTokens;
     }
 
-    protected static Map<String, Set<String>> getAllClassPackages (Buffer buffer)
+    protected static Map<String, Set<String>> getAllClassPackages ()
     {
-        File hxmlFile = HaXeSideKickPlugin.getBuildFile(buffer);
+        File hxmlFile = HaXeSideKickPlugin.getBuildFile();
         if (hxmlFile == null) {
             Log.log(Log.ERROR, "HaXe", "No .hxml file found to get class paths");
             JOptionPane.showMessageDialog(null, "No .hxml file found to get class paths", "Warning", JOptionPane.ERROR_MESSAGE);
@@ -653,7 +657,7 @@ public class HaXeSideKickPlugin extends EditPlugin
     {
         Map<String, Set<String>> classPackages = new HashMap<String, Set<String>>();
         Set<String> classPaths = new HashSet<String>();
-        Set<String> stdLibs = new HashSet<String>();
+        Set<String> haxelibs = new HashSet<String>();
 
         if (!hxmlFile.exists()) {
             Log.log(Log.ERROR, "HaXe", "*.hxml file doesn't exist: " + hxmlFile);
@@ -676,7 +680,7 @@ public class HaXeSideKickPlugin extends EditPlugin
 
                 m = libPattern.matcher(str);
                 if (m.matches()) {
-                    stdLibs.add(m.group(1));
+                    haxelibs.add(m.group(1));
                 }
             }
             in.close();
@@ -685,9 +689,10 @@ public class HaXeSideKickPlugin extends EditPlugin
             Log.log(Log.ERROR, "HaXe", e.toString());
         }
 
+        //Create a regex pattern for searching the haxelibs
         StringBuilder libsString = new StringBuilder();
         libsString.append(".*(");
-        Iterator<String> libsIter = stdLibs.iterator();
+        Iterator<String> libsIter = haxelibs.iterator();
         if (libsIter.hasNext()) {
             libsString.append(libsIter.next());
         }
@@ -697,17 +702,7 @@ public class HaXeSideKickPlugin extends EditPlugin
         libsString.append(").*");
         Pattern libsPattern = Pattern.compile(libsString.toString());
 
-        //jEdit.getProperty("options.haxe.installDir");
-        //Add the system classpaths
-        String installDirString = jEdit.getProperty(OPTION_PREFIX + "installDir");
-
-        if (installDirString == null || installDirString.trim().equals("") || installDirString.indexOf("System Default") >= 0) {
-        	installDirString = HaXeSideKickPlugin.getSystemDefaultHaxeInstallPath();
-        }
-
-
-        File haxelib = new File(jEdit.getProperty("options.haxe.haxelibDir"));//new File(jEdit.getProperty("options.haxe.stdDir"));//installDir.getAbsolutePath() + File.separator + "lib");
-
+        File haxelib = new File(getHaxelibPath());
         if (!haxelib.exists()) {
             JOptionPane.showMessageDialog(null, "haxelib folder " + haxelib + " doesn't exist.  Check the \"Installation Directory\" option in Plugins->Plugin Options->Haxe", "Error", JOptionPane.ERROR_MESSAGE);
         }
@@ -727,7 +722,11 @@ public class HaXeSideKickPlugin extends EditPlugin
             Log.log(Log.ERROR, "HaXe", "HaXe stdlib directory doesn't exist: " + haxelib);
         }
 
-        classPaths.add(jEdit.getProperty("options.haxe.stdDir"));
+        if (getStdLibPath() != null) {
+            classPaths.add(getStdLibPath());
+        } else {
+            Log.log(Log.ERROR, null, "Could not find haxe std lib path");
+        }
 
         // Go through the classpaths and add the *.hx files
         try {
@@ -810,21 +809,19 @@ public class HaXeSideKickPlugin extends EditPlugin
         }
     }
 
-    protected static Map<String, Set<String>> getImportableClasses (Buffer buffer)
+    protected static Map<String, Set<String>> getAllImportableClasses ()
     {
-        if (jEdit.getPlugin("projectviewer.ProjectPlugin", false) != null) {
-            String projectRoot = getCurrentProject() == null ? null : getCurrentProject().getRootPath();//getProjectRoot();
-            if (currentProjectRootForImporting != projectRoot) {
-                currentProjectRootForImporting = projectRoot;
-                importableClassesCache = getAllClassPackages(buffer);
-            }
+        String projectRoot = getCurrentProject() == null ? null : getCurrentProject().getRootPath();//getProjectRoot();
+        if (currentProjectRootForImporting != projectRoot) {
+            currentProjectRootForImporting = projectRoot;
+            importableClassesCache = getAllClassPackages();
         }
 
         if (importableClassesCache != null) {
             return importableClassesCache;
         }
 
-        return getAllClassPackages(buffer);
+        return getAllClassPackages();
     }
 
     protected static void checkAndUpdateProjectHaxeBuildFile (VPTProject prj)
@@ -845,6 +842,35 @@ public class HaXeSideKickPlugin extends EditPlugin
         }
     }
 
+    protected static String getHaxelibPath ()
+    {
+        String[] envp = {"HOME=" + System.getProperty("user.home")};
+        SystemProcessOutput output = JavaSystemCaller.systemCall("haxelib config", System.getProperty("user.home"), null, envp);
+        String path = output.output.trim();
+        if (path.charAt(path.length() - 1) == '/') {
+            path = path.substring(0, path.length() - 1);
+        }
+        return path;
+    }
+
+    protected static String getStdLibPath ()
+    {
+        VPTProject prj = getCurrentProject();
+        if (prj != null) {
+            String libraryPathProp = prj.getProperty(ProjectOptionPane.PROJECT_STD_DIR);
+            if (libraryPathProp != null && libraryPathProp.trim().length() > 0) {
+                trace("returning project std dir");
+                return libraryPathProp.trim();
+            }
+        }
+        String path = System.getenv("HAXE_LIBRARY_PATH");
+        if (path != null && path.trim().length() > 0) {
+            return path;
+        }
+
+        return getSystemDefaultHaxeInstallPath() + File.separator + "std";
+    }
+
 
     protected static Pattern patternVar = Pattern.compile(".*[ \t]var[ \t].*:[ \t]*([A-Za-z0-9_]+).*");
     protected static Pattern patternExtends = Pattern.compile("^.*class[ \t]+([A-Za-z0-9_]+)[ \t]extends[ \t]([A-Za-z0-9_]+).*");
@@ -862,4 +888,3 @@ public class HaXeSideKickPlugin extends EditPlugin
     private static String currentProjectRootForImporting;
 
 }
-

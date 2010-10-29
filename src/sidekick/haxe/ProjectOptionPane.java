@@ -17,12 +17,14 @@ public class ProjectOptionPane extends AbstractOptionPane
     public static final String PROJECT_HXML_FILE = "projectHXMLFile";
     public static final String PROJECT_STD_DIR = "projectStdDir";
     public static final String PROJECT_HAXE_EXECUTABLE = "projectHaxeExecutable";
+    public static final String PROJECT_LAUNCH_CMD = "projectLaunchCommand";
 
     VPTProject project;
 
     private JTextField hxmlFile;
     private JTextField haxeStdDir;
     private JTextField haxeExecutable;
+    private JTextField launchCommand;
 
     public ProjectOptionPane(VPTProject project)
     {
@@ -39,6 +41,10 @@ public class ProjectOptionPane extends AbstractOptionPane
         addComponent(jEdit.getProperty(OPTION_PREFIX + PROJECT_HXML_FILE + ".label"), hxmlFile);
 
         addSeparator();
+        launchCommand = new JTextField(project.getProperty(PROJECT_LAUNCH_CMD));
+        addComponent(jEdit.getProperty(OPTION_PREFIX + PROJECT_LAUNCH_CMD + ".label"), launchCommand);
+
+        addSeparator();
         haxeStdDir = new JTextField(project.getProperty(PROJECT_STD_DIR));
         addComponent(jEdit.getProperty(OPTION_PREFIX + PROJECT_STD_DIR + ".label"), haxeStdDir);
 
@@ -52,6 +58,9 @@ public class ProjectOptionPane extends AbstractOptionPane
     {
         if (hxmlFile.getText().trim().length() > 0) {
             project.setProperty(PROJECT_HXML_FILE, hxmlFile.getText().trim());
+        }
+        if (launchCommand.getText().trim().length() > 0) {
+            project.setProperty(PROJECT_LAUNCH_CMD, launchCommand.getText().trim());
         }
         if (haxeStdDir.getText().trim().length() > 0) {
             project.setProperty(PROJECT_STD_DIR, haxeStdDir.getText().trim());

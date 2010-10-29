@@ -70,14 +70,15 @@ options.haxe.label=HaXe
 options.haxe.code=new sidekick.haxe.HaXeOptionPane();
 
 # Option Pane values and labels
-options.haxe.launchCommand=/usr/bin/open deploy/out.swf
-options.haxe.launchCommand.label=Launch output command
-#Keep null to use the system default
-options.haxe.installDir=System Default
-options.haxe.installDir.label=Haxe executable path (leave empty for default)
-options.haxe.stdDir.label=Std lib path
-options.haxe.haxelibDir.label=Haxelib path
-# options.haxe.compilerLocation.label=Compiler location:
+# options.haxe.launchCommand=/usr/bin/open deploy/out.swf
+# options.haxe.launchCommand.label=Launch output command
+# #Keep null to use the system default
+# options.haxe.installDir=System Default
+# options.haxe.installDir.label=Haxe executable path (leave empty for default)
+options.haxe.stdDir.label=HaXe std lib path. Only change if installed in a non-default location, otherwise leave empty. 
+options.haxe.stdDir=
+# options.haxe.haxelibDir.label=Haxelib path
+# # options.haxe.compilerLocation.label=Compiler location:
 options.haxe.defaultInstallDirMac=/usr/lib/haxe
 options.haxe.defaultInstallDirLinux=/usr/lib/haxe
 options.haxe.defaultInstallDirWindows=C:\\Program Files\\Motion-Twin\\haxe
@@ -86,6 +87,7 @@ options.haxe.defaultInstallDirWindows7=C:\\Program Files (x86)\\Motion-Twin\\hax
 #ProjectViewer optionpanel
 options.haxe-project-options.label=HaXe Paths
 options.haxe.projectHXMLFile.label=Project hxml file (for project building/code completion)
+options.haxe.projectLaunchCommand.label=Launch command (haxe -cmd "XXX" build.hxml)
 options.haxe.projectStdDir.label=Project specific haXe std library location (advanced use only)
 options.haxe.projectHaxeExecutable.label=Project specific haxe compiler (advanced use only)
 

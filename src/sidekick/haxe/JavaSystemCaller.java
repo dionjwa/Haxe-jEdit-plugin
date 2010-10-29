@@ -134,7 +134,7 @@ public final class JavaSystemCaller
                 }
                 final Process proc = rt.exec(processCommand, envp, workingDir);
                 Log.log(Log.NOTICE, "JavaSystemCaller", "processCommand=" + processCommand +
-                    "\nworkingDir=" + workingDir + "\nenvp=" + Arrays.toString(envp));
+                    ", workingDir=" + workingDir + ", envp=" + Arrays.toString(envp));
                 // any error message?
                 final StreamGobbler errorGobbler = new
                     StreamGobbler(proc.getErrorStream(), "ERROR");
