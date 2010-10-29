@@ -9,6 +9,7 @@ import java.io.InputStreamReader;
 import java.io.IOException;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 
 /**
  * Make a system call through a system shell in a platform-independent manner in Java. <br />
@@ -30,10 +31,10 @@ public final class JavaSystemCaller
      * @throws IllegalArgumentException if one parameters is null or empty.
      * 'args' can be empty (default 'ls' performed then)
      */
-    public static SystemProcessOutput systemCall(String command, String workingDirectory, String[] someParameters)
+    public static SystemProcessOutput systemCall(String command, String workingDirectory, String[] someParameters, String[] envp)
     {
         try {
-            return Exec.execute(command, workingDirectory, someParameters);
+            return Exec.execute(command, workingDirectory, envp, someParameters);
         } catch (Exception e) {
             Log.log(Log.ERROR, "JavaSystemCaller", e.getMessage());
             return null;
@@ -115,7 +116,7 @@ public final class JavaSystemCaller
          * @param someParameters parameters of the command (must not be null or empty)
          * @return final output (stdout only)
          */
-        public static SystemProcessOutput execute(final String aCommand, String workingDirectory, final String... someParameters)
+        public static SystemProcessOutput execute(final String aCommand, String workingDirectory, String[] envp, final String... someParameters)
         {
             SystemProcessOutput output = new SystemProcessOutput();
             try
@@ -131,7 +132,9 @@ public final class JavaSystemCaller
                 if (!workingDir.exists()) {
                 	    Log.log(Log.ERROR, "JavaSystemCaller", "workingDir=" + workingDir + " doesn't exist");
                 }
-                final Process proc = rt.exec(processCommand, null, workingDir);
+                final Process proc = rt.exec(processCommand, envp, workingDir);
+                Log.log(Log.NOTICE, "JavaSystemCaller", "processCommand=" + processCommand +
+                    "\nworkingDir=" + workingDir + "\nenvp=" + Arrays.toString(envp));
                 // any error message?
                 final StreamGobbler errorGobbler = new
                     StreamGobbler(proc.getErrorStream(), "ERROR");

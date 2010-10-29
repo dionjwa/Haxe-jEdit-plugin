@@ -83,6 +83,12 @@ options.haxe.defaultInstallDirLinux=/usr/lib/haxe
 options.haxe.defaultInstallDirWindows=C:\\Program Files\\Motion-Twin\\haxe
 options.haxe.defaultInstallDirWindows7=C:\\Program Files (x86)\\Motion-Twin\\haxe
 
+#ProjectViewer optionpanel
+options.haxe-project-options.label=HaXe Paths
+options.haxe.projectHXMLFile.label=Project hxml file (for project building/code completion)
+options.haxe.projectStdDir.label=Project specific haXe std library location (advanced use only)
+options.haxe.projectHaxeExecutable.label=Project specific haxe compiler (advanced use only)
+
 #Errors
 haxe.error.noBuildFile.message=Attempting to build haxe project, but no *.hxml at the project root, or in a parent directory of the current buffer.
 haxe.error.noBuildFile.title=No *.hxml file found

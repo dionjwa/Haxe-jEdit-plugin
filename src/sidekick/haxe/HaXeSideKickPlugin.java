@@ -31,7 +31,6 @@ import org.gjt.sp.util.Log;
 
 import completion.util.CompletionUtil;
 
-import projectviewer.ProjectManager;
 import projectviewer.ProjectViewer;
 import projectviewer.vpt.VPTProject;
 import sidekick.haxe.JavaSystemCaller.StreamGobbler;
@@ -66,6 +65,8 @@ public class HaXeSideKickPlugin extends EditPlugin
                 e.printStackTrace();
             }
         }
+
+        checkAndUpdateProjectHaxeBuildFile(getCurrentProject());
 
         HaxeCompilerOutput output = getHaxeBuildOutput(editPane, 0, false, true);
         if (output != null) {
@@ -103,126 +104,6 @@ public class HaXeSideKickPlugin extends EditPlugin
             e.printStackTrace();
         }
     }
-
-//    public static GenericSideKickCompletion getSideKickCompletion (EditPane editPane, int caret)
-//    {
-//        // If the caret is at a ".", use the Haxe compiler to provide completion hints
-//        // Save the file if dirty
-//        if (editPane.getBuffer().isDirty()) {
-//            editPane.getBuffer().save(editPane.getView(), null, false, true);
-//            // Wait a bit to allow the save notifications to go through and not
-//            // bork the reload/popup
-//            try {
-//                Thread.sleep(50);
-//            } catch (InterruptedException e) {
-//                e.printStackTrace();
-//            }
-//        }
-//
-//        HaxeCompilerOutput output = HaXeSideKickPlugin.getHaxeBuildOutput(editPane, caret, true);
-//
-//        String completionXMLString = output.output.errors.trim();
-//
-//        if (completionXMLString == null || completionXMLString.equals("")
-//            || !completionXMLString.startsWith("<")) {
-//            return null;
-//        }
-//
-//        List<CodeCompletion> codeCompletions = new ArrayList<CodeCompletion>();
-//
-//        try {
-//            // Example see http://www.rgagnon.com/javadetails/java-0573.html
-//            DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
-//            DocumentBuilder db = dbf.newDocumentBuilder();
-//            InputSource is = new InputSource();
-//            is.setCharacterStream(new StringReader(completionXMLString));
-//
-//            Document doc = db.parse(is);
-//            NodeList insertions = doc.getElementsByTagName("i");
-//
-//            // iterate the insertions
-//            for (int i = 0; i < insertions.getLength(); i++) {
-//                Element element = (Element)insertions.item(i);
-//                if (element.getNodeName().equals("i")) {
-//                    // Insertion
-//                    String codeName = element.getAttribute("n");
-//                    String argString = ((Element)element.getElementsByTagName("t").item(0)).getTextContent();
-//                    String[] methodTokens = argString.split("->");
-//                    String returns = methodTokens[methodTokens.length - 1];
-//                    if (methodTokens.length == 1) {
-//                        CodeCompletionField cc = new CodeCompletionField();
-//                        cc.name = codeName;
-//                        cc.setClassName(returns);
-//                        codeCompletions.add(cc);
-//                    } else {
-//                        CodeCompletionMethod cc = new CodeCompletionMethod();
-//                        cc.name = codeName;
-//                        cc.returnType = returns;
-//                        if (methodTokens.length > 1 && !methodTokens[0].trim().equals("Void")) {
-//                            List<String> args = new ArrayList<String>(methodTokens.length - 1);
-//                            List<String> argsTypes = new ArrayList<String>(
-//                                methodTokens.length - 1);
-//                            for (int jj = 0; jj < methodTokens.length - 1; ++jj) {
-//                                String[] argTokens = methodTokens[jj].split(":");
-//                                args.add(argTokens[0]);
-//                                if (argTokens.length > 1) {
-//                                    argsTypes.add(argTokens[1]);
-//                                }
-//                            }
-//                            cc.arguments = args;
-//                            cc.argumentTypes = argsTypes;
-//                        }
-//                        codeCompletions.add(cc);
-//                    }
-//                }
-//            }
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//        }
-//
-//        GenericSideKickCompletion completion = new GenericSideKickCompletion(editPane.getView(),
-//            "", codeCompletions);
-//        return completion;
-//    }
-
-//    public static void haxeCodeComplete (View view)
-//    {
-//        EditPane editPane = view.getEditPane();
-//        Buffer buffer = editPane.getBuffer();
-//        JEditTextArea textArea = editPane.getTextArea();
-//
-//        SideKickParser parser = SideKickPlugin.getParserForBuffer(buffer);
-//
-//        if (!buffer.getText(textArea.getCaretPosition() - 1, 1).equals(".")) {
-//            return;
-//        }
-//
-//        if (parser == null) {
-//            return;
-//        }
-//
-//        SideKickCompletion complete = getSideKickCompletion(editPane, textArea.getCaretPosition());
-//
-//        if (complete == null || complete.size() == 0) {
-//// trace("SideKickCompletion==null");
-//        } else if (complete.size() == 1) {
-//            // if user invokes complete explicitly, insert the
-//            // completion immediately.
-//            //
-//            // if the user eg enters </ in XML mode, there will
-//            // only be one completion and / is an instant complete
-//            // key, so we insert it
-//            complete.insert(0);
-//            return;
-//        }
-//
-//        // show the popup if
-//        // - complete has one element and user invoked with delay key
-//        // - or complete has multiple elements
-//        // and popup is not already shown because of explicit invocation
-//        // of the complete action during the trigger delay
-//        parser.getCompletionPopup(view, textArea.getCaretPosition(), complete, true);
-//    }
 
     public static List<String> executeShellCommand (final String command, String workingDirectory)
     {
@@ -265,46 +146,33 @@ public class HaXeSideKickPlugin extends EditPlugin
         return out;
     }
 
+
+    public static File getFirstProjectHXMLFile (VPTProject prj)
+    {
+        if (prj == null) {
+            return null;
+        }
+        // If there's a project selected, try looking there first
+        String projectRoot = prj.getRootPath();
+        if (projectRoot != null && projectRoot.length() > 0) {
+            return getFirstBuildFileInDir(projectRoot);
+        }
+        return null;
+    }
+
     // Get the first *.hxml file we find
     public static File getBuildFile (Buffer buffer)
     {
-        File buildFile;
-        // If there's a project selected, try looking there first
-        if (jEdit.getPlugin("projectviewer.ProjectPlugin", false) != null) {
-            String projectRoot = getProjectRoot();
-            if (projectRoot != null) {
-                buildFile = getFirstBuildFileInDir(projectRoot);
-                if (buildFile != null) {
-                    return buildFile;
-                }
-            }
-
-            if (buffer != null) {
-                // Try the project of the current buffer, even if it's a different project to the
-                // current selected project
-                ProjectManager pm = ProjectManager.getInstance();
-                String path = buffer.getPath();
-                for (VPTProject prj : pm.getProjects()) {
-                    if (prj.isInProject(path)) {
-                        buildFile = getFirstBuildFileInDir(prj.getRootPath());
-                        if (buildFile != null) {
-                            return buildFile;
-                        }
-                    }
-                }
-            }
+        VPTProject prj = getCurrentProject();
+        if (prj == null) {
+            return null;
+        }
+        checkAndUpdateProjectHaxeBuildFile(prj);
+        File buildFile = new File(prj.getRootPath() + File.separator + prj.getProperty(ProjectOptionPane.PROJECT_HXML_FILE));
+        if (buildFile.exists()) {
+            return buildFile;
         }
 
-        // Otherwise, search up the file system tree, and grab the first *.hxml we find
-        File curDir = buffer == null ? null
-            : new File(buffer.getPath()).getParentFile();
-        while (curDir != null) {
-            buildFile = getFirstBuildFileInDir(curDir.getAbsolutePath());
-            if (buildFile != null) {
-                return buildFile;
-            }
-            curDir = curDir.getParentFile();
-        }
         JOptionPane.showMessageDialog(null, "No .hxml file found in the project root folder, nor any parent folder.", "Error", JOptionPane.ERROR_MESSAGE);
         return null;
     }
@@ -334,7 +202,18 @@ public class HaXeSideKickPlugin extends EditPlugin
     		return null;
     	}
 
+    	VPTProject prj = getCurrentProject();
+
+    	if (prj == null) {
+    	    Log.log(
+                Log.ERROR,
+                NAME,
+                "Attempting to build haxe project, but no project currently selected.");
+    	    return null;
+    	}
+
         File hxmlFile = getBuildFile(editPane.getBuffer());
+
 
         if (hxmlFile == null) {
             Log.log(
@@ -349,7 +228,15 @@ public class HaXeSideKickPlugin extends EditPlugin
 
         String projectRootPath = hxmlFile.getParentFile().getAbsolutePath();
 
-        String command = "haxe " + hxmlFile.getName();
+        String command = "haxe ";
+
+        String haxeExecutableProp = prj.getProperty(ProjectOptionPane.PROJECT_HAXE_EXECUTABLE);
+        if (haxeExecutableProp != null && haxeExecutableProp.length() > 0) {
+            command = haxeExecutableProp + " ";
+        }
+
+        command += hxmlFile.getName();
+
         if (getCodeCompletion) {
             String path = editPane.getBuffer().getPath();
             path = path.substring(projectRootPath.length());
@@ -360,32 +247,25 @@ public class HaXeSideKickPlugin extends EditPlugin
         }
         trace("  command=" + command);
 
-        SystemProcessOutput output = JavaSystemCaller.systemCall(command, projectRootPath);
+        //Figure out if we are using custom std lib location
+        String stdLibDirProp = prj.getProperty(ProjectOptionPane.PROJECT_STD_DIR);
+        ArrayList<String> env = new ArrayList<String>();
+        env.add("HOME=" + System.getProperty("user.home"));
+        if (stdLibDirProp != null && stdLibDirProp.length() > 0) {
+            env.add("HAXE_LIBRARY_PATH=" + stdLibDirProp);
+        }
+        String[] envp = env.toArray(new String[env.size()]);
+
+        SystemProcessOutput output = JavaSystemCaller.systemCall(command, projectRootPath, null, envp);
         return new HaxeCompilerOutput(hxmlFile, output);
     }
 
-    public static String getProjectRoot ()
+    public static VPTProject getCurrentProject ()
     {
         if (!isProjectSelected()) {
             return null;
         }
-        VPTProject prj = ProjectViewer.getActiveProject(jEdit.getActiveView());
-        return prj == null ? null : prj.getRootPath();
-    }
-
-    public static String getProjectRoot (EditPane editPane)
-    {
-        if (editPane == null) {
-            return getProjectRoot();
-        }
-        ProjectManager pm = ProjectManager.getInstance();
-        String path = editPane.getBuffer().getPath();
-        for (VPTProject prj : pm.getProjects()) {
-            if (prj.isInProject(path)) {
-                return prj.getRootPath();
-            }
-        }
-        return null;
+        return ProjectViewer.getActiveProject(jEdit.getActiveView());
     }
 
     public static void handleBuildErrors (String errorOutput, HaXeErrorSource errorSource,
@@ -460,22 +340,6 @@ public class HaXeSideKickPlugin extends EditPlugin
             sb.append(s.toString() + " ");
         }
         Log.log(Log.NOTICE, "HaXe", sb.toString());
-    }
-
-
-//    public static void addMissingImports (View view)
-//    {
-//        new Thread(new ImportThread(view)).start();
-////        ThreadUtilities.runInBackground(new ImportThread(view));
-//    }
-
-    public static void main (String[] args)
-    {
-//        Map<String, String> packages = getPackagesFromHXMLFile(new File(
-//            "/Users/dion/Documents/storage/projects/turngame/build.hxml"));
-//        for (String cl : packages.keySet()) {
-//            System.out.println(cl + " : " + packages.get(cl));
-//        }
     }
 
     protected static String getSystemDefaultHaxeInstallPath ()
@@ -841,16 +705,16 @@ public class HaXeSideKickPlugin extends EditPlugin
         	installDirString = HaXeSideKickPlugin.getSystemDefaultHaxeInstallPath();
         }
 
-//        File installDir = new File(installDirString);
-        File stdlib = new File(jEdit.getProperty("options.haxe.haxelibDir"));//new File(jEdit.getProperty("options.haxe.stdDir"));//installDir.getAbsolutePath() + File.separator + "lib");
 
-        if (!stdlib.exists()) {
-            JOptionPane.showMessageDialog(null, "haxelib folder " + stdlib + " doesn't exist.  Check the \"Installation Directory\" option in Plugins->Plugin Options->Haxe", "Error", JOptionPane.ERROR_MESSAGE);
+        File haxelib = new File(jEdit.getProperty("options.haxe.haxelibDir"));//new File(jEdit.getProperty("options.haxe.stdDir"));//installDir.getAbsolutePath() + File.separator + "lib");
+
+        if (!haxelib.exists()) {
+            JOptionPane.showMessageDialog(null, "haxelib folder " + haxelib + " doesn't exist.  Check the \"Installation Directory\" option in Plugins->Plugin Options->Haxe", "Error", JOptionPane.ERROR_MESSAGE);
         }
 
         Pattern startsWithNumber = Pattern.compile("^[0-9].*");
-        if (stdlib.exists() && stdlib.isDirectory()) {
-            for (File libDir : stdlib.listFiles()) {
+        if (haxelib.exists() && haxelib.isDirectory()) {
+            for (File libDir : haxelib.listFiles()) {
                 if (libDir.isDirectory()) {
                     for (File versioned : libDir.listFiles()) {
                         if (versioned.isDirectory() && libsPattern.matcher(versioned.getAbsolutePath()).matches() && startsWithNumber.matcher(versioned.getName()).matches()) {
@@ -860,14 +724,9 @@ public class HaXeSideKickPlugin extends EditPlugin
                 }
             }
         } else {
-            Log.log(Log.ERROR, "HaXe", "HaXe stdlib directory doesn't exist: " + stdlib);
+            Log.log(Log.ERROR, "HaXe", "HaXe stdlib directory doesn't exist: " + haxelib);
         }
 
-//        if (!installDir.exists()) {
-//        	JOptionPane.showMessageDialog(null, "Haxe install folder " + installDir + " doesn't exist.  Check the \"Installation Directory\" option in Plugins->Plugin Options->Haxe", "Error", JOptionPane.ERROR_MESSAGE);
-//        }
-
-//        classPaths.add(installDir.getAbsolutePath() + File.separator + "std");
         classPaths.add(jEdit.getProperty("options.haxe.stdDir"));
 
         // Go through the classpaths and add the *.hx files
@@ -954,7 +813,7 @@ public class HaXeSideKickPlugin extends EditPlugin
     protected static Map<String, Set<String>> getImportableClasses (Buffer buffer)
     {
         if (jEdit.getPlugin("projectviewer.ProjectPlugin", false) != null) {
-            String projectRoot = getProjectRoot();
+            String projectRoot = getCurrentProject() == null ? null : getCurrentProject().getRootPath();//getProjectRoot();
             if (currentProjectRootForImporting != projectRoot) {
                 currentProjectRootForImporting = projectRoot;
                 importableClassesCache = getAllClassPackages(buffer);
@@ -966,6 +825,24 @@ public class HaXeSideKickPlugin extends EditPlugin
         }
 
         return getAllClassPackages(buffer);
+    }
+
+    protected static void checkAndUpdateProjectHaxeBuildFile (VPTProject prj)
+    {
+        String buildFileProp = prj.getProperty(ProjectOptionPane.PROJECT_HXML_FILE);
+        if (buildFileProp != null && buildFileProp.toLowerCase().endsWith(".hxml")) {
+            File buildFile = new File(prj.getRootPath() + File.separator + buildFileProp);
+            if (buildFile.exists()) {
+                return;
+            }
+        }
+
+        File buildFile = getFirstProjectHXMLFile(prj);
+        if (buildFile != null && buildFile.exists()) {
+            prj.setProperty(ProjectOptionPane.PROJECT_HXML_FILE, buildFile.getAbsolutePath().substring(prj.getRootPath().length() + 1));
+        } else {
+            prj.removeProperty(ProjectOptionPane.PROJECT_HXML_FILE);
+        }
     }
 
 

@@ -8,7 +8,7 @@
 	<SERVICE CLASS="completion.service.CompletionProvider" NAME="haxe">
 		new sidekick.haxe.HaxeCodeCompletion();
 	</SERVICE>
-	<!--<SERVICE CLASS="projectviewer.config.OptionsService" NAME="haxe">
+	<SERVICE CLASS="projectviewer.config.OptionsService" NAME="haxe">
 		new sidekick.haxe.ProjectOptionPane.ProjectOptionService();
-	</SERVICE>-->
+	</SERVICE>
 </SERVICES>
