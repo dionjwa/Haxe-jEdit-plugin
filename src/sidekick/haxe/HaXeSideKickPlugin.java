@@ -20,6 +20,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import javax.swing.JOptionPane;
+
 import org.gjt.sp.jedit.Buffer;
 import org.gjt.sp.jedit.EditPane;
 import org.gjt.sp.jedit.EditPlugin;
@@ -29,11 +30,12 @@ import org.gjt.sp.jedit.jEdit;
 import org.gjt.sp.jedit.textarea.JEditTextArea;
 import org.gjt.sp.util.Log;
 
-import completion.util.CompletionUtil;
-
 import projectviewer.ProjectViewer;
 import projectviewer.vpt.VPTProject;
 import sidekick.haxe.JavaSystemCaller.StreamGobbler;
+
+import completion.util.CompletionUtil;
+
 import errorlist.ErrorSource;
 import errorlist.DefaultErrorSource.DefaultError;
 
@@ -152,6 +154,7 @@ public class HaXeSideKickPlugin extends EditPlugin
         // If there's a project selected, try looking there first
         String projectRoot = prj.getRootPath();
         if (projectRoot != null && projectRoot.length() > 0) {
+            trace("projectRoot=" + projectRoot);
             return getFirstBuildFileInDir(projectRoot);
         }
         return null;
@@ -176,6 +179,9 @@ public class HaXeSideKickPlugin extends EditPlugin
 
     protected static File getFirstBuildFileInDir (String path)
     {
+        if (!new File(path).exists()) {
+            return null;
+        }
         // Get the first *.hxml file we find
         for (String filename : new File(path).list()) {
             if (filename.toLowerCase().endsWith(".hxml")) {
@@ -826,6 +832,10 @@ public class HaXeSideKickPlugin extends EditPlugin
 
     protected static void checkAndUpdateProjectHaxeBuildFile (VPTProject prj)
     {
+        if (prj == null) {
+            return;
+        }
+
         String buildFileProp = prj.getProperty(ProjectOptionPane.PROJECT_HXML_FILE);
         if (buildFileProp != null && buildFileProp.toLowerCase().endsWith(".hxml")) {
             File buildFile = new File(prj.getRootPath() + File.separator + buildFileProp);
