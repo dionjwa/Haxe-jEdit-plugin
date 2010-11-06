@@ -242,10 +242,6 @@ public class HaXeSideKickPlugin extends EditPlugin
 
         if (getCodeCompletion) {
             String path = editPane.getBuffer().getPath();
-            path = path.substring(projectRootPath.length());
-            if (path.startsWith(File.separator)) {
-                path = path.substring(1);
-            }
             command += " --display " + path + "@" + caret;
         }
         trace("  command=" + command);
