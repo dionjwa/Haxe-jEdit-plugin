@@ -323,9 +323,11 @@ public class HaXeSideKickPlugin extends EditPlugin
     {
         HaxeCompilerOutput output = buildProject();
         if (output != null && !isErrors()) {
-            String launchCommand = getLaunchCommand();//jEdit.getProperty("options.haxe.launchCommand");
-            if (launchCommand != null) {
-                executeShellCommand(launchCommand, output.buildFile.getParentFile().getAbsolutePath());
+            String launchCommand = getLaunchCommand();
+            if (launchCommand != null && getCurrentProject() != null) {
+                executeShellCommand(launchCommand, getCurrentProject().getRootPath());
+            } else {
+                trace("Null launch command");
             }
         }
     }
