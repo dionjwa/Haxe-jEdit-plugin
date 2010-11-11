@@ -18,12 +18,12 @@
     </ACTION>
     <ACTION NAME="haxe-add-missing-imports">
         <CODE>
-                        sidekick.haxe.HaXeSideKickPlugin.addMissingImports(view);
+                        sidekick.haxe.ImportManager.addMissingImports(view);
 		</CODE>
     </ACTION>
     <ACTION NAME="haxe-add-import-at-caret">
         <CODE>
-                        sidekick.haxe.HaXeSideKickPlugin.addImport(view);
+                        sidekick.haxe.ImportManager.addImport(view);
 		</CODE>
     </ACTION>
     <ACTION NAME="haxe-go-to-last-edit-location">
@@ -33,7 +33,7 @@
     </ACTION>
     <ACTION NAME="haxe-clear-import-cache">
         <CODE>
-                        sidekick.haxe.HaXeSideKickPlugin.clearImportCache();
+                        sidekick.haxe.ImportManager.clearImportCache();
 		</CODE>
     </ACTION>
 </ACTIONS>
