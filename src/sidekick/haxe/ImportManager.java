@@ -34,7 +34,7 @@ public class ImportManager
 {
     public static void addMissingImports (final View view)
     {
-        addImports(view, false);
+        addImports(view, false, false);
     }
 
     public static void clearImportCache ()
@@ -47,9 +47,14 @@ public class ImportManager
      * Adds the import at the cursor
      * @param view
      */
+    public static void addImport (final View view, boolean using)
+    {
+        addImports(view, true, using);
+    }
+
     public static void addImport (final View view)
     {
-        addImports(view, true);
+        addImports(view, true, false);
     }
 
     public static void getRepeatedMatches (Pattern pattern, String line, Set<String> matches)
@@ -77,7 +82,7 @@ public class ImportManager
         }
     }
 
-    protected static void addImports (final View view, boolean onlyAtCaret)
+    protected static void addImports (final View view, boolean onlyAtCaret, boolean using)
     {
         Buffer buffer = view.getBuffer();
         JEditTextArea textArea = view.getTextArea();
@@ -110,7 +115,7 @@ public class ImportManager
             if (!existingImports.contains(importToken)) {
                 if (classPackages.containsKey(importToken)) {
                     if (classPackages.get(importToken).size() == 1) {
-                        importsToAdd.add("import " + classPackages.get(importToken).iterator().next() + ";");
+                        importsToAdd.add((using ? "using " : "import ") + classPackages.get(importToken).iterator().next() + ";");
                     } else {//Handle the duplicates
 
                         Set<String> dups = classPackages.get(importToken);
@@ -126,7 +131,7 @@ public class ImportManager
                             options,
                             options[0]);
                         if (n >= 0) {
-                            importsToAdd.add("import " + options[n] + ";");
+                            importsToAdd.add((using ? "using " : "import ") + options[n] + ";");
                         }
                     }
                 } else {
@@ -207,12 +212,11 @@ public class ImportManager
                 bufferText.append(line + "\n");
             }
         }
-
         String caretLine = textArea.getLineText(textArea.getCaretLine()).trim();
         int caretLineOffset = textArea.getCaretPosition() - textArea.getLineStartOffset(textArea.getCaretLine());
 
         String firstLineTest = textArea.getLineText(textArea.getFirstLine()).trim();
-        String textString = bufferText.toString();
+        String textString = bufferText.toString().trim();
         textString = removeDuplicateEmptyLines(textString);
         textArea.setText(textString);
 

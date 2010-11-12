@@ -26,6 +26,11 @@
                         sidekick.haxe.ImportManager.addImport(view);
 		</CODE>
     </ACTION>
+    <ACTION NAME="haxe-add-using-at-caret">
+        <CODE>
+                        sidekick.haxe.ImportManager.addImport(view, true);
+		</CODE>
+    </ACTION>
     <ACTION NAME="haxe-go-to-last-edit-location">
         <CODE>
                         sidekick.haxe.HaXeSideKickPlugin.goToLastEditLocation(view);
