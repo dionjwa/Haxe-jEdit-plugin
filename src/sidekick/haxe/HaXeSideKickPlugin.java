@@ -269,18 +269,20 @@ public class HaXeSideKickPlugin extends EditPlugin
             	if (errorLine == null || errorLine.trim().length() == 0) {
             		continue;
             	}
-//            	trace("Errorline:" + errorLine);
                 m = patternError.matcher(errorLine);
                 if (m.matches()) {
+                    String path = m.group(1);
+                    if (!new File(path).exists()) {
+                        path = projectRootPath + File.separatorChar + m.group(1);
+                    }
                     DefaultError error = new DefaultError(errorSource, ErrorSource.ERROR,
-                        projectRootPath + File.separatorChar + m.group(1), Integer.parseInt(m.group(2)) - 1, 0, 0, m.group(3));
+                        path, Integer.parseInt(m.group(2)) - 1, 0, 0, m.group(3));
                     errorSource.addError(error);
                 }
                 else {
                     trace("no error pattern match: " + errorLine);
                     errorSource.addError(new DefaultError(errorSource, ErrorSource.ERROR,
                     		buildFile.getAbsolutePath().replace(System.getProperty("user.dir"), ""), 0, 0, 0, errorLine));
-
                 }
             }
         }
