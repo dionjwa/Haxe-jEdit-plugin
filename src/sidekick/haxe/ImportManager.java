@@ -488,7 +488,7 @@ public class ImportManager
     protected static Pattern patternGenerics = Pattern.compile(".*<[ \t]*([A-Z_]+[A-Za-z0-9_]*)[ \t]*>.*");
     protected static Pattern patternImplements = Pattern.compile(".*[ \t]implements[ \t]+(.*)");
     protected static Pattern patternNew = Pattern.compile("^.*[ \t\\(\\[]+new[ \t]+([A-Za-z0-9_]+).*");
-    protected static Pattern patternPastImportZone = Pattern.compile("^[ \t]*(@|private|public|class|interface|/\\*|typedef|enum).*");
+    protected static Pattern patternPastImportZone = Pattern.compile("^[ \t]*(@|#|private|public|class|interface|/\\*|typedef|enum).*");
     protected static Pattern patternStatics = Pattern.compile(".*[{ \t\\(]([A-Z_][A-Za-z0-9_]*).*");
     protected static Pattern patternVar = Pattern.compile(".*[ \t]var[ \t].*:[ \t]*([A-Za-z0-9_]+).*");
 
