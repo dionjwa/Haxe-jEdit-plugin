@@ -21,7 +21,7 @@
 plugin.sidekick.haxe.HaXeSideKickPlugin.activate=defer
 plugin.sidekick.haxe.HaXeSideKickPlugin.name=HaXeSideKick
 plugin.sidekick.haxe.HaXeSideKickPlugin.author=Dion Amago
-plugin.sidekick.haxe.HaXeSideKickPlugin.version=0.2
+plugin.sidekick.haxe.HaXeSideKickPlugin.version=0.3
 plugin.sidekick.haxe.HaXeSideKickPlugin.docs=index.html
 plugin.sidekick.haxe.HaXeSideKickPlugin.description=HaXe parser, builder, and code-completion service.
 
@@ -54,33 +54,17 @@ haxe-add-using-at-caret.label=Add using at caret
 haxe-go-to-last-edit-location.label=Go to last edit location
 haxe-clear-import-cache.label=Clear import cache
   
-# menu
-#plugin.sidekick.haxe.HaXeSideKickPlugin.menu=sidekick-tree 
-
 # registration with SideKick as a mode parser
 sidekick.parser.haxe.label=haxe
 mode.haxe.sidekick.parser=haxe
-
-#I did make a commando.xml, but it's easier to just integrate the haxe build directly into the Errorlist
-#mode.haxe.commando.compile=haxe
-#commando.haxe.command=haxe
-#commando.haxe.buildfile=build.hxml
 
 # Option panel
 plugin.sidekick.haxe.HaXeSideKickPlugin.option-pane=haxe
 options.haxe.label=HaXe
 options.haxe.code=new sidekick.haxe.HaXeOptionPane();
 
-# Option Pane values and labels
-# options.haxe.launchCommand=/usr/bin/open deploy/out.swf
-# options.haxe.launchCommand.label=Launch output command
-# #Keep null to use the system default
-# options.haxe.installDir=System Default
-# options.haxe.installDir.label=Haxe executable path (leave empty for default)
 options.haxe.stdDir.label=HaXe std lib path. Only change if installed in a non-default location, otherwise leave empty. 
 options.haxe.stdDir=
-# options.haxe.haxelibDir.label=Haxelib path
-# # options.haxe.compilerLocation.label=Compiler location:
 options.haxe.defaultInstallDirMac=/usr/lib/haxe
 options.haxe.defaultInstallDirLinux=/usr/lib/haxe
 options.haxe.defaultInstallDirWindows=C:\\Program Files\\Motion-Twin\\haxe

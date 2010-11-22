@@ -1,3 +1,11 @@
+v0.3
+-Auto-import bugfixes.
+-The build.hxml and lauch command can be set on a per project basis.
+-For advanced users, each project can specify a haxe executable and haxelib path.
+-Improved .ctags definitions.
+-Code completion fixed for source files outside the project source folder(s).
+-Action for defining a "using" instead of "import" for a class name under the cursor.
+-Fixed build error paths.
 v0.2
 -Fixed windows/windows7 default Haxe paths
 -improved auto imports
