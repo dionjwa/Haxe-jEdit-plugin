@@ -1,4 +1,5 @@
 v0.3
+-Completion plugin integration.
 -Auto-import bugfixes.
 -The build.hxml and lauch command can be set on a per project basis.
 -For advanced users, each project can specify a haxe executable and haxelib path.
