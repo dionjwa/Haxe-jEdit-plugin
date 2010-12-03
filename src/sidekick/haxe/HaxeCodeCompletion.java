@@ -145,6 +145,8 @@ public class HaxeCodeCompletion
 
         HaxeCompilerOutput output = HaXeSideKickPlugin.getHaxeBuildOutput(view.getEditPane(), dotPosition, true);
 
+
+
         if (output == null || output.output == null || output.output.errors == null) {
             trace("  haxe build error, no completion candidates");
             return null;
@@ -154,6 +156,7 @@ public class HaxeCodeCompletion
 
         if (completionXMLString == null || completionXMLString.equals("")
             || !completionXMLString.startsWith("<")) {
+            HaXeSideKickPlugin.checkCompilerOutputForErrors(output);
             return null;
         }
 

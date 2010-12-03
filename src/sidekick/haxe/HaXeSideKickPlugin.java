@@ -53,11 +53,16 @@ public class HaXeSideKickPlugin extends EditPlugin
         checkAndUpdateProjectHaxeBuildFile(getCurrentProject());
 
         HaxeCompilerOutput output = getHaxeBuildOutput(editPane, 0, false, true);
+        checkCompilerOutputForErrors(output);
+        return output;
+    }
+
+    public static void checkCompilerOutputForErrors (HaxeCompilerOutput output)
+    {
         if (output != null) {
             handleBuildErrors(output.output.errors, _errorSource, output.getProjectRoot(), getBuildFile());
-            trace(output);
+//            trace(output);
         }
-        return output;
     }
 
     /**
