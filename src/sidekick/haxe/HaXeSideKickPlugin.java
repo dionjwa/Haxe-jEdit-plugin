@@ -403,7 +403,7 @@ public class HaXeSideKickPlugin extends EditPlugin
         String[] envp = {"HOME=" + System.getProperty("user.home")};
         SystemProcessOutput output = JavaSystemCaller.systemCall("haxelib config", System.getProperty("user.home"), null, envp);
         String path = output.output.trim();
-        if (path.charAt(path.length() - 1) == '/') {
+        if (path.length() > 0 && path.charAt(path.length() - 1) == '/') {
             path = path.substring(0, path.length() - 1);
         }
         return path;
