@@ -61,7 +61,6 @@ public class HaXeSideKickPlugin extends EditPlugin
     {
         if (output != null) {
             handleBuildErrors(output.output.errors, _errorSource, output.getProjectRoot(), getBuildFile());
-//            trace(output);
         }
     }
 
