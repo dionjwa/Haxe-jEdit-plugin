@@ -79,7 +79,9 @@ public class EnumSwitchCompletionCandidate extends CtagsCompletionCandidate
                     break;
                 }
                 if (atEnum) {
-                    if (!(line.trim().startsWith("/*") || line.trim().startsWith("//"))) {
+                    //Ignore empty lines and comments
+                    if (!line.trim().matches("^[ \t]*(/\\*|//|#)+.*") && line.trim().length() > 0) {
+                        //Remove the trailing semicolon
                         if (line.trim().replace(";", "").length() > 0) {
                             enums.add(line.trim().replace(";", ""));
                         }
