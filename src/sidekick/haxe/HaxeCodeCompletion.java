@@ -53,9 +53,16 @@ public class HaxeCodeCompletion
      */
     public List<CompletionCandidate> getCompletionCandidates (View view)
     {
+        //If there are enum switch completions, then return those and ignore others.
+        List<CompletionCandidate> enumSwitchCompletions = getEnumSwitchCompletions(view);
+        if (enumSwitchCompletions != null) {
+            return enumSwitchCompletions;
+        }
+
         List<CompletionCandidate> haxeCompilerCompletions = getHaxeCompilerCompletions(view);
         List<CompletionCandidate> ctagsCompletions = getCtagsCompletions(view);
 
+        //Quick return if all are null
         if (haxeCompilerCompletions == null && ctagsCompletions == null) {
             return null;
         }
@@ -106,7 +113,7 @@ public class HaxeCodeCompletion
         TextArea ta = view.getTextArea();
         //If we're not dot-completing, look for classes
         if (prefix.length() > 0 && !ta.getText(ta.getCaretPosition() - 1 - prefix.length(), 1).equals(".")) {
-            q = (islowercase ? TagIndex._NAME_LOWERCASE_FLD : TagIndex._NAME_FLD) + ":" + prefix + "* AND kind:class" +
+            q = (islowercase ? TagIndex._NAME_LOWERCASE_FLD : TagIndex._NAME_FLD) + ":" + prefix + "* AND (kind:class OR kind:enum)" +
                 " AND " + TagIndex._PATH_FLD + ":*.hx";
             tags = CtagsInterfacePlugin.runScopedQuery(view, q);
             Set<String> classes = new HashSet<String>();
@@ -205,6 +212,30 @@ public class HaxeCodeCompletion
         }
 
         return codeCompletions;
+    }
+
+    protected List<CompletionCandidate> getEnumSwitchCompletions (View view)
+    {
+        String prefix = CompletionUtil.getCompletionPrefix(view);
+        prefix = prefix == null ? "" : prefix;
+
+        if (!prefix.equals("switch")) {
+            return null;
+        }
+
+        //Global enums
+        String q = "kind:enum AND " +  TagIndex._PATH_FLD + ":*.hx ";
+        Vector<Tag> tags = CtagsInterfacePlugin.runScopedQuery(view, q);
+
+        List<CompletionCandidate> candidates = new ArrayList<CompletionCandidate>();
+
+        for (Tag t : tags) {
+            if (t.getName().length() > 1) {
+                candidates.add(new EnumSwitchCompletionCandidate(t));
+            }
+        }
+        Collections.sort(candidates);
+        return candidates;
     }
 
     private Set<Mode> haxeMode;
