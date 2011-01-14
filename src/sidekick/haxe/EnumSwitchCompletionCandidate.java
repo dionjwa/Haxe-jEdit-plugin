@@ -33,27 +33,17 @@ public class EnumSwitchCompletionCandidate extends CtagsCompletionCandidate
         TextArea textArea = view.getTextArea();
         String prefix = CompletionUtil.getCompletionPrefix(view);
         int caret = textArea.getCaretPosition();
-        int lineIndex = textArea.getCaretLine();
         JEditBuffer buffer = textArea.getBuffer();
 
         if (prefix.length() > 0) {
             buffer.remove(caret - prefix.length(), prefix.length());
         }
 
-        String line = buffer.getLineText(lineIndex);
-        int tabCount = 0;
-        while (line != null && tabCount < line.length() && line.charAt(tabCount) == '\t') {
-            tabCount++;
-        }
-
         StringBuilder sb = new StringBuilder();
-        sb.append("switch {\n");
-        int count = 1;
+        sb.append("switch ($1) {\n");
+        int count = 2;
         for (String e : getEnumConstructors(view, tag)) {
-            for(int i = 0; i < tabCount; i++) {
-                sb.append("\t");
-            }
-            sb.append("case " + e + ": $" + (count++) + "\n");
+            sb.append("\tcase " + e + ": $" + (count++) + "\n");
         }
         sb.append("}$end\n");
 
