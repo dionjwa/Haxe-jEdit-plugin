@@ -1,3 +1,7 @@
+v0.4
+-autocompletion of switch statements on enums
+-autocompletion of class declarations to full package+class names
+-fixed .ctags classes definition
 v0.3
 -Completion plugin integration.
 -Auto-import bugfixes.
