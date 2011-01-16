@@ -120,6 +120,7 @@ public class ImportManager
     protected static void addImports (final View view, boolean onlyAtCaret, boolean using)
     {
         Buffer buffer = view.getBuffer();
+
         JEditTextArea textArea = view.getTextArea();
         Set<String> importTokens = null;
         String[] lines = view.getTextArea().getText().split("\n");
@@ -140,11 +141,15 @@ public class ImportManager
         Set<String> existingImports = getCurrentImports(lines);
         List<String> importsToAdd = new ArrayList<String>();
 
+        //Don't import classes in the same package
+        String bufferPackage = getBufferPackage(buffer);
+
         for (String importToken : importTokens) {
             if (!existingImports.contains(importToken)) {
 
                 String fullName = getFullClassName(importToken);
-                if (fullName != null) {
+                String packageName = getPackageOfFullClassName(fullName);
+                if (fullName != null && (bufferPackage == null || !bufferPackage.equals(packageName))) {
                     importsToAdd.add((using ? "using " : "import ") + fullName + ";");
                 }
             }
@@ -500,6 +505,31 @@ public class ImportManager
         return s;
     }
 
+    protected static String getBufferPackage(Buffer buffer)
+    {
+        String line;
+        Matcher m;
+        for(int ii = 0; ii < buffer.getLineCount() ; ii++) {
+            line = buffer.getLineText(ii);
+            if (line != null) {
+                m = patternPackage.matcher(line);
+                if (m.matches()) {
+                    return m.group(1);
+                }
+            }
+        }
+        return null;
+    }
+
+    protected static String getPackageOfFullClassName (String classname)
+    {
+        if (classname == null || !classname.contains(".")) {
+            return classname;
+        }
+
+        return classname.substring(0, classname.lastIndexOf('.'));
+    }
+
     protected static Pattern patternImport = Pattern.compile("^[ \t]*(import|using)[ \t]+(.*);.*");
     protected static Pattern patternArgument = Pattern.compile(".*:[ \t]*([A-Z][A-Za-z0-9_]*).*");
     protected static Pattern patternExtends = Pattern.compile("^.*class[ \t]+([A-Za-z0-9_]+)[ \t]extends[ \t]([A-Za-z0-9_]+).*");
@@ -509,6 +539,7 @@ public class ImportManager
     protected static Pattern patternPastImportZone = Pattern.compile("^[ \t]*(@|#|private|public|class|interface|/\\*|typedef|enum).*");
     protected static Pattern patternStatics = Pattern.compile(".*[{ \t\\(]([A-Z_][A-Za-z0-9_]*).*");
     protected static Pattern patternVar = Pattern.compile(".*[ \t]var[ \t].*:[ \t]*([A-Za-z0-9_]+).*");
+    protected static Pattern patternPackage = Pattern.compile("^[ \t]*package[ \t]+([a-z][a-zA-Z0-9_\\.]*)[ \t;\n].*");
 
     private static Map<String, List<String>> importableClassesCache;
     private static String currentProjectRootForImporting;
