@@ -1,5 +1,9 @@
 package sidekick.haxe;
 
+import static sidekick.haxe.HaXeSideKickPlugin.getHaxelibPath;
+import static sidekick.haxe.HaXeSideKickPlugin.getStdLibPath;
+import static sidekick.haxe.HaXeSideKickPlugin.trace;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -21,14 +25,11 @@ import javax.swing.JOptionPane;
 
 import org.gjt.sp.jedit.Buffer;
 import org.gjt.sp.jedit.View;
+import org.gjt.sp.jedit.jEdit;
 import org.gjt.sp.jedit.textarea.JEditTextArea;
 import org.gjt.sp.util.Log;
 
 import completion.util.CompletionUtil;
-
-import static sidekick.haxe.HaXeSideKickPlugin.trace;
-import static sidekick.haxe.HaXeSideKickPlugin.getHaxelibPath;
-import static sidekick.haxe.HaXeSideKickPlugin.getStdLibPath;
 
 public class ImportManager
 {
@@ -44,7 +45,7 @@ public class ImportManager
     }
 
     /**
-     * Adds the import at the cursor
+     * Adds the import at the cursor to the imports at the top
      * @param view
      */
     public static void addImport (final View view, boolean using)
@@ -82,6 +83,40 @@ public class ImportManager
         }
     }
 
+    public static String getFullClassName (String baseClassName)
+    {
+        Map<String, List<String>> classPackages = getAllImportableClasses();
+
+        if (classPackages == null || classPackages.size() == 0) {
+            return null;
+        }
+
+        if (classPackages.containsKey(baseClassName)) {
+            if (classPackages.get(baseClassName).size() == 1) {
+                return classPackages.get(baseClassName).get(0);
+            } else {//Handle the duplicates
+                List<String> dups = classPackages.get(baseClassName);
+                String[] options = new String[dups.size()];
+                options = dups.toArray(options);
+
+                int n = JOptionPane.showOptionDialog(jEdit.getActiveView(),
+                    "Resolve import " + baseClassName,
+                    "Resolve import " + baseClassName,
+                    JOptionPane.NO_OPTION,
+                    JOptionPane.QUESTION_MESSAGE,
+                    null,
+                    options,
+                    options[0]);
+                if (n >= 0) {
+                    return options[n];
+                }
+            }
+        } else {
+            Log.log(Log.NOTICE, "HaXe", "No import found for " + baseClassName);
+        }
+        return null;
+    }
+
     protected static void addImports (final View view, boolean onlyAtCaret, boolean using)
     {
         Buffer buffer = view.getBuffer();
@@ -103,44 +138,19 @@ public class ImportManager
         importTokens.remove("Public");
 
         Set<String> existingImports = getCurrentImports(lines);
-        Map<String, Set<String>> classPackages = getAllImportableClasses();
-
-        if (classPackages == null || classPackages.size() == 0) {
-            return;
-        }
-
         List<String> importsToAdd = new ArrayList<String>();
 
         for (String importToken : importTokens) {
             if (!existingImports.contains(importToken)) {
-                if (classPackages.containsKey(importToken)) {
-                    if (classPackages.get(importToken).size() == 1) {
-                        importsToAdd.add((using ? "using " : "import ") + classPackages.get(importToken).iterator().next() + ";");
-                    } else {//Handle the duplicates
 
-                        Set<String> dups = classPackages.get(importToken);
-                        String[] options = new String[dups.size()];
-                        options = dups.toArray(options);
-
-                        int n = JOptionPane.showOptionDialog(view,
-                            "Resolve import " + importToken,
-                            "Resolve import " + importToken,
-                            JOptionPane.NO_OPTION,
-                            JOptionPane.QUESTION_MESSAGE,
-                            null,
-                            options,
-                            options[0]);
-                        if (n >= 0) {
-                            importsToAdd.add((using ? "using " : "import ") + options[n] + ";");
-                        }
-                    }
-                } else {
-                    Log.log(Log.NOTICE, "HaXe", "No import found for " + importToken);
+                String fullName = getFullClassName(importToken);
+                if (fullName != null) {
+                    importsToAdd.add((using ? "using " : "import ") + fullName + ";");
                 }
             }
         }
 
-        //Add existing imports
+        //Add to existing imports at the top of the source file
         String line;
         Matcher m;
 
@@ -291,7 +301,7 @@ public class ImportManager
         return importTokens;
     }
 
-    protected static Map<String, Set<String>> getAllClassPackages ()
+    protected static Map<String, List<String>> getAllClassPackages ()
     {
         File hxmlFile = HaXeSideKickPlugin.getBuildFile();
         if (hxmlFile == null) {
@@ -302,7 +312,7 @@ public class ImportManager
         return getPackagesFromHXMLFile(hxmlFile);
     }
 
-    protected static Map<String, Set<String>> getAllImportableClasses ()
+    protected static Map<String, List<String>> getAllImportableClasses ()
     {
         String projectRoot = HaXeSideKickPlugin.getCurrentProject() == null ? null : HaXeSideKickPlugin.getCurrentProject().getRootPath();//getProjectRoot();
         if (currentProjectRootForImporting != projectRoot) {
@@ -334,7 +344,7 @@ public class ImportManager
         return existingImports;
     }
 
-    protected static Map<String, Set<String>> getPackagesFromHXMLFile (File hxmlFile)
+    protected static Map<String, List<String>> getPackagesFromHXMLFile (File hxmlFile)
     {
         Map<String, Set<String>> classPackages = new HashMap<String, Set<String>>();
         Set<String> classPaths = new HashSet<String>();
@@ -342,7 +352,7 @@ public class ImportManager
 
         if (!hxmlFile.exists()) {
             Log.log(Log.ERROR, "HaXe", "*.hxml file doesn't exist: " + hxmlFile);
-            return classPackages;
+            return null;
         }
         // Get the classpaths from the *.hxml file
         try {
@@ -444,7 +454,15 @@ public class ImportManager
             Log.log(Log.ERROR, "HaXe", e.toString());
         }
 
-        return classPackages;
+        Map<String, List<String>> results = new HashMap<String, List<String>>();
+        for (String baseclass : classPackages.keySet()) {
+            List<String> imports = new ArrayList<String>();
+            for(Object fullImport : classPackages.get(baseclass).toArray()) {
+                imports.add((String)fullImport);
+            }
+            results.put(baseclass, imports);
+        }
+        return results;
     }
 
     static protected List<File> getFileListingNoSort (File aStartingDir)
@@ -492,7 +510,7 @@ public class ImportManager
     protected static Pattern patternStatics = Pattern.compile(".*[{ \t\\(]([A-Z_][A-Za-z0-9_]*).*");
     protected static Pattern patternVar = Pattern.compile(".*[ \t]var[ \t].*:[ \t]*([A-Za-z0-9_]+).*");
 
-    private static Map<String, Set<String>> importableClassesCache;
+    private static Map<String, List<String>> importableClassesCache;
     private static String currentProjectRootForImporting;
 
 }

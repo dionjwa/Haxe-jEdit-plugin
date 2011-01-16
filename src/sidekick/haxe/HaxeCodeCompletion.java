@@ -53,29 +53,12 @@ public class HaxeCodeCompletion
      */
     public List<CompletionCandidate> getCompletionCandidates (View view)
     {
-        //If there are enum switch completions, then return those and ignore others.
-        List<CompletionCandidate> enumSwitchCompletions = getEnumSwitchCompletions(view);
-        if (enumSwitchCompletions != null) {
-            return enumSwitchCompletions;
-        }
-
-        List<CompletionCandidate> haxeCompilerCompletions = getHaxeCompilerCompletions(view);
-        List<CompletionCandidate> ctagsCompletions = getCtagsCompletions(view);
-
-        //Quick return if all are null
-        if (haxeCompilerCompletions == null && ctagsCompletions == null) {
-            return null;
-        }
-
         List<CompletionCandidate> codeCompletions = new ArrayList<CompletionCandidate>();
 
-        if (haxeCompilerCompletions != null) {
-            codeCompletions.addAll(haxeCompilerCompletions);
-        }
-
-        if (ctagsCompletions != null) {
-            codeCompletions.addAll(ctagsCompletions);
-        }
+        getImportCompletions(view, codeCompletions);
+        getEnumSwitchCompletions(view, codeCompletions);
+        getHaxeCompilerCompletions(view, codeCompletions);
+        getCtagsCompletions(view, codeCompletions);
 
         return codeCompletions;
     }
@@ -88,9 +71,14 @@ public class HaxeCodeCompletion
     /**
      * Get local members and Haxe classes.
      */
-    protected List<CompletionCandidate> getCtagsCompletions (View view)
+    protected void getCtagsCompletions (View view, List<CompletionCandidate> candidates)
     {
+        //Ctags cannot current complete dot completion, save that for the compiler.
+        if (CompletionUtil.isDotCompletion(view)) {
+            return;
+        }
 
+        List<CompletionCandidate> localCandidates = new ArrayList<CompletionCandidate>();
         String prefix = CompletionUtil.getCompletionPrefix(view);
         prefix = prefix == null ? "" : prefix;
 
@@ -102,13 +90,12 @@ public class HaxeCodeCompletion
 
         Vector<Tag> tags = CtagsInterfacePlugin.runScopedQuery(view, q);
 
-        List<CompletionCandidate> candidates = new ArrayList<CompletionCandidate>();
-
         for (Tag t : tags) {
             if (t.getName().length() > 1) {
-                candidates.add(new CtagsCompletionCandidate(t));
+                localCandidates.add(new CtagsCompletionCandidate(t));
             }
         }
+
 
         TextArea ta = view.getTextArea();
         //If we're not dot-completing, look for classes
@@ -118,22 +105,24 @@ public class HaxeCodeCompletion
             tags = CtagsInterfacePlugin.runScopedQuery(view, q);
             Set<String> classes = new HashSet<String>();
             for (Tag t : tags) {
-                if (!classes.contains(t.getName())) {
-                    candidates.add(new CtagsCompletionCandidate(t));
+                if (!classes.contains(t.getName()) && !prefix.equals(t.getName())) {
+                    localCandidates.add(new CtagsCompletionCandidate(t));
                     classes.add(t.getName());
                 }
             }
         }
-        Collections.sort(candidates);
-        return candidates;
+
+        Collections.sort(localCandidates);
+        candidates.addAll(localCandidates);
+
     }
 
-    protected List<CompletionCandidate> getHaxeCompilerCompletions (View view)
+    protected void getHaxeCompilerCompletions (View view, List<CompletionCandidate> candidates)
     {
         TextArea ta = view.getTextArea();
         int dotPosition = ta.getCaretPosition();
         if (!ta.getText(dotPosition - 1, 1).equals(".")) {
-            return null;
+            return;
         }
 
         // If the caret is at a ".", use the Haxe compiler to provide completion hints
@@ -154,17 +143,17 @@ public class HaxeCodeCompletion
 
         if (output == null || output.output == null || output.output.errors == null) {
             trace("  haxe build error, no completion candidates");
-            return null;
+            return;
         }
 
         String completionXMLString = output.output.errors.trim();
 
         if (completionXMLString == null || completionXMLString.equals("")
             || !completionXMLString.startsWith("<")) {
-            return null;
+            return;
         }
 
-        List<CompletionCandidate> codeCompletions = new ArrayList<CompletionCandidate>();
+        List<CompletionCandidate> localCandidates = new ArrayList<CompletionCandidate>();
 
         try {
             // Example see http://www.rgagnon.com/javadetails/java-0573.html
@@ -186,7 +175,7 @@ public class HaxeCodeCompletion
                     String[] methodTokens = argString.split("->");
                     String returns = methodTokens[methodTokens.length - 1];
                     if (methodTokens.length == 1) {
-                        codeCompletions.add(new CodeCompletionField(codeName, returns));
+                        localCandidates.add(new CodeCompletionField(codeName, returns));
                     } else {
                         CodeCompletionMethod cc = new CodeCompletionMethod(codeName, returns);
                         if (methodTokens.length > 1 && !methodTokens[0].trim().equals("Void")) {
@@ -203,7 +192,7 @@ public class HaxeCodeCompletion
                             cc.arguments = args;
                             cc.argumentTypes = argsTypes;
                         }
-                        codeCompletions.add(cc);
+                        localCandidates.add(cc);
                     }
                 }
             }
@@ -211,31 +200,49 @@ public class HaxeCodeCompletion
             e.printStackTrace();
         }
 
-        return codeCompletions;
+
+        Collections.sort(localCandidates);
+        candidates.addAll(localCandidates);
     }
 
-    protected List<CompletionCandidate> getEnumSwitchCompletions (View view)
+    protected void getEnumSwitchCompletions (View view, List<CompletionCandidate> candidates)
     {
         String prefix = CompletionUtil.getCompletionPrefix(view);
         prefix = prefix == null ? "" : prefix;
 
         if (!prefix.equals("switch")) {
-            return null;
+            return;
         }
 
         //Global enums
         String q = "kind:enum AND " +  TagIndex._PATH_FLD + ":*.hx ";
         Vector<Tag> tags = CtagsInterfacePlugin.runScopedQuery(view, q);
 
-        List<CompletionCandidate> candidates = new ArrayList<CompletionCandidate>();
+        List<CompletionCandidate> localCandidates = new ArrayList<CompletionCandidate>();
 
         for (Tag t : tags) {
             if (t.getName().length() > 1) {
-                candidates.add(new EnumSwitchCompletionCandidate(t));
+                localCandidates.add(new EnumSwitchCompletionCandidate(t));
             }
         }
-        Collections.sort(candidates);
-        return candidates;
+
+        Collections.sort(localCandidates);
+        candidates.addAll(localCandidates);
+    }
+
+    protected void getImportCompletions (View view, List<CompletionCandidate> candidates)
+    {
+        String prefix = CompletionUtil.getCompletionPrefix(view);
+        //Don't bother for dot completion
+        if (prefix.endsWith(".")) {
+            return;
+        }
+        prefix = prefix == null ? "" : prefix;
+
+        String fullPackageName = ImportManager.getFullClassName(prefix);
+        if (fullPackageName != null) {
+            candidates.add(new CompletionCandidateFullPackageName(fullPackageName));
+        }
     }
 
     private Set<Mode> haxeMode;
