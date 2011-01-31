@@ -234,13 +234,16 @@ public class HaxeCodeCompletion
     {
         String prefix = CompletionUtil.getCompletionPrefix(view);
         //Don't bother for dot completion
-        if (prefix.endsWith(".")) {
+        prefix = prefix == null ? "" : prefix;
+        if (prefix.length() == 0 || prefix.endsWith(".")) {
             return;
         }
-        prefix = prefix == null ? "" : prefix;
 
-        for (String fullPackageName : ImportManager.getFullClassNames(prefix)) {
-            candidates.add(new CompletionCandidateFullPackageName(fullPackageName));
+        List<String> packages = ImportManager.getFullClassNames(prefix);
+        if (packages != null) {
+            for (String fullPackageName : packages) {
+                candidates.add(new CompletionCandidateFullPackageName(fullPackageName));
+            }
         }
     }
 
