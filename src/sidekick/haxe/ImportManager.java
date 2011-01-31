@@ -319,9 +319,15 @@ public class ImportManager
 
     protected static Map<String, List<String>> getAllImportableClasses ()
     {
+        long now = System.currentTimeMillis();
+        if (now - lastImportQueryTime > IMPORT_CACHE_EXPIRE_DELAY) {
+            importableClassesCache = null;
+        }
         String projectRoot = HaXeSideKickPlugin.getCurrentProject() == null ? null : HaXeSideKickPlugin.getCurrentProject().getRootPath();//getProjectRoot();
         if (currentProjectRootForImporting != projectRoot) {
             currentProjectRootForImporting = projectRoot;
+            //Allow these results to last a while before recomputing
+            lastImportQueryTime = System.currentTimeMillis();
             importableClassesCache = getAllClassPackages();
         }
 
@@ -329,6 +335,8 @@ public class ImportManager
             return importableClassesCache;
         }
 
+        //Allow these results to last a while before recomputing
+        lastImportQueryTime = System.currentTimeMillis();
         return getAllClassPackages();
     }
 
@@ -467,6 +475,7 @@ public class ImportManager
             }
             results.put(baseclass, imports);
         }
+
         return results;
     }
 
@@ -542,6 +551,8 @@ public class ImportManager
     protected static Pattern patternPackage = Pattern.compile("^[ \t]*package[ \t]+([a-z][a-zA-Z0-9_\\.]*)[ \t;\n].*");
 
     private static Map<String, List<String>> importableClassesCache;
+    private static long lastImportQueryTime = 0;
+    private static long IMPORT_CACHE_EXPIRE_DELAY = 10 * 1000;//10 seconds
     private static String currentProjectRootForImporting;
 
 }
