@@ -239,8 +239,7 @@ public class HaxeCodeCompletion
         }
         prefix = prefix == null ? "" : prefix;
 
-        String fullPackageName = ImportManager.getFullClassName(prefix);
-        if (fullPackageName != null) {
+        for (String fullPackageName : ImportManager.getFullClassNames(prefix)) {
             candidates.add(new CompletionCandidateFullPackageName(fullPackageName));
         }
     }

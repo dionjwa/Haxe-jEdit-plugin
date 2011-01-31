@@ -117,6 +117,16 @@ public class ImportManager
         return null;
     }
 
+    public static List<String> getFullClassNames (String baseClassName)
+    {
+        Map<String, List<String>> classPackages = getAllImportableClasses();
+
+        if (classPackages == null || classPackages.size() == 0) {
+            return null;
+        }
+        return classPackages.get(baseClassName);
+    }
+
     protected static void addImports (final View view, boolean onlyAtCaret, boolean using)
     {
         Buffer buffer = view.getBuffer();
