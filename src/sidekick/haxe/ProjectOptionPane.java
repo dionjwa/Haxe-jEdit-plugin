@@ -56,18 +56,18 @@ public class ProjectOptionPane extends AbstractOptionPane
     @Override
     protected void _save()
     {
-        if (hxmlFile.getText().trim().length() > 0) {
+//        if (hxmlFile.getText().trim().length() > 0) {
             project.setProperty(PROJECT_HXML_FILE, hxmlFile.getText().trim());
-        }
-        if (launchCommand.getText().trim().length() > 0) {
+//        }
+//        if (launchCommand.getText().trim().length() > 0) {
             project.setProperty(PROJECT_LAUNCH_CMD, launchCommand.getText().trim());
-        }
-        if (haxeStdDir.getText().trim().length() > 0) {
+//        }
+//        if (haxeStdDir.getText().trim().length() > 0) {
             project.setProperty(PROJECT_STD_DIR, haxeStdDir.getText().trim());
-        }
-        if (haxeExecutable.getText().trim().length() > 0) {
+//        }
+//        if (haxeExecutable.getText().trim().length() > 0) {
             project.setProperty(PROJECT_HAXE_EXECUTABLE, haxeExecutable.getText().trim());
-        }
+//        }
     }
 
 
