@@ -576,6 +576,23 @@ public class ImportManager
 //        Log.log(Log.MESSAGE, "HaXe", "Constants=" + classPackages.get("Constants"));
 
 
+
+        //Add the results from the inlines .hxml files
+        for (String inlineHxmlFile : inlineHxmlFiles) {
+            File f = new File(root + File.separator + inlineHxmlFile);
+            if (!f.exists()) {
+                Log.log(Log.ERROR, "HaXe", "No inline hxml file found: " + f);
+                continue;
+            }
+            Map<String, List<String>> inlineResults = getPackagesFromHXMLFile(f, root);
+            for (String className : inlineResults.keySet()) {
+                if (!classPackages.containsKey(className)) {
+                    classPackages.put(className, new HashSet<String>());
+                }
+                classPackages.get(className).addAll(inlineResults.get(className));
+            }
+        }
+
         Map<String, List<String>> results = new HashMap<String, List<String>>();
         for (String baseclass : classPackages.keySet()) {
             List<String> imports = new ArrayList<String>();
@@ -585,21 +602,6 @@ public class ImportManager
             results.put(baseclass, imports);
         }
 
-        for (String inlineHxmlFile : inlineHxmlFiles) {
-            File f = new File(root + File.separator + inlineHxmlFile);
-            if (!f.exists()) {
-                Log.log(Log.ERROR, "HaXe", "No inline hxml file found: " + f);
-                continue;
-            }
-            Map<String, List<String>> inlineResults = getPackagesFromHXMLFile(f, root);
-            for (String k : inlineResults.keySet()) {
-                if (results.containsKey(k)) {
-                    results.get(k).addAll(inlineResults.get(k));
-                } else {
-                    results.put(k, inlineResults.get(k));
-                }
-            }
-        }
         return results;
     }
 
