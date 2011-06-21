@@ -558,7 +558,7 @@ public class ImportManager
                         continue;
                     }
 
-                    if (packagePath.contains("_std") || packagePath.startsWith("std.")) {
+                    if (packagePath.contains("_std") || packagePath.startsWith("std.") || packagePath.startsWith("haxe.macro")) {
                         continue;
                     }
 
@@ -593,6 +593,7 @@ public class ImportManager
             }
         }
 
+        //Convert sets to lists
         Map<String, List<String>> results = new HashMap<String, List<String>>();
         for (String baseclass : classPackages.keySet()) {
             List<String> imports = new ArrayList<String>();
