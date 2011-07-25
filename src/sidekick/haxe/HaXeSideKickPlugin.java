@@ -339,7 +339,7 @@ public class HaXeSideKickPlugin extends EditPlugin
         for (Object s : arguments) {
             sb.append(s.toString() + " ");
         }
-        Log.log(Log.NOTICE, "HaXe", sb.toString());
+        Log.log(Log.MESSAGE, "HaXe", sb.toString());
     }
 
     protected static String getSystemDefaultHaxeInstallPath ()
