@@ -207,7 +207,6 @@ public class HaXeSideKickPlugin extends EditPlugin
 
         File hxmlFile = getBuildFile();
 
-
         if (hxmlFile == null) {
             Log.log(
                 Log.ERROR,
@@ -219,7 +218,7 @@ public class HaXeSideKickPlugin extends EditPlugin
             return null;
         }
 
-        String projectRootPath = hxmlFile.getParentFile().getAbsolutePath();
+        String projectRootPath = prj.getNodePath();
 
         String command = "haxe ";
 
@@ -228,7 +227,11 @@ public class HaXeSideKickPlugin extends EditPlugin
             command = haxeExecutableProp + " ";
         }
 
-        command += hxmlFile.getName();
+        String hxmlfile = hxmlFile.getAbsolutePath().replace(projectRootPath, "");
+        if (hxmlfile.startsWith(File.separator)) {
+            hxmlfile = hxmlfile.substring(1);
+        }
+        command += hxmlfile;
 
         if (getCodeCompletion) {
             String path = editPane.getBuffer().getPath();
