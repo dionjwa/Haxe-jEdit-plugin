@@ -60,7 +60,7 @@ public class HaXeSideKickPlugin extends EditPlugin
     public static void checkCompilerOutputForErrors (HaxeCompilerOutput output)
     {
         if (output != null) {
-            handleBuildErrors(output.output.errors, _errorSource, output.getProjectRoot(), getBuildFile());
+            handleBuildErrors(output.output.errors, _errorSource, getCurrentProject().getNodePath(), getBuildFile());
         }
     }
 
@@ -289,7 +289,7 @@ public class HaXeSideKickPlugin extends EditPlugin
                 else {
                     trace("no error pattern match: " + errorLine);
                     errorSource.addError(new DefaultError(errorSource, ErrorSource.ERROR,
-                    		buildFile.getAbsolutePath().replace(System.getProperty("user.dir"), ""), 0, 0, 0, errorLine));
+                        projectRootPath.replace(System.getProperty("user.dir"), ""), 0, 0, 0, errorLine));
                 }
             }
         }

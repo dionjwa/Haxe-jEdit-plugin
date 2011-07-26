@@ -441,8 +441,8 @@ public class ImportManager
     }
     protected static Map<String, List<String>> getPackagesFromHXMLFile (File hxmlFile, File root)
     {
-        if (root == null) {
-            root = hxmlFile.getParentFile();
+        if (root == null && HaXeSideKickPlugin.getCurrentProject() != null) {
+            root = new File(HaXeSideKickPlugin.getCurrentProject().getNodePath());
         }
         Map<String, Set<String>> classPackages = new HashMap<String, Set<String>>();
         Set<String> classPaths = new HashSet<String>();
