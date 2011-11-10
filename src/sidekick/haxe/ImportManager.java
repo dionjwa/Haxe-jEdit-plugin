@@ -498,7 +498,7 @@ public class ImportManager
 
         File haxelib = new File(getHaxelibPath());
         if (!haxelib.exists()) {
-            Log.log(Log.ERROR, null, "haxelib folder " + haxelib + " doesn't exist.  Check the \"Installation Directory\" option in Plugins->Plugin Options->Haxe");
+            Log.log(Log.ERROR, null, "haxelib folder '" + haxelib + "' doesn't exist.  Check the \"Installation Directory\" option in Plugins->Plugin Options->Haxe");
         }
 
         Pattern startsWithNumber = Pattern.compile("^[0-9].*");

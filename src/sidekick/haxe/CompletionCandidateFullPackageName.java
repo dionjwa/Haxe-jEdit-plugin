@@ -69,6 +69,12 @@ public class CompletionCandidateFullPackageName extends DefaultListCellRenderer
     @Override
     public String getDescription ()
     {
+        return null;
+    }
+
+    @Override
+    public String getLabelText ()
+    {
         return fullClassName;
     }
 

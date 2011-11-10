@@ -1,7 +1,5 @@
 package sidekick.haxe;
 
-import static sidekick.haxe.HaXeSideKickPlugin.trace;
-
 import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -33,6 +31,8 @@ import completion.util.CtagsCompletionCandidate;
 import ctagsinterface.index.TagIndex;
 import ctagsinterface.main.CtagsInterfacePlugin;
 import ctagsinterface.main.Tag;
+
+import static sidekick.haxe.HaXeSideKickPlugin.trace;
 
 /**
  * Service for the Completion plugin.
@@ -141,6 +141,8 @@ public class HaxeCodeCompletion
 
         HaxeCompilerOutput output = HaXeSideKickPlugin.getHaxeBuildOutput(view.getEditPane(), dotPosition, true);
 
+        trace(output);
+
         if (output == null || output.output == null || output.output.errors == null) {
             trace("  haxe build error, no completion candidates");
             return;
@@ -174,10 +176,11 @@ public class HaxeCodeCompletion
                     String argString = ((Element)element.getElementsByTagName("t").item(0)).getTextContent();
                     String[] methodTokens = argString.split("->");
                     String returns = methodTokens[methodTokens.length - 1];
+                    String docs = ((Element)element.getElementsByTagName("d").item(0)).getTextContent();
                     if (methodTokens.length == 1) {
-                        localCandidates.add(new CodeCompletionField(codeName, returns));
+                        localCandidates.add(new CodeCompletionField(codeName, returns, docs));
                     } else {
-                        CodeCompletionMethod cc = new CodeCompletionMethod(codeName, returns);
+                        CodeCompletionMethod cc = new CodeCompletionMethod(codeName, returns, docs);
                         if (methodTokens.length > 1 && !methodTokens[0].trim().equals("Void")) {
                             List<String> args = new ArrayList<String>(methodTokens.length - 1);
                             List<String> argsTypes = new ArrayList<String>(
@@ -196,6 +199,7 @@ public class HaxeCodeCompletion
                     }
                 }
             }
+            trace("Number of code completions=" + localCandidates.size());
         } catch (Exception e) {
             e.printStackTrace();
         }

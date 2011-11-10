@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <!--
- This is the build.xml file for building the CtagsInterface plugin.
+ This is the build.xml file for building the HaxeSideKick plugin.
  It is based on the standard build.xml file for jEdit plugins.
 -->
 <project name="HaXeSideKick" default="build" basedir=".">
@@ -53,6 +53,10 @@
                         <arg value="-R" />
                         <arg path="." />
                 </exec>
+        </target>
+        
+        <target name="copyDropbox">
+                <copy file="${jedit.plugins.dir}/${jar.file}" tofile="/Users/dion/Dropboxes/Dion/Dropbox/Public/${jar.file}"/>
         </target>
 	
 </project>
