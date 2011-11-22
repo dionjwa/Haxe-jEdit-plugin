@@ -1,4 +1,4 @@
-package sidekick.haxe;
+package completion.util;
 
 import static completion.util.CompletionUtil.createAbbrev;
 
@@ -15,19 +15,21 @@ import org.gjt.sp.jedit.textarea.TextArea;
 import superabbrevs.SuperAbbrevs;
 
 import completion.service.CompletionCandidate;
-import completion.util.CompletionUtil;
-import completion.util.CtagsCompletionCandidate;
 
 import ctagsinterface.main.KindIconProvider;
-
-public class CompletionCandidateFullPackageName extends DefaultListCellRenderer
+import ctagsinterface.main.Tag;
+/**
+ * Use this class for Ctags code completions.
+ *
+ */
+public class CtagsCompletionCandidate extends DefaultListCellRenderer
     implements CompletionCandidate
 {
-    protected String fullClassName;
-    public CompletionCandidateFullPackageName (String fullClassName)
+    public Tag tag;
+
+    public CtagsCompletionCandidate (Tag tag)
     {
-        super();
-        this.fullClassName = fullClassName;
+        this.tag = tag;
     }
 
     @Override
@@ -35,7 +37,9 @@ public class CompletionCandidateFullPackageName extends DefaultListCellRenderer
         boolean isSelected, boolean cellHasFocus)
     {
         super.getListCellRendererComponent(list, null, index, isSelected, cellHasFocus);
-        String kind = "class";
+        String kind = tag.getKind();
+        if (kind == null)
+            kind = "";
         setIcon(KindIconProvider.getIcon(kind));
         setText(CompletionUtil.prefixByIndex(getLabelText(), index));
         return this;
@@ -53,7 +57,7 @@ public class CompletionCandidateFullPackageName extends DefaultListCellRenderer
         }
 
         // Check if a parametrized abbreviation is needed
-        String sig = getStringForInsertion();
+        String sig = getDescription();
         if (sig == null || sig.length() == 0)
             return;
         String abbrev = createAbbrev(sig);
@@ -72,31 +76,47 @@ public class CompletionCandidateFullPackageName extends DefaultListCellRenderer
         return null;
     }
 
-    public String getStringForInsertion()
-    {
-        return fullClassName;
-    }
-
     @Override
     public String getLabelText ()
     {
-        return fullClassName;
+        StringBuilder sb = new StringBuilder();
+        sb.append(tag.getName());
+        String signature = tag.getExtension("signature");
+        if (signature != null && signature.length() > 0)
+            sb.append(signature);
+        String namespace = tag.getNamespace();
+        if (namespace != null && namespace.length() > 0)
+            sb.append(" - " + namespace);
+        return sb.toString();
     }
 
     @Override
     public boolean isValid (View view)
     {
         String prefix = CompletionUtil.getCompletionPrefix(view);
-        return prefix != null && prefix.length() > 0 && fullClassName.endsWith(prefix);
+        if (prefix == null || prefix.length() == 0) {
+            return true;
+        }
+
+        //If the completion matches the prefix exactly, ignore it (it doesn't add anything)
+        if (prefix.trim().equals(getDescription().trim())) {
+            return false;
+        }
+
+        //If the prefix is all in lower case, ignore case.
+        if (prefix.toLowerCase().equals(prefix)) {
+            return tag.getName().toLowerCase().startsWith(prefix.toLowerCase());
+        } else {
+            return tag.getName().startsWith(prefix);
+        }
     }
 
     @Override
     public int compareTo (CompletionCandidate o)
     {
         if (o instanceof CtagsCompletionCandidate) {
-            fullClassName.compareTo(((CtagsCompletionCandidate)o).tag.getName());
+            tag.getName().compareTo(((CtagsCompletionCandidate)o).tag.getName());
         }
-        return fullClassName.compareTo(o.getDescription());
+        return tag.getName().compareTo(o.getDescription());
     }
-
 }
