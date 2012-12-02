@@ -21,9 +21,8 @@ import org.gjt.sp.util.Log;
 import projectviewer.ProjectViewer;
 import projectviewer.vpt.VPTProject;
 import sidekick.haxe.JavaSystemCaller.StreamGobbler;
-
-import errorlist.ErrorSource;
 import errorlist.DefaultErrorSource.DefaultError;
+import errorlist.ErrorSource;
 
 public class HaXeSideKickPlugin extends EditPlugin
 {
@@ -34,6 +33,50 @@ public class HaXeSideKickPlugin extends EditPlugin
     public final static String OPTION_PREFIX = "options.haxe.";
     public final static String PROPERTY_PREFIX = "plugin.sidekick.haxe.";
 
+    /** 
+     * Use (in order) the custom command, the first hxml file found in the project root, or the first *.hxproj found
+     * in the project root.
+     */
+    public static String getBuildCommand()
+    {
+        VPTProject prj = getCurrentProject();
+        if (prj == null) {
+            return null;
+        }
+        String buildString = prj.getProperty(ProjectOptionPane.PROJECT_BUILD_CMD);
+        if (buildString != null && !buildString.trim().isEmpty()) {
+            return buildString.trim();
+        }
+        
+        File hxmlFile = getFirstProjectHXMLFile(prj);
+        if (hxmlFile != null) {
+            return getBuildCommandFromHxmlFile(hxmlFile);
+        }
+        
+        return null;
+    }
+    
+    public static String getBuildCommandFromHxmlFile(File hxmlFile)
+    {
+        VPTProject prj = getCurrentProject();
+        if (prj == null) {
+            return null;
+        }
+        
+        String projectRootPath = prj.getNodePath();
+
+        String command = "haxe ";
+
+        String hxmlfile = hxmlFile.getAbsolutePath().replace(projectRootPath, "");
+        if (hxmlfile.startsWith(File.separator)) {
+            hxmlfile = hxmlfile.substring(1);
+        }
+        command += hxmlfile;
+        
+        
+        return command;
+    }
+    
     public static HaxeCompilerOutput buildProject ()
     {
         EditPane editPane = jEdit.getActiveView().getEditPane();
@@ -50,7 +93,7 @@ public class HaXeSideKickPlugin extends EditPlugin
             }
         }
 
-        checkAndUpdateProjectHaxeBuildFile(getCurrentProject());
+//        checkAndUpdateProjectHaxeBuildFile(getCurrentProject());
 
         HaxeCompilerOutput output = getHaxeBuildOutput(editPane, 0, false, true);
         checkCompilerOutputForErrors(output);
@@ -60,7 +103,7 @@ public class HaXeSideKickPlugin extends EditPlugin
     public static void checkCompilerOutputForErrors (HaxeCompilerOutput output)
     {
         if (output != null) {
-            handleBuildErrors(output.output.errors, _errorSource, getCurrentProject().getNodePath(), getBuildFile());
+            handleBuildErrors(output.output.errors, _errorSource, getCurrentProject().getNodePath(), getHxmlFile());
         }
     }
 
@@ -145,29 +188,25 @@ public class HaXeSideKickPlugin extends EditPlugin
         String projectRoot = prj.getRootPath();
         if (projectRoot != null && projectRoot.length() > 0) {
             trace("projectRoot=" + projectRoot);
-            return getFirstBuildFileInDir(projectRoot);
+            return getFirstHxmlFileInDir(projectRoot);
         }
         return null;
     }
 
-    // Get the project defined hxml file.
-    public static File getBuildFile ()
+    /**
+     *  Get the first hxml file found in the project root.
+     * @return
+     */
+    public static File getHxmlFile ()
     {
         VPTProject prj = getCurrentProject();
         if (prj == null) {
             return null;
         }
-        checkAndUpdateProjectHaxeBuildFile(prj);
-        File buildFile = new File(prj.getRootPath() + File.separator + prj.getProperty(ProjectOptionPane.PROJECT_HXML_FILE));
-        if (buildFile.exists()) {
-            return buildFile;
-        }
-
-        JOptionPane.showMessageDialog(null, "No .hxml file found in the project root folder", "Error", JOptionPane.ERROR_MESSAGE);
-        return null;
+        return getFirstHxmlFileInDir(prj.getRootPath());
     }
 
-    protected static File getFirstBuildFileInDir (String path)
+    protected static File getFirstHxmlFileInDir (String path)
     {
         if (!new File(path).exists()) {
             return null;
@@ -204,14 +243,16 @@ public class HaXeSideKickPlugin extends EditPlugin
                 "Attempting to build haxe project, but no project currently selected.");
     	    return null;
     	}
+    	
+    	String command = getBuildCommand();
+    	
+        File hxmlFile = getHxmlFile();
 
-        File hxmlFile = getBuildFile();
-
-        if (hxmlFile == null) {
+        if (command == null) {
             Log.log(
                 Log.ERROR,
                 NAME,
-                "Attempting to build haxe project, but no *.hxml at the project root.");
+                "Attempting to build haxe project, but not custom build comamnd or *.hxml at the project root.");
             if (showErrorPopups) {
                 GUIUtilities.error(jEdit.getActiveView(), "haxe.error.noBuildFile", null);
             }
@@ -220,35 +261,13 @@ public class HaXeSideKickPlugin extends EditPlugin
 
         String projectRootPath = prj.getNodePath();
 
-        String command = "haxe ";
-
-        String haxeExecutableProp = prj.getProperty(ProjectOptionPane.PROJECT_HAXE_EXECUTABLE);
-        if (haxeExecutableProp != null && haxeExecutableProp.length() > 0) {
-            command = haxeExecutableProp + " ";
-        }
-
-        String hxmlfile = hxmlFile.getAbsolutePath().replace(projectRootPath, "");
-        if (hxmlfile.startsWith(File.separator)) {
-            hxmlfile = hxmlfile.substring(1);
-        }
-        command += hxmlfile;
-
         if (getCodeCompletion) {
             String path = editPane.getBuffer().getPath();
             command += " --display " + path + "@" + caret;
         }
         trace("  command=" + command);
 
-        //Figure out if we are using custom std lib location
-        String stdLibDirProp = prj.getProperty(ProjectOptionPane.PROJECT_STD_DIR);
-        ArrayList<String> env = new ArrayList<String>();
-        env.add("HOME=" + System.getProperty("user.home"));
-        if (stdLibDirProp != null && stdLibDirProp.length() > 0) {
-            env.add("HAXE_LIBRARY_PATH=" + stdLibDirProp);
-        }
-        String[] envp = env.toArray(new String[env.size()]);
-
-        SystemProcessOutput output = JavaSystemCaller.systemCall(command, projectRootPath, null, envp);
+        SystemProcessOutput output = JavaSystemCaller.systemCall(command, projectRootPath, null, null);
         return new HaxeCompilerOutput(hxmlFile, output);
     }
 
@@ -379,28 +398,6 @@ public class HaXeSideKickPlugin extends EditPlugin
     public void stop ()
     {}
 
-    protected static void checkAndUpdateProjectHaxeBuildFile (VPTProject prj)
-    {
-        if (prj == null) {
-            return;
-        }
-
-        String buildFileProp = prj.getProperty(ProjectOptionPane.PROJECT_HXML_FILE);
-        if (buildFileProp != null && buildFileProp.toLowerCase().endsWith(".hxml")) {
-            File buildFile = new File(prj.getRootPath() + File.separator + buildFileProp);
-            if (buildFile.exists()) {
-                return;
-            }
-        }
-
-        File buildFile = getFirstProjectHXMLFile(prj);
-        if (buildFile != null && buildFile.exists()) {
-            prj.setProperty(ProjectOptionPane.PROJECT_HXML_FILE, buildFile.getAbsolutePath().substring(prj.getRootPath().length() + 1));
-        } else {
-            prj.removeProperty(ProjectOptionPane.PROJECT_HXML_FILE);
-        }
-    }
-
     protected static String getHaxelibPath ()
     {
         String[] envp = {"HOME=" + System.getProperty("user.home")};
@@ -409,19 +406,12 @@ public class HaXeSideKickPlugin extends EditPlugin
         if (path.length() > 0 && path.charAt(path.length() - 1) == '/') {
             path = path.substring(0, path.length() - 1);
         }
+        trace("haxelib path=" + path);
         return path;
     }
 
     protected static String getStdLibPath ()
     {
-        VPTProject prj = getCurrentProject();
-        if (prj != null) {
-            String libraryPathProp = prj.getProperty(ProjectOptionPane.PROJECT_STD_DIR);
-            if (libraryPathProp != null && libraryPathProp.trim().length() > 0) {
-                trace("returning project std dir");
-                return libraryPathProp.trim();
-            }
-        }
         String path = System.getenv("HAXE_LIBRARY_PATH");
         if (path != null && path.trim().length() > 0) {
             return path;

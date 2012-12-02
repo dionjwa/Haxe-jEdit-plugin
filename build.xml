@@ -57,6 +57,7 @@
         
         <target name="copyDropbox">
                 <copy file="${jedit.plugins.dir}/${jar.file}" tofile="/Users/dion/Dropboxes/Dion/Dropbox/Public/${jar.file}"/>
+                <copy file="${jedit.plugins.dir}/${jar.file}" tofile="/Users/dion/Library/jEdit/jars/${jar.file}"/>
         </target>
 	
 </project>

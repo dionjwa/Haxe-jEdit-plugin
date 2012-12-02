@@ -85,7 +85,7 @@ public class ImportManager
 
     public static String getFullClassName (String baseClassName)
     {
-        Map<String, List<String>> classPackages = getAllImportableClasses();
+        Map<String, Set<String>> classPackages = getAllImportableClasses();
 
         if (classPackages == null || classPackages.size() == 0) {
             return null;
@@ -93,9 +93,9 @@ public class ImportManager
 
         if (classPackages.containsKey(baseClassName)) {
             if (classPackages.get(baseClassName).size() == 1) {
-                return classPackages.get(baseClassName).get(0);
+                return classPackages.get(baseClassName).iterator().next();
             } else {//Handle the duplicates
-                List<String> dups = classPackages.get(baseClassName);
+                Set<String> dups = classPackages.get(baseClassName);
                 String[] options = new String[dups.size()];
                 options = dups.toArray(options);
 
@@ -117,9 +117,9 @@ public class ImportManager
         return null;
     }
 
-    public static List<String> getFullClassNames (String baseClassName)
+    public static Set<String> getFullClassNames (String baseClassName)
     {
-        Map<String, List<String>> classPackages = getAllImportableClasses();
+        Map<String, Set<String>> classPackages = getAllImportableClasses();
 
         if (classPackages == null || classPackages.size() == 0) {
             return null;
@@ -236,29 +236,12 @@ public class ImportManager
 
         Pattern packagePrefixPattern = Pattern.compile("^[ \t]*(import|using)[ \t]+([a-zA-Z0-9_]+(\\.[a-zA-Z0-9_]+)?+).*");
         boolean pastImportZone = false;
-//        boolean isInImportCompilerConditional = false;
         isInCompilerConditional = false;
         for (int ii = 0; ii < buffer.getLineCount(); ++ii) {
             line = buffer.getLineText(ii);
 
             if (!addedImports) {
-//                if (line.trim().startsWith("#if")) {
-//                    isInCompilerConditional = true;
-////                    isInImportCompilerConditional = false;
-//                }
-//                if (line.trim().startsWith("#end")) {
-//                    isInCompilerConditional = false;
-////                    isInImportCompilerConditional = false;
-//                }
-//                if (isInCompilerConditional) {
-//                    if (patternImport.matcher(line).matches() || patternUsing.matcher(line).matches()) {
-//                        isInImportCompilerConditional = true;
-//                    }
-//                }
-
-//                if (!(line.trim().startsWith("#if") || line.trim().startsWith("#end") || line.trim().startsWith("#else"))) {
-                    bufferText.append(line + "\n");
-//                }
+                bufferText.append(line + "\n");
 
                 if (packagePattern.matcher(line).matches()) {
                     String currentPackagePrefix = "";
@@ -380,9 +363,9 @@ public class ImportManager
         return importTokens;
     }
 
-    protected static Map<String, List<String>> getAllClassPackages ()
+    protected static Map<String, Set<String>> getAllClassPackages ()
     {
-        File hxmlFile = HaXeSideKickPlugin.getBuildFile();
+        File hxmlFile = HaXeSideKickPlugin.getHxmlFile();
         if (hxmlFile == null) {
             Log.log(Log.ERROR, "HaXe", "No .hxml file found to get class paths");
             JOptionPane.showMessageDialog(null, "No .hxml file found to get class paths", "Warning", JOptionPane.ERROR_MESSAGE);
@@ -391,7 +374,7 @@ public class ImportManager
         return getPackagesFromHXMLFile(hxmlFile);
     }
 
-    protected static Map<String, List<String>> getAllImportableClasses ()
+    protected static Map<String, Set<String>> getAllImportableClasses ()
     {
         long now = System.currentTimeMillis();
         if (now - lastImportQueryTime > IMPORT_CACHE_EXPIRE_DELAY) {
@@ -435,11 +418,70 @@ public class ImportManager
         return existingImports;
     }
 
-    protected static Map<String, List<String>> getPackagesFromHXMLFile (File hxmlFile)
+    protected static Map<String, Set<String>> getPackagesFromHXMLFile (File hxmlFile)
     {
         return getPackagesFromHXMLFile(hxmlFile, null);
     }
-    protected static Map<String, List<String>> getPackagesFromHXMLFile (File hxmlFile, File root)
+    
+    protected static Map<String, Set<String>> getPackagesFromSrcFolders (Set<String> classPaths)
+    {
+        Map<String, Set<String>> classPackages = new HashMap<String, Set<String>>();
+        return getPackagesFromSrcFolders(classPaths, classPackages);
+    }
+    /**
+     * Returns a class name mapped to a list of packages (Class names are not unique).
+     * @param hxmlFile
+     * @param root
+     * @return Map<String, List<String>>
+     */
+    protected static Map<String, Set<String>> getPackagesFromSrcFolders (Set<String> classPaths, Map<String, Set<String>> existing)
+    {
+        Map<String, Set<String>> classPackages = existing;
+        // Go through the classpaths and add the *.hx files
+        try {
+            for (String path : classPaths) {
+                Log.log(Log.MESSAGE, "HaXe", "    getting source files from " + path);
+                List<File> haxeFiles = getFileListingNoSort(new File(path));
+
+                // Break down the name to correctly be the package
+                for (File haxeFile : haxeFiles) {
+                    String fullPath = haxeFile.getAbsolutePath();
+                    //Remove the suffix
+                    fullPath = fullPath.substring(0, fullPath.length() - 3);
+                    //Just the package path, without the absolute path part
+                    String packagePath = fullPath.substring(path.length() + 1);
+                    //Cleanup
+                    packagePath = packagePath.replace('/', '.');
+                    packagePath = packagePath.replace('\\', '.');
+                    packagePath = packagePath.replace("flash9", "flash");
+                    String className = haxeFile.getName();
+                    className = className.substring(0, className.length() - 3);
+
+                    //Classes without packages don't need to be imported
+                    if (packagePath.indexOf('.') == -1) {
+                        continue;
+                    }
+
+                    if (packagePath.contains("_std") || packagePath.startsWith("std.") || packagePath.startsWith("haxe.macro")) {
+                        continue;
+                    }
+
+                    if (!classPackages.containsKey(className)) {
+                        classPackages.put(className, new HashSet<String>());
+                    }
+
+//                    Log.log(Log.MESSAGE, "HaXe", "         " + packagePath);
+                    classPackages.get(className).add(packagePath);
+                }
+            }
+        } catch (FileNotFoundException e) {
+            Log.log(Log.ERROR, "HaXe", e.toString());
+        }
+
+        return classPackages;
+    }
+    
+    protected static Map<String, Set<String>> getPackagesFromHXMLFile (File hxmlFile, File root)
     {
         if (root == null && HaXeSideKickPlugin.getCurrentProject() != null) {
             root = new File(HaXeSideKickPlugin.getCurrentProject().getNodePath());
@@ -531,79 +573,83 @@ public class ImportManager
             Log.log(Log.ERROR, null, "Could not find haxe std lib path");
         }
 
+        
+      //Add the results from the inlines .hxml files
+    for (String inlineHxmlFile : inlineHxmlFiles) {
+        File f = new File(root + File.separator + inlineHxmlFile);
+        if (!f.exists()) {
+            Log.log(Log.ERROR, "HaXe", "No inline hxml file found: " + f);
+            continue;
+        }
+        Map<String, Set<String>> inlineResults = getPackagesFromHXMLFile(f, root);
+        for (String className : inlineResults.keySet()) {
+            if (!classPackages.containsKey(className)) {
+                classPackages.put(className, new HashSet<String>());
+            }
+            classPackages.get(className).addAll(inlineResults.get(className));
+        }
+    }
+        
+        return getPackagesFromSrcFolders(classPaths, classPackages);
 //        Log.log(Log.MESSAGE, "HaXe classPaths", "haxe classpaths iterating=" + classPaths);
 
         // Go through the classpaths and add the *.hx files
-        try {
-            for (String path : classPaths) {
-                Log.log(Log.MESSAGE, "HaXe", "    getting source files from " + path);
-                List<File> haxeFiles = getFileListingNoSort(new File(path));
-
-                // Break down the name to correctly be the package
-                for (File haxeFile : haxeFiles) {
-                    String fullPath = haxeFile.getAbsolutePath();
-                    //Remove the suffix
-                    fullPath = fullPath.substring(0, fullPath.length() - 3);
-                    //Just the package path, without the absolute path part
-                    String packagePath = fullPath.substring(path.length() + 1);
-                    //Cleanup
-                    packagePath = packagePath.replace('/', '.');
-                    packagePath = packagePath.replace('\\', '.');
-                    packagePath = packagePath.replace("flash9", "flash");
-                    String className = haxeFile.getName();
-                    className = className.substring(0, className.length() - 3);
-
-                    //Classes without packages don't need to be imported
-                    if (packagePath.indexOf('.') == -1) {
-                        continue;
-                    }
-
-                    if (packagePath.contains("_std") || packagePath.startsWith("std.") || packagePath.startsWith("haxe.macro")) {
-                        continue;
-                    }
-
-                    if (!classPackages.containsKey(className)) {
-                        classPackages.put(className, new HashSet<String>());
-                    }
-
-//                    Log.log(Log.MESSAGE, "HaXe", "         " + packagePath);
-                    classPackages.get(className).add(packagePath);
-                }
-            }
-        } catch (FileNotFoundException e) {
-            Log.log(Log.ERROR, "HaXe", e.toString());
-        }
-//        Log.log(Log.MESSAGE, "HaXe", "Constants=" + classPackages.get("Constants"));
-
-
-
-        //Add the results from the inlines .hxml files
-        for (String inlineHxmlFile : inlineHxmlFiles) {
-            File f = new File(root + File.separator + inlineHxmlFile);
-            if (!f.exists()) {
-                Log.log(Log.ERROR, "HaXe", "No inline hxml file found: " + f);
-                continue;
-            }
-            Map<String, List<String>> inlineResults = getPackagesFromHXMLFile(f, root);
-            for (String className : inlineResults.keySet()) {
-                if (!classPackages.containsKey(className)) {
-                    classPackages.put(className, new HashSet<String>());
-                }
-                classPackages.get(className).addAll(inlineResults.get(className));
-            }
-        }
-
-        //Convert sets to lists
-        Map<String, List<String>> results = new HashMap<String, List<String>>();
-        for (String baseclass : classPackages.keySet()) {
-            List<String> imports = new ArrayList<String>();
-            for(Object fullImport : classPackages.get(baseclass).toArray()) {
-                imports.add((String)fullImport);
-            }
-            results.put(baseclass, imports);
-        }
-
-        return results;
+//        try {
+//            for (String path : classPaths) {
+//                Log.log(Log.MESSAGE, "HaXe", "    getting source files from " + path);
+//                List<File> haxeFiles = getFileListingNoSort(new File(path));
+//
+//                // Break down the name to correctly be the package
+//                for (File haxeFile : haxeFiles) {
+//                    String fullPath = haxeFile.getAbsolutePath();
+//                    //Remove the suffix
+//                    fullPath = fullPath.substring(0, fullPath.length() - 3);
+//                    //Just the package path, without the absolute path part
+//                    String packagePath = fullPath.substring(path.length() + 1);
+//                    //Cleanup
+//                    packagePath = packagePath.replace('/', '.');
+//                    packagePath = packagePath.replace('\\', '.');
+//                    packagePath = packagePath.replace("flash9", "flash");
+//                    String className = haxeFile.getName();
+//                    className = className.substring(0, className.length() - 3);
+//
+//                    //Classes without packages don't need to be imported
+//                    if (packagePath.indexOf('.') == -1) {
+//                        continue;
+//                    }
+//
+//                    if (packagePath.contains("_std") || packagePath.startsWith("std.") || packagePath.startsWith("haxe.macro")) {
+//                        continue;
+//                    }
+//
+//                    if (!classPackages.containsKey(className)) {
+//                        classPackages.put(className, new HashSet<String>());
+//                    }
+//
+////                    Log.log(Log.MESSAGE, "HaXe", "         " + packagePath);
+//                    classPackages.get(className).add(packagePath);
+//                }
+//            }
+//        } catch (FileNotFoundException e) {
+//            Log.log(Log.ERROR, "HaXe", e.toString());
+//        }
+////        Log.log(Log.MESSAGE, "HaXe", "Constants=" + classPackages.get("Constants"));
+//
+//
+//
+//        
+//
+//        //Convert sets to lists
+//        Map<String, List<String>> results = new HashMap<String, List<String>>();
+//        for (String baseclass : classPackages.keySet()) {
+//            List<String> imports = new ArrayList<String>();
+//            for(Object fullImport : classPackages.get(baseclass).toArray()) {
+//                imports.add((String)fullImport);
+//            }
+//            results.put(baseclass, imports);
+//        }
+//
+//        return results;
     }
 
     static protected File getHaxelibDevDir (File haxelibProjectDir)
@@ -720,7 +766,7 @@ public class ImportManager
     protected static Pattern patternPackage = Pattern.compile("^[ \t]*package[ \t]+([a-z][a-zA-Z0-9_\\.]*)[ \t;\n].*");
     protected static Pattern patternInlineHxmlFile = Pattern.compile("^[ \t]*(.*hxml)");
 
-    private static Map<String, List<String>> importableClassesCache;
+    private static Map<String, Set<String>> importableClassesCache;
     private static long lastImportQueryTime = 0;
     private static long IMPORT_CACHE_EXPIRE_DELAY = 10 * 1000;//10 seconds
     private static String currentProjectRootForImporting;

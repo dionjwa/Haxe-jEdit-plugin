@@ -243,7 +243,7 @@ public class HaxeCodeCompletion
             return;
         }
 
-        List<String> packages = ImportManager.getFullClassNames(prefix);
+        Set<String> packages = ImportManager.getFullClassNames(prefix);
         if (packages != null) {
             for (String fullPackageName : packages) {
                 candidates.add(new CompletionCandidateFullPackageName(fullPackageName));

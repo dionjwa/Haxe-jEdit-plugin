@@ -18,6 +18,7 @@ import completion.service.CompletionCandidate;
 
 import ctagsinterface.main.KindIconProvider;
 import ctagsinterface.main.Tag;
+
 /**
  * Use this class for Ctags code completions.
  *
@@ -57,7 +58,7 @@ public class CtagsCompletionCandidate extends DefaultListCellRenderer
         }
 
         // Check if a parametrized abbreviation is needed
-        String sig = getDescription();
+        String sig = tag.getName();
         if (sig == null || sig.length() == 0)
             return;
         String abbrev = createAbbrev(sig);
@@ -99,7 +100,7 @@ public class CtagsCompletionCandidate extends DefaultListCellRenderer
         }
 
         //If the completion matches the prefix exactly, ignore it (it doesn't add anything)
-        if (prefix.trim().equals(getDescription().trim())) {
+        if (prefix.trim().equals(tag.getName().trim())) {
             return false;
         }
 
@@ -114,9 +115,23 @@ public class CtagsCompletionCandidate extends DefaultListCellRenderer
     @Override
     public int compareTo (CompletionCandidate o)
     {
-        if (o instanceof CtagsCompletionCandidate) {
-            tag.getName().compareTo(((CtagsCompletionCandidate)o).tag.getName());
+        if (tag == null || tag.getName() == null) {
+            return 1;
         }
-        return tag.getName().compareTo(o.getDescription());
+        if (o == null) {
+            return -1;
+        }
+        if (o instanceof CtagsCompletionCandidate) {
+            if (((CtagsCompletionCandidate)o).tag == null || ((CtagsCompletionCandidate)o).tag.getName() == null) {
+                return -1;
+            }
+            return tag.getName().compareTo(((CtagsCompletionCandidate)o).tag.getName());
+        } else {
+            if (o.getDescription() == null) {
+                return -1;
+            } else {
+                return tag.getName().compareTo(o.getDescription());
+            }
+        }
     }
 }

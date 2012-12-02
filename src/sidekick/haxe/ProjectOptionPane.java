@@ -14,17 +14,13 @@ import projectviewer.vpt.VPTProject;
 public class ProjectOptionPane extends AbstractOptionPane
 {
     private static final String OPTION_PREFIX = "options.haxe.";
-    public static final String PROJECT_HXML_FILE = "projectHXMLFile";
-    public static final String PROJECT_STD_DIR = "projectStdDir";
-    public static final String PROJECT_HAXE_EXECUTABLE = "projectHaxeExecutable";
     public static final String PROJECT_LAUNCH_CMD = "projectLaunchCommand";
+    public static final String PROJECT_BUILD_CMD = "projectBuildCommand";
 
     VPTProject project;
 
-    private JTextField hxmlFile;
-    private JTextField haxeStdDir;
-    private JTextField haxeExecutable;
     private JTextField launchCommand;
+    private JTextField buildCommand;
 
     public ProjectOptionPane(VPTProject project)
     {
@@ -35,31 +31,19 @@ public class ProjectOptionPane extends AbstractOptionPane
     @Override
     protected void _init()
     {
-        addComponent(new JLabel("Advanced haXe options.  Leave empty for defaults."));
-        addSeparator();
-        hxmlFile = new JTextField(project.getProperty(PROJECT_HXML_FILE));
-        addComponent(jEdit.getProperty(OPTION_PREFIX + PROJECT_HXML_FILE + ".label"), hxmlFile);
-
-        addSeparator();
+        addComponent(new JLabel(jEdit.getProperty(OPTION_PREFIX + PROJECT_BUILD_CMD + ".label")));
+        buildCommand = new JTextField(project.getProperty(PROJECT_BUILD_CMD));
+        addComponent("", buildCommand);
+        addComponent(new JLabel(jEdit.getProperty(OPTION_PREFIX + PROJECT_LAUNCH_CMD + ".label")));
         launchCommand = new JTextField(project.getProperty(PROJECT_LAUNCH_CMD));
-        addComponent(jEdit.getProperty(OPTION_PREFIX + PROJECT_LAUNCH_CMD + ".label"), launchCommand);
-
-        addSeparator();
-        haxeStdDir = new JTextField(project.getProperty(PROJECT_STD_DIR));
-        addComponent(jEdit.getProperty(OPTION_PREFIX + PROJECT_STD_DIR + ".label"), haxeStdDir);
-
-        addSeparator();
-        haxeExecutable = new JTextField(project.getProperty(PROJECT_HAXE_EXECUTABLE));
-        addComponent(jEdit.getProperty(OPTION_PREFIX + PROJECT_HAXE_EXECUTABLE + ".label"), haxeExecutable);
+        addComponent("", launchCommand);
     }
 
     @Override
     protected void _save()
     {
-        project.setProperty(PROJECT_HXML_FILE, hxmlFile.getText().trim());
         project.setProperty(PROJECT_LAUNCH_CMD, launchCommand.getText().trim());
-        project.setProperty(PROJECT_STD_DIR, haxeStdDir.getText().trim());
-        project.setProperty(PROJECT_HAXE_EXECUTABLE, haxeExecutable.getText().trim());
+        project.setProperty(PROJECT_BUILD_CMD, buildCommand.getText().trim());
     }
 
 

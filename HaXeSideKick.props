@@ -21,7 +21,7 @@
 plugin.sidekick.haxe.HaXeSideKickPlugin.activate=defer
 plugin.sidekick.haxe.HaXeSideKickPlugin.name=HaXeSideKick
 plugin.sidekick.haxe.HaXeSideKickPlugin.author=Dion Amago
-plugin.sidekick.haxe.HaXeSideKickPlugin.version=0.4
+plugin.sidekick.haxe.HaXeSideKickPlugin.version=0.5
 plugin.sidekick.haxe.HaXeSideKickPlugin.docs=index.html
 plugin.sidekick.haxe.HaXeSideKickPlugin.description=HaXe parser, builder, and code-completion service.
 
@@ -63,23 +63,14 @@ plugin.sidekick.haxe.HaXeSideKickPlugin.option-pane=haxe
 options.haxe.label=HaXe
 options.haxe.code=new sidekick.haxe.HaXeOptionPane();
 
-options.haxe.stdDir.label=HaXe std lib path. Only change if installed in a non-default location, otherwise leave empty. 
-options.haxe.stdDir=
-options.haxe.defaultInstallDirMac=/usr/lib/haxe
-options.haxe.defaultInstallDirLinux=/usr/lib/haxe
-options.haxe.defaultInstallDirWindows=C:\\Program Files\\Motion-Twin\\haxe
-options.haxe.defaultInstallDirWindows7=C:\\Program Files (x86)\\Motion-Twin\\haxe
-
 #ProjectViewer optionpanel
-options.haxe-project-options.label=HaXe Paths
-options.haxe.projectHXMLFile.label=Project hxml file (for project building/code completion)
-options.haxe.projectLaunchCommand.label=Launch command (haxe -cmd "XXX" build.hxml)
-options.haxe.projectStdDir.label=Project specific haXe std library location (advanced use only)
-options.haxe.projectHaxeExecutable.label=Project specific haxe compiler (advanced use only)
+options.haxe-project-options.label=HaXe Options
+options.haxe.projectLaunchCommand.label=Calls this command preceded by a successful compilation:
+options.haxe.projectBuildCommand.label=Haxe build command.  If empty, searches for the first hxml file in the project root:
 
 #Errors
-haxe.error.noBuildFile.message=Attempting to build haxe project, but no *.hxml at the project root, or in a parent directory of the current buffer.
-haxe.error.noBuildFile.title=No *.hxml file found
+haxe.error.noBuildFile.message=Attempting to build haxe project, but not custom build comamnd or *.hxml at the project root.
+haxe.error.noBuildFile.title=No haxe build command or *.hxml file found
 
 #Apparently I should set this to true, even though I don't write any data there
 plugin.sidekick.haxe.HaXeSideKickPlugin.usePluginHome=true
