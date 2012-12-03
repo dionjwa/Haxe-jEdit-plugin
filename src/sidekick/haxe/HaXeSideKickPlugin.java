@@ -10,6 +10,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import javax.swing.JOptionPane;
+import javax.xml.xpath.XPathConstants;
+import javax.xml.xpath.XPathExpressionException;
 
 import org.gjt.sp.jedit.EditPane;
 import org.gjt.sp.jedit.EditPlugin;
@@ -17,6 +19,7 @@ import org.gjt.sp.jedit.GUIUtilities;
 import org.gjt.sp.jedit.View;
 import org.gjt.sp.jedit.jEdit;
 import org.gjt.sp.util.Log;
+import org.w3c.dom.NodeList;
 
 import projectviewer.ProjectViewer;
 import projectviewer.vpt.VPTProject;
@@ -48,6 +51,11 @@ public class HaXeSideKickPlugin extends EditPlugin
             return buildString.trim();
         }
         
+        File hxprojFile = getHxprojFile();
+        if (hxprojFile != null) {
+            return getBuildCommandFromHxprojFile(hxprojFile);
+        }
+        
         File hxmlFile = getFirstProjectHXMLFile(prj);
         if (hxmlFile != null) {
             return getBuildCommandFromHxmlFile(hxmlFile);
@@ -73,6 +81,82 @@ public class HaXeSideKickPlugin extends EditPlugin
         }
         command += hxmlfile;
         
+        
+        return command;
+    }
+    
+    public static String getBuildCommandFromHxprojFile(File hxprojFile)
+    {
+        VPTProject prj = getCurrentProject();
+        if (prj == null) {
+            return null;
+        }
+        
+        String command = "haxe";
+        
+        javax.xml.xpath.XPath xpath = javax.xml.xpath.XPathFactory.newInstance().newXPath();
+        org.xml.sax.InputSource inputSource = new org.xml.sax.InputSource(hxprojFile.getAbsolutePath());
+        
+        try {
+            
+            String evalString = "/project/classpaths//@path";
+            //source
+            NodeList results = (NodeList) xpath.evaluate(evalString, inputSource, XPathConstants.NODESET);
+            if (results != null) {
+                for (int i = 0; i < results.getLength(); i++) {
+                    command += " -cp " + results.item(i).getTextContent();
+                }
+            }
+            
+            //Main class
+            command += " -main " + xpath.evaluate("/project/build//@mainClass", inputSource);
+            
+            //Compiler options
+            if (xpath.evaluate("/project/build//@enabledebug", inputSource).equalsIgnoreCase("True")) {
+                command += " -debug";
+            }
+            if (xpath.evaluate("/project/build//@flashStrict", inputSource).equalsIgnoreCase("True")) {
+                command += " --flash-strict";
+            }
+            
+            //haxelibs
+            results = (NodeList) xpath.evaluate("/project/haxelib//@name", inputSource, XPathConstants.NODESET);
+            if (results != null) {
+                for (int i = 0; i < results.getLength(); i++) {
+                    command += " -lib " + results.item(i).getTextContent();
+                }
+            }
+            
+            //Output
+            evalString = "/project/output//@platform";
+            trace(evalString + ": " + (xpath.evaluate(evalString, inputSource)));
+            if (xpath.evaluate(evalString, inputSource) != null && xpath.evaluate(evalString, inputSource).trim().toLowerCase().equals("flash player")) {
+                String swfheader = ""; 
+                if (xpath.evaluate("/project/output//@width", inputSource) != null && xpath.evaluate("/project/output//@height", inputSource) != null) {
+                    swfheader += " -swf-header " + xpath.evaluate("/project/output//@width", inputSource) + ":" + xpath.evaluate("/project/output//@height", inputSource);
+                }
+                if (xpath.evaluate("/project/output//@fps", inputSource) != null) {
+                    swfheader += ":" + xpath.evaluate("/project/output//@fps", inputSource);
+                }
+                if (xpath.evaluate("/project/output//@background", inputSource) != null) {
+                    swfheader += ":" + xpath.evaluate("/project/output//@background", inputSource).replace("#", "");
+                }
+                if (swfheader.length() > 0) {
+                    command += swfheader;
+                }
+                
+                if (xpath.evaluate("/project/output//@version", inputSource) != null) {
+                    command += " -swf-version " + xpath.evaluate("/project/output//@version", inputSource);
+                }
+                
+                command += " -swf " + xpath.evaluate("/project/build//@mainClass", inputSource) + ".swf";
+                command += " --no-output";
+            }
+            
+        } catch (XPathExpressionException e1) {
+            // TODO Auto-generated catch block
+            e1.printStackTrace();
+        }
         
         return command;
     }
@@ -197,6 +281,19 @@ public class HaXeSideKickPlugin extends EditPlugin
      *  Get the first hxml file found in the project root.
      * @return
      */
+    public static File getHxprojFile ()
+    {
+        VPTProject prj = getCurrentProject();
+        if (prj == null) {
+            return null;
+        }
+        return getFirstFlashDevelopFileInDir(prj.getRootPath());
+    }
+    
+    /**
+     *  Get the first hxml file found in the project root.
+     * @return
+     */
     public static File getHxmlFile ()
     {
         VPTProject prj = getCurrentProject();
@@ -214,6 +311,20 @@ public class HaXeSideKickPlugin extends EditPlugin
         // Get the first *.hxml file we find
         for (String filename : new File(path).list()) {
             if (filename.toLowerCase().endsWith(".hxml")) {
+                return new File(path, filename);
+            }
+        }
+        return null;
+    }
+    
+    protected static File getFirstFlashDevelopFileInDir (String path)
+    {
+        if (!new File(path).exists()) {
+            return null;
+        }
+        // Get the first *.hxml file we find
+        for (String filename : new File(path).list()) {
+            if (filename.toLowerCase().endsWith(".hxproj")) {
                 return new File(path, filename);
             }
         }
