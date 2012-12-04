@@ -65,8 +65,10 @@ options.haxe.code=new sidekick.haxe.HaXeOptionPane();
 
 #ProjectViewer optionpanel
 options.haxe-project-options.label=HaXe Options
-options.haxe.projectLaunchCommand.label=Calls this command preceded by a successful compilation:
-options.haxe.projectBuildCommand.label=Haxe build command.  If empty, searches for the first hxml file in the project root:
+options.haxe.projectLaunchCommand.label=Launch command. The build is called first:
+options.haxe.projectBuildCommand.label=Haxe build command.  If empty, searches for the first *.hxml or *.hxproj file in the project root:
+options.haxe.projectPreBuildCommand.label=Call this before building:
+options.haxe.projectCurrentBuildCommand.label=Current build command:
 
 #Errors
 haxe.error.noBuildFile.message=Attempting to build haxe project, but not custom build comamnd or *.hxml at the project root.
