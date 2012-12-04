@@ -21,7 +21,7 @@
 plugin.sidekick.haxe.HaXeSideKickPlugin.activate=defer
 plugin.sidekick.haxe.HaXeSideKickPlugin.name=HaXeSideKick
 plugin.sidekick.haxe.HaXeSideKickPlugin.author=Dion Amago
-plugin.sidekick.haxe.HaXeSideKickPlugin.version=0.5
+plugin.sidekick.haxe.HaXeSideKickPlugin.version=0.6
 plugin.sidekick.haxe.HaXeSideKickPlugin.docs=index.html
 plugin.sidekick.haxe.HaXeSideKickPlugin.description=HaXe parser, builder, and code-completion service.
 
