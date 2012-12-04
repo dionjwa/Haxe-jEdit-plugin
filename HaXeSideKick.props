@@ -27,13 +27,13 @@ plugin.sidekick.haxe.HaXeSideKickPlugin.description=HaXe parser, builder, and co
 
 # dependencies
 plugin.sidekick.haxe.HaXeSideKickPlugin.depend.0=jdk 1.6
-plugin.sidekick.haxe.HaXeSideKickPlugin.depend.1=jedit 04.04.01.00
+plugin.sidekick.haxe.HaXeSideKickPlugin.depend.1=jedit 04.05.01.00
 plugin.sidekick.haxe.HaXeSideKickPlugin.depend.2=plugin errorlist.ErrorListPlugin 1.9
-plugin.sidekick.haxe.HaXeSideKickPlugin.depend.3=plugin sidekick.SideKickPlugin 1.0
-plugin.sidekick.haxe.HaXeSideKickPlugin.depend.4=plugin projectviewer.ProjectPlugin 3.0.1
-plugin.sidekick.haxe.HaXeSideKickPlugin.depend.5=plugin completion.CompletionPlugin 0.2
-plugin.sidekick.haxe.HaXeSideKickPlugin.depend.6=plugin ctagsinterface.main.CtagsInterfacePlugin 2.1
-plugin.sidekick.haxe.HaXeSideKickPlugin.depend.7=plugin SuperAbbrevsPlugin 0.32
+plugin.sidekick.haxe.HaXeSideKickPlugin.depend.3=plugin sidekick.SideKickPlugin 1.2
+plugin.sidekick.haxe.HaXeSideKickPlugin.depend.4=plugin projectviewer.ProjectPlugin 3.4.0
+plugin.sidekick.haxe.HaXeSideKickPlugin.depend.5=plugin completion.CompletionPlugin 0.3
+plugin.sidekick.haxe.HaXeSideKickPlugin.depend.6=plugin ctagsinterface.main.CtagsInterfacePlugin 2.2
+plugin.sidekick.haxe.HaXeSideKickPlugin.depend.7=plugin SuperAbbrevsPlugin 1.0
 
 # Plugins menu items
 plugin.sidekick.haxe.HaXeSideKickPlugin.menu.label=HaXe
